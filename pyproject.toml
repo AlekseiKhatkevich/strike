@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "strike"
+version = "0.1.0"
+description = ""
+authors = ["Aleksei Khatkevich <aleksey.hatkevich@zyfra.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.95"
+uvicorn = "0.22.*"
+uvloop = "0.17.*"
+httptools = "0.5.*"
+sqlalchemy = "2.0.*"
+orjson = "3.8.*"
+asyncpg = "0.27.*"
+pytest = "7.*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
