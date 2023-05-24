@@ -1,18 +1,18 @@
-from fastapi import FastAPI
+from typing import Annotated
+
+from fastapi import FastAPI, Depends
+
+from config import Settings, get_settings
 
 app = FastAPI()
 
 
 @app.get("/")
-async def root():
-    import os
-    return os.environ['SQLALCHEMY_DATABASE_URL']
+async def root(settings: Annotated[Settings, Depends(get_settings)]):
+    return settings.dict()
 
 
 @app.get("/hello/{name}")
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
-
-
-# SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:1q2w3e@localhost:6432/tsdb"
 

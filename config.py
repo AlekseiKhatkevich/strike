@@ -1,0 +1,29 @@
+from functools import cache
+
+from pydantic import (
+    BaseSettings,
+    RedisDsn,
+    PostgresDsn,
+    root_validator,
+)
+
+
+class Settings(BaseSettings):
+    """
+    Базовые настройки проекта.
+    """
+    pg_dsn: PostgresDsn
+    pg_dsn_direct: PostgresDsn
+    redis_dsn: RedisDsn
+
+
+@cache
+def get_settings() -> Settings:
+    """
+    Отдает базовые настройки проекта.
+    :return: Settings
+    """
+    return Settings()
+
+
+settings: Settings = get_settings()

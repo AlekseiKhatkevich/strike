@@ -2,7 +2,7 @@
 name = "strike"
 version = "0.1.0"
 description = ""
-authors = ["Aleksei Khatkevich <aleksey.hatkevich@zyfra.com>"]
+authors = ["Aleksei Khatkevich <qwerty12345@disroot.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
