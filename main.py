@@ -4,14 +4,6 @@ from fastapi import FastAPI, Depends
 
 from config import Settings, get_settings
 
-# meta = MetaData()
-# engine = create_async_engine(
-#         settings.pg_dsn,
-#         echo=True,
-#         echo_pool=True,
-#     )
-
-
 
 app = FastAPI()
 
