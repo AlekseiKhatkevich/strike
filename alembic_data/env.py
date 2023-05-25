@@ -1,18 +1,15 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
-from alembic import context
 
 from config import settings
 from database import Base
 from models import *   # не удалять иначе alembic не видит модели
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
 config = context.config
 config.set_main_option('sqlalchemy.url', settings.pg_dsn)  # добавляет ключ sqlalchemy.url в alembic.ini
 
