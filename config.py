@@ -4,7 +4,12 @@ from pydantic import (
     BaseSettings,
     RedisDsn,
     PostgresDsn,
-    root_validator,
+)
+
+
+__all__ = (
+    'settings',
+    'get_settings',
 )
 
 
