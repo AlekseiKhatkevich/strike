@@ -11,6 +11,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import validates
 from sqlalchemy.sql import func
 
+
 from constants import EMAIL_REGEXP
 from database import Base
 
@@ -25,7 +26,7 @@ class User(Base):
     id = Column(
         BigInteger,
         primary_key=True,
-        index=True,
+        # index=True,
     )
     name = Column(
         String(64),
@@ -50,8 +51,8 @@ class User(Base):
     )
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        nullable=False,
-        onupdate=func.now(),
+        # nullable=False,
+        server_onupdate=func.now(),
     )
 
     __table_args__ = (
