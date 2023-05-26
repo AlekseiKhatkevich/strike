@@ -1,3 +1,5 @@
+import datetime
+
 from email_validator import validate_email
 from sqlalchemy import (
     Boolean,
@@ -9,7 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     Identity,
 )
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, Mapped, mapped_column
 from sqlalchemy.sql import func
 
 
@@ -24,33 +26,32 @@ __all__ = (
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         BigInteger,
         Identity(always=True),
         primary_key=True,
     )
-    name = Column(
+    name: Mapped[str | None] = mapped_column(
         String(64),
         nullable=False,
     )
-    email = Column(
+    email: Mapped[str | None] = mapped_column(
         String(320),
     )
-    hashed_password = Column(
+    hashed_password: Mapped[str] = mapped_column(
         String(256),
         nullable=False,
     )
-    is_active = Column(
-        Boolean,
+    is_active: Mapped[bool] = mapped_column(
         default=True,
         nullable=False,
     )
-    registration_date = Column(
+    registration_date: Mapped[datetime.datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
-    updated_at = Column(
+    updated_at: Mapped[datetime.datetime | None] = mapped_column(
         TIMESTAMP(timezone=True),
         onupdate=func.now(),
     )
