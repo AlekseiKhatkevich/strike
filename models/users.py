@@ -7,6 +7,7 @@ from sqlalchemy import (
     TIMESTAMP,
     Index,
     CheckConstraint,
+    Identity,
 )
 from sqlalchemy.orm import validates
 from sqlalchemy.sql import func
@@ -25,8 +26,8 @@ class User(Base):
 
     id = Column(
         BigInteger,
+        Identity(always=True),
         primary_key=True,
-        # index=True,
     )
     name = Column(
         String(64),
@@ -51,8 +52,7 @@ class User(Base):
     )
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        # nullable=False,
-        server_onupdate=func.now(),
+        onupdate=func.now(),
     )
 
     __table_args__ = (
