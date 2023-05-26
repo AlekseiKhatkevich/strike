@@ -1,17 +1,25 @@
+import datetime
 import uuid
 
-from sqlalchemy import MetaData, NullPool
+from sqlalchemy import (
+    BigInteger,
+    TIMESTAMP,
+    MetaData,
+    NullPool,
+)
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
 from config import settings
+from typing_and_types import BigIntType
 
 __all__ = (
     'Base',
     'engine',
     'async_session',
 )
+
 
 engine = create_async_engine(
     settings.pg_dsn,
@@ -39,3 +47,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         'fk': 'fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s',
         'pk': 'pk_%(table_name)s'
     })
+    type_annotation_map = {
+        BigIntType: BigInteger,
+        datetime.datetime: TIMESTAMP(timezone=True),
+    }

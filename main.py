@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing_and_types import Annotated
 
 from fastapi import FastAPI, Depends
 
