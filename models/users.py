@@ -11,7 +11,7 @@ from sqlalchemy.sql import func
 
 from constants import EMAIL_REGEXP
 from database import Base
-from models.annotations import BigIntPk
+from .annotations import BigIntPk
 
 __all__ = (
     'User',
@@ -31,7 +31,8 @@ class User(Base):
     )
     hashed_password: Mapped[str] = mapped_column(
         String(256),
-    )
+        deferred=True,  # todo prevent from loading aka database hash comparison
+    )  # await session.scalars(select(User).limit(1).options(undefer(User.hashed_password)))
     is_active: Mapped[bool] = mapped_column(
         default=True,
     )
@@ -40,6 +41,7 @@ class User(Base):
     )
     updated_at: Mapped[datetime.datetime | None] = mapped_column(
         onupdate=func.now(),
+        deferred=True,  # await a1.awaitable_attrs.bs
     )
 
     __table_args__ = (
@@ -64,8 +66,7 @@ class User(Base):
         ),
     )
 
-    def __str__(self) -> str:
-        return f'User {self.name} with id={self.id}'
+    __repr__ = __str__ = lambda self: f'User "{self.name}" with id={self.id}'
 
     @validates("email")
     def validate_email(self, _, value: str) -> str:
