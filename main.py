@@ -1,11 +1,11 @@
-from typing import Annotated
+from fastapi import FastAPI
 
-from fastapi import FastAPI, Depends
+from routers import users
 
-from config import Settings, get_settings
+
+__all__ = (
+    'app',
+)
 
 app = FastAPI()
-
-
-
-
+app.include_router(users.router)

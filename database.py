@@ -27,7 +27,7 @@ engine = create_async_engine(
     echo=True,
     echo_pool=True,
     connect_args={
-            'prepared_statement_name_func': lambda:  f'__asyncpg_{uuid.uuid4()}__',
+            'prepared_statement_name_func': lambda: f'__asyncpg_{uuid.uuid4()}__',
         },
 )
 
