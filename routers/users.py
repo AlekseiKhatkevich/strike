@@ -1,30 +1,26 @@
-from fastapi import APIRouter, status
+from typing import Annotated
 
-from database import async_session
-from models import User
-from serializers import UserRegistrationSerializer
-from sqlalchemy import insert
+from fastapi import APIRouter, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dependencies import get_session
+from serializers.users import UserRegistrationSerializer
 
 __all__ = (
     'router',
 )
 
+from serializers.crud.users import create_new_user
+
 router = APIRouter(prefix='/users', tags=['users'])
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-async def register_new_user(user_data: UserRegistrationSerializer) -> dict[str, int]:
+async def register_new_user(session: Annotated[AsyncSession, Depends(get_session)], user_data: UserRegistrationSerializer) -> dict[str, int]:
     """
     """
-    async with async_session() as session:
-        stmt = insert(User).values(
-            name=user_data.name,
-            email=user_data.email,
-            hashed_password=user_data.password.get_secret_value(),
-        )
-        db_response = await session.execute(stmt)
-        await session.commit()
+    created_user_id = await create_new_user(session, user_data)
 
-    return {'id': db_response.inserted_primary_key[0]}
+    return {'id': created_user_id}
 
 # todo валидация, перенос круда, сессия в депенденсиес, подтсвержение токена инвайта
