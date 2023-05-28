@@ -1,19 +1,19 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import insert
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import User
 
 if TYPE_CHECKING:
-    from serializers import UserRegistrationSerializer
+    from serializers.users import UserRegistrationSerializer
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 __all__ = (
     'create_new_user',
 )
 
 
-async def create_new_user(session: AsyncSession, user_data: 'UserRegistrationSerializer') -> int:
+async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> int:
     """
     :param session:
     :param user_data:
