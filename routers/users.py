@@ -27,4 +27,4 @@ async def register_new_user(session: SessionDep, user_data: UserRegistrationSeri
 
     return {'id': created_user_id}
 
-# todo валидация, подтсвержение токена инвайта
+#todo подтсвержение токена инвайта

@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     pg_dsn: PostgresDsn
     pg_dsn_direct: PostgresDsn
     redis_dsn: RedisDsn
+    secret_string: str
 
 
 @cache
