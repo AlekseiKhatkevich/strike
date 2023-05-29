@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 __all__ = (
     'generate_invitation_token',
     'verify_invitation_token',
+    'InvitationTokenDeclinedException',
 )
 
 ALL_USERS = '__ALL__'
@@ -58,7 +59,12 @@ def verify_invitation_token(token: 'SecretStr', username: str = None, password: 
     :return:
     """
     try:
-        decoded = jwt.decode(token.get_secret_value(), settings.secret_string, audience=[username, ALL_USERS], algorithms=ALGORYTHM)
+        decoded = jwt.decode(
+            token.get_secret_value(),
+            settings.secret_string,
+            audience=[username, ALL_USERS],
+            algorithms=ALGORYTHM,
+        )
     except (jwt.InvalidAudienceError, jwt.ExpiredSignatureError,) as err:
         # todo logging
         raise InvitationTokenDeclinedException() from err
