@@ -21,7 +21,8 @@ class UserRegistrationSerializer(BaseModel):
     name: constr(max_length=64)
     email: EmailStr | None
     password: Annotated[SecretStr, Field(max_length=72)]
-    invitation_token: str
+    invitation_token: SecretStr
+    invitation_password: SecretStr | None
 
     class Config:
         anystr_strip_whitespace = True

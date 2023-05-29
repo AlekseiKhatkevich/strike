@@ -1,10 +1,13 @@
 import contextlib
 import datetime
+from typing import TYPE_CHECKING
 
 import jwt
-from jwt import InvalidAudienceError, ExpiredSignatureError
 
 from config import settings
+
+if TYPE_CHECKING:
+    from pydantic import SecretStr
 
 __all__ = (
     'generate_invitation_token',
@@ -46,7 +49,7 @@ def generate_invitation_token(valid_util: datetime.datetime,
     return jwt.encode(payload, settings.secret_string, algorithm=ALGORYTHM)
 
 
-def verify_invitation_token(token, username: str = None, password: str = None) -> None:
+def verify_invitation_token(token: 'SecretStr', username: str = None, password: 'SecretStr' = None) -> dict:
     """
 
     :param token:
@@ -55,14 +58,16 @@ def verify_invitation_token(token, username: str = None, password: str = None) -
     :return:
     """
     try:
-        decoded = jwt.decode(token, settings.secret_string, audience=username or ALL_USERS, algorithms=ALGORYTHM)
-    except (InvalidAudienceError, ExpiredSignatureError,) as err:
+        decoded = jwt.decode(token.get_secret_value(), settings.secret_string, audience=[username, ALL_USERS], algorithms=ALGORYTHM)
+    except (jwt.InvalidAudienceError, jwt.ExpiredSignatureError,) as err:
         # todo logging
         raise InvitationTokenDeclinedException() from err
 
     with contextlib.suppress(KeyError):
         invitation_password = decoded['invitation_password']
-        if invitation_password != password:
+        if invitation_password != password.get_secret_value():
             # todo logging
             raise InvitationTokenDeclinedException()
+
+    return decoded
 

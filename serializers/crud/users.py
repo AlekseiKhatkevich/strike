@@ -4,6 +4,7 @@ from sqlalchemy import insert
 
 from models import User
 from security.hashers import make_hash
+from security.invitation import verify_invitation_token
 
 if TYPE_CHECKING:
     from serializers.users import UserRegistrationSerializer
@@ -20,6 +21,11 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
     :param user_data:
     :return:
     """
+    verify_invitation_token(
+        token=user_data.invitation_token,
+        username=user_data.name,
+        password=user_data.invitation_password,
+    )
     hashed_password = make_hash(user_data.password.get_secret_value())
 
     async with session.begin():

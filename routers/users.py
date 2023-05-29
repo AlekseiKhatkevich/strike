@@ -26,5 +26,3 @@ async def register_new_user(session: SessionDep, user_data: UserRegistrationSeri
         ) from err
 
     return {'id': created_user_id}
-
-#todo подтсвержение токена инвайта
