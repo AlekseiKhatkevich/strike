@@ -9,7 +9,7 @@ from database import async_session
 __all__ = (
     'SessionDep',
     'SettingsDep',
-    'get_settings',
+    'get_session',
 )
 
 

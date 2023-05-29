@@ -10,7 +10,7 @@ __all__ = (
 )
 
 
-router = APIRouter(prefix='/users', tags=['users'])
+router = APIRouter(tags=['users'])
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
@@ -26,3 +26,8 @@ async def register_new_user(session: SessionDep, user_data: UserRegistrationSeri
         ) from err
 
     return {'id': created_user_id}
+
+
+@router.get('/ping/')
+async def ping():
+    return {"ping": "pong!"}

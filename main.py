@@ -13,7 +13,7 @@ __all__ = (
 
 app = FastAPI(default_response_class=ORJSONResponse)
 
-app.include_router(users.router)
+app.include_router(users.router, prefix='/users')
 
 client = TestClient(app)
 
