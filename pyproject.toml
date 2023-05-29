@@ -26,6 +26,7 @@ pytest-env = "*"
 pytest = "7.3.*"
 pytest-randomly = "*"
 httpx = "0.24.*"
+pytest-asyncio = "*"
 
 [build-system]
 requires = ["poetry-core"]

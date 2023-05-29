@@ -11,6 +11,7 @@ from pydantic import (
 __all__ = (
     'settings',
     'get_settings',
+    'Settings',
 )
 
 
@@ -22,6 +23,9 @@ class Settings(BaseSettings):
     pg_dsn_direct: PostgresDsn
     redis_dsn: RedisDsn
     secret_string: SecretStr
+
+    class Config:
+        env_file = '.env'
 
 
 @cache
