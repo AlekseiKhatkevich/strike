@@ -14,13 +14,18 @@ httptools = "0.5.*"
 sqlalchemy = "2.0.*"
 orjson = "3.8.*"
 asyncpg = "0.27.*"
-pytest = "7.*"
 alembic = "^1.11"
 python-dotenv = "^1.0.0"
 email-validator = "^2.0.0"
 bcrypt = "4.*"
 pyjwt = {extras = ["crypto"], version = "2.*"}
 
+
+[tool.poetry.group.dev.dependencies]
+pytest-env = "*"
+pytest = "7.3.*"
+pytest-randomly = "*"
+httpx = "0.24.*"
 
 [build-system]
 requires = ["poetry-core"]

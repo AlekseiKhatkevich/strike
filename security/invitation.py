@@ -47,7 +47,7 @@ def generate_invitation_token(valid_util: datetime.datetime,
     if invitation_password is not None:
         payload['invitation_password'] = invitation_password
 
-    return jwt.encode(payload, settings.secret_string, algorithm=ALGORYTHM)
+    return jwt.encode(payload, settings.secret_string.get_secret_value(), algorithm=ALGORYTHM)
 
 
 def verify_invitation_token(token: 'SecretStr', username: str = None, password: 'SecretStr' = None) -> dict:
@@ -61,7 +61,7 @@ def verify_invitation_token(token: 'SecretStr', username: str = None, password: 
     try:
         decoded = jwt.decode(
             token.get_secret_value(),
-            settings.secret_string,
+            settings.secret_string.get_secret_value(),
             audience=[username, ALL_USERS],
             algorithms=ALGORYTHM,
         )
