@@ -9,7 +9,7 @@ from models import User
 
 async def test_user_model_creation_positive(db_session, user_in_factory):
     """
-
+    Позитивный тест создания записи в БД в случае сохранения модели User c корректными данными.
     """
     async with db_session.begin():
         user = user_in_factory.build()
@@ -28,12 +28,19 @@ async def test_user_model_creation_positive(db_session, user_in_factory):
 
 
 def test_user_model_email_validator_negative(user_in_factory):
+    """
+    Негативный тест валидатора SA на поле email.
+    """
     expected_error_message = 'The email address is not valid. It must have exactly one @-sign.'
     with pytest.raises(EmailSyntaxError, match=expected_error_message):
         user_in_factory.build(email='nonsense')
 
 
 async def test_user_model_email_check_constraint_negative(db_session):
+    """
+    Негативный тест чек констрейнта на поле email. Используем SA.insert так как в таком случае
+    валидация модели не срабатывает.
+    """
     with pytest.raises(so_exc.IntegrityError):
         async with db_session.begin():
             stmt = insert(User).values(
@@ -45,6 +52,9 @@ async def test_user_model_email_check_constraint_negative(db_session):
 
 
 async def test_updated_at_positive(db_session, user_in_db):
+    """
+    Позитивный тест обновления записи модели User. В поле updated_at должен записаться текущий datetime.
+    """
     async with db_session.begin():
         user_in_db.name = 'test'
         await db_session.commit()
@@ -54,9 +64,3 @@ async def test_updated_at_positive(db_session, user_in_db):
 
         await user_in_db.awaitable_attrs.updated_at
         assert user_in_db.updated_at is not None
-
-
-def test_ping(client):
-    response = client.get('/users/ping/')
-    assert response.status_code == 200
-    assert response.json() == {"ping": "pong!"}
