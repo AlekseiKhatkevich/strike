@@ -56,24 +56,27 @@ async def recreate_database():
 
 @pytest.fixture
 async def db_session():
+    """
+    https://stackoverflow.com/questions/67255653/how-to-set-up-and-tear-down-a-database-between-tests-in-fastapi
+    """
     async with engine.connect() as connection:
         transaction = connection.begin()
-        session = async_session(bind=connection)
+        async with async_session(bind=connection) as session:
 
-        # Begin a nested transaction (using SAVEPOINT).
-        nested = await connection.begin_nested()
+            # Begin a nested transaction (using SAVEPOINT).
+            nested = await connection.begin_nested()
 
-        # If the application code calls session.commit, it will end the nested
-        # transaction. Need to start a new one when that happens.
-        @listens_for(session.sync_session, "after_transaction_end")
-        async def end_savepoint(session, transaction):
-            nonlocal nested
-            if not nested.is_active:
-                nested = await connection.begin_nested()
+            # If the application code calls session.commit, it will end the nested
+            # transaction. Need to start a new one when that happens.
+            @listens_for(session.sync_session, 'after_transaction_end')
+            async def end_savepoint(session, transaction):
+                nonlocal nested
+                if not nested.is_active:
+                    nested = await connection.begin_nested()
 
-        yield session
+            yield session
 
         # Rollback the overall transaction, restoring the state before the test ran.
-        session.close()
+            # session.close()
         transaction.rollback()
-        connection.close()
+            # connection.close()
