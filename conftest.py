@@ -5,6 +5,8 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sqlalchemy import text
 
+from sqlalchemy.event import listens_for
+
 from database import engine, Base, async_session
 from dependencies import get_session
 from main import app
@@ -54,7 +56,24 @@ async def recreate_database():
 
 @pytest.fixture
 async def db_session():
+    async with engine.connect() as connection:
+        transaction = connection.begin()
+        session = async_session(bind=connection)
 
-    async with async_session() as _session:
-        yield _session
+        # Begin a nested transaction (using SAVEPOINT).
+        nested = await connection.begin_nested()
 
+        # If the application code calls session.commit, it will end the nested
+        # transaction. Need to start a new one when that happens.
+        @listens_for(session.sync_session, "after_transaction_end")
+        async def end_savepoint(session, transaction):
+            nonlocal nested
+            if not nested.is_active:
+                nested = await connection.begin_nested()
+
+        yield session
+
+        # Rollback the overall transaction, restoring the state before the test ran.
+        session.close()
+        transaction.rollback()
+        connection.close()
