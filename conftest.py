@@ -4,11 +4,9 @@ import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sqlalchemy import text
-
 from sqlalchemy.event import listens_for
 
 from database import engine, Base, async_session
-from dependencies import get_session
 from main import app
 
 
@@ -25,27 +23,21 @@ async def async_client_httpx():
         yield client
 
 
-# db_session = pytest.fixture(get_session)
+@pytest.fixture
+async def db_session_with_truncate():
 
+    async with engine.begin() as conn:
+        # await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
-# @pytest.fixture
-# async def db_session():
-#
-#     async with engine.begin() as conn:
-#         # await conn.run_sync(Base.metadata.drop_all)
-#         await conn.run_sync(Base.metadata.create_all)
-#
-#         # tasks = [conn.execute(
-#         #         text(f"TRUNCATE {table.name} RESTART IDENTITY CASCADE;")
-#         #     ) for table in Base.metadata.sorted_tables]
-#         # await asyncio.gather(*tasks)
-#         tables = [table.name for table in Base.metadata.sorted_tables]
-#         statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-#         await conn.execute(statement)
-#         await conn.commit()
-#
-#     async with async_session() as _session:
-#         yield _session
+        tables = [table.name for table in Base.metadata.sorted_tables]
+        statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+        await conn.execute(statement)
+        await conn.commit()
+
+    async with async_session() as _session:
+        yield _session
+
 
 @pytest.fixture
 async def recreate_database():
@@ -55,7 +47,7 @@ async def recreate_database():
 
 
 @pytest.fixture
-async def db_session():
+async def db_session_old_version():
     """
     https://stackoverflow.com/questions/67255653/how-to-set-up-and-tear-down-a-database-between-tests-in-fastapi
     """
@@ -77,6 +69,36 @@ async def db_session():
             yield session
 
         # Rollback the overall transaction, restoring the state before the test ran.
-            # session.close()
         transaction.rollback()
-            # connection.close()
+
+
+@pytest.fixture
+async def db_session():
+    """
+    https://github.com/sqlalchemy/sqlalchemy/issues/5811#issuecomment-755871691
+    """
+    async with engine.connect() as conn:
+        await conn.begin()
+
+        await conn.begin_nested()
+
+        async with async_session(bind=conn) as session:
+
+            @listens_for(session.sync_session, 'after_transaction_end')
+            def end_savepoint(*args, **kwargs):
+                if conn.closed:
+                    return
+
+                if not conn.in_nested_transaction():
+                    conn.sync_connection.begin_nested()
+
+            yield session
+
+
+# @pytest.fixture(scope='session', autouse=True)
+# def setup_database():
+#     async def _action():
+#         async with engine.begin() as conn:
+#             await conn.run_sync(Base.metadata.create_all)
+#     asyncio.run(_action())
+#
