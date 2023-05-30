@@ -8,6 +8,7 @@ from sqlalchemy.event import listens_for
 
 from database import engine, Base, async_session
 from main import app
+from pytest_factoryboy import register
 
 
 #  фикстура eventloop встроена и доступна через pytest-asyncio
@@ -95,10 +96,14 @@ async def db_session():
             yield session
 
 
-# @pytest.fixture(scope='session', autouse=True)
-# def setup_database():
-#     async def _action():
-#         async with engine.begin() as conn:
-#             await conn.run_sync(Base.metadata.create_all)
-#     asyncio.run(_action())
-#
+@pytest.fixture(scope='session', autouse=True)
+def setup_database():
+    async def _action():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    asyncio.run(_action())
+
+
+from factories import *
+register(UserFactory)
+

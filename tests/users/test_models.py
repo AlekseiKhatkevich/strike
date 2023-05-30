@@ -1,26 +1,27 @@
-import os
-from sqlalchemy import select
-
-import pytest
-from sqlalchemy import text, insert
-
-from models import User
+import datetime
 
 
-async def test_mani(db_session):
+
+
+async def test_user_model_creation_positive(db_session, user_factory):
+    """
+
+    """
+    async with db_session.begin():
+        user = user_factory.build()
+        db_session.add(user)
 
     async with db_session.begin():
-        stmt = insert(User).values(
-            name='test',
-            email='hardcase@inbox.ru',
-            hashed_password='sdfsdfdsf',
-        )
-        db_response = await db_session.execute(stmt)
-        assert os.environ['SECRET_STRING'] == 'fake_secret_string'
+        await db_session.refresh(user)
+        assert user.id is not None
 
-    async with db_session.begin():
-        a = await db_session.execute(select(User))
-        assert [i for i in a]
+        await user.awaitable_attrs.hashed_password
+        await user.awaitable_attrs.updated_at
+
+        assert user.is_active
+        assert user.updated_at is None
+        assert user.registration_date.tzinfo == datetime.UTC
+
 
 
 def test_ping(client):
