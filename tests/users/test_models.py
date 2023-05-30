@@ -1,17 +1,21 @@
 import os
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import text, insert
+
+from models import User
 
 
+async def test_mani(db_session):
 
-
-async def test_mani(db_session, event_loop):
-    type(event_loop)
     async with db_session.begin():
-        a = await db_session.execute(text('select version()'))
-        assert 1 + 1 == 2
-        assert os.environ['SECRET_STRING'] == 'fake_secret_string'
+        stmt = insert(User).values(
+            name='test',
+            email='hardcase@inbox.ru',
+            hashed_password='sdfsdfdsf',
+        )
+        db_response = await db_session.execute(stmt)
+    assert os.environ['SECRET_STRING'] == 'fake_secret_string'
 
 
 def test_ping(client):
