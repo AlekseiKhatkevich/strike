@@ -1,17 +1,16 @@
 import factory
+from faker import Factory as FakerFactory
 
 from models import User
-
-from faker import Factory as FakerFactory
 
 faker = FakerFactory.create()
 
 __all__ = (
-    'UserFactory',
+    'UserInFactory',
 )
 
 
-class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
+class UserInFactory(factory.alchemy.SQLAlchemyModelFactory):
     name = factory.Faker('name')
     email = factory.Faker('email')
     hashed_password = factory.Faker('password')

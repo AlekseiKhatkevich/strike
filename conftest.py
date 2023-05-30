@@ -8,7 +8,6 @@ from sqlalchemy.event import listens_for
 
 from database import engine, Base, async_session
 from main import app
-from pytest_factoryboy import register
 
 
 #  фикстура eventloop встроена и доступна через pytest-asyncio
@@ -104,6 +103,5 @@ def setup_database():
     asyncio.run(_action())
 
 
-from factories import *
-register(UserFactory)
+# register(UserInFactory)
 
