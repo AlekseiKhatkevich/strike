@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import insert
-
 from models import User
 from security.hashers import make_hash
 from security.invitation import verify_invitation_token

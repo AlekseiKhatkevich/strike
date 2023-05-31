@@ -18,7 +18,7 @@ class UserInFactory(factory.alchemy.SQLAlchemyModelFactory):
     """
     name = factory.Faker('name')
     email = factory.Faker('email')
-    hashed_password = factory.Faker('password')
+    hashed_password = '$2b$12$uNtijERc0FMIOofs06PGCeXfA05XWKDvyZqMBe54hkf5AXJhcVu1K'
 
     class Meta:
         model = User

@@ -65,7 +65,7 @@ def verify_invitation_token(token: 'SecretStr', username: str = None, password: 
             audience=[username, ALL_USERS],
             algorithms=ALGORYTHM,
         )
-    except (jwt.InvalidAudienceError, jwt.ExpiredSignatureError,) as err:
+    except (jwt.InvalidAudienceError, jwt.ExpiredSignatureError, jwt.InvalidSignatureError) as err:
         # todo logging
         raise InvitationTokenDeclinedException() from err
 
