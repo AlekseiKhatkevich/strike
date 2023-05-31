@@ -17,7 +17,7 @@ config.set_main_option('sqlalchemy.url', settings.pg_dsn)  # добавляет 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name, disable_existing_loggers=False)
+    fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -61,7 +61,7 @@ def do_run_migrations(connection: Connection) -> None:
         target_metadata=target_metadata,
         compare_type=True,
         compare_server_default=True,
-        include_schemas=True,
+        # include_schemas=True,
     )
 
     with context.begin_transaction():
@@ -73,10 +73,10 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
-    connectable = context.config.attributes.get("connection", None)
+    # connectable = context.config.attributes.get("connection", None)
 
-    if connectable is None:
-        connectable = async_engine_from_config(
+    # if connectable is None:
+    connectable = async_engine_from_config(
             config.get_section(config.config_ini_section, {}),
             prefix="sqlalchemy.",
             poolclass=pool.NullPool,

@@ -28,14 +28,12 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
     )
     hashed_password = make_hash(user_data.password.get_secret_value())
 
-    async with session.begin():
-        session.add(
-            User(
+    user = User(
                 name=user_data.name,
                 email=user_data.email,
                 hashed_password=hashed_password,
             )
-        )
 
-        # noinspection PyUnresolvedReferences
-        return db_response.inserted_primary_key[0]
+    session.add(user)
+    await session.commit()
+    return user.id

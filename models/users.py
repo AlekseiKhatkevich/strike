@@ -9,7 +9,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import validates, Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from internal.constants import EMAIL_REGEXP
+from internal.constants import EMAIL_REGEXP, BCRYPT_REGEXP
 from database import Base
 from .annotations import BigIntPk
 from .mixins import UpdatedAtMixin
@@ -60,6 +60,13 @@ class User(UpdatedAtMixin, Base):
                 EMAIL_REGEXP,
             ),
             name='email',
+        ),
+        CheckConstraint(
+            func.regexp_like(
+                hashed_password,
+                BCRYPT_REGEXP,
+            ),
+            name='hashed_password',
         ),
     )
 
