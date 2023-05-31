@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, HTTPException
 from sqlalchemy import exc as so_exc
 
 from internal.dependencies import SessionDep
-from serializers.crud.users import create_new_user
+from crud.users import create_new_user
 from serializers.users import UserRegistrationSerializer
 
 __all__ = (
@@ -18,14 +18,14 @@ async def register_new_user(session: SessionDep, user_data: UserRegistrationSeri
     """
     """
     try:
-        created_user_id = await create_new_user(session, user_data)
+        created_user = await create_new_user(session, user_data)
     except so_exc.IntegrityError as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='User with this name or email already exists',
         ) from err
 
-    return {'id': created_user_id}
+    return {'id': created_user.id}
 
 
 @router.get('/ping/')

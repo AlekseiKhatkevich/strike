@@ -19,3 +19,4 @@ async def user_in_db(db_session, user_in_factory) -> 'User':
 
 
 register(UserInFactory)
+register(UserRegistrationSerializerFactory)

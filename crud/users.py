@@ -13,7 +13,7 @@ __all__ = (
 )
 
 
-async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> int:
+async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> User:
     """
     :param session:
     :param user_data:
@@ -34,4 +34,4 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
 
     session.add(user)
     await session.commit()
-    return user.id
+    return user
