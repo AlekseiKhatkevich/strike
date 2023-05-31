@@ -10,7 +10,7 @@ from sqlalchemy.orm import validates, Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from internal.constants import EMAIL_REGEXP, BCRYPT_REGEXP
-from database import Base
+from internal.database import Base
 from .annotations import BigIntPk
 from .mixins import UpdatedAtMixin
 

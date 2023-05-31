@@ -7,9 +7,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from config import settings
-from database import Base
+from internal.database import Base
 # from models import *   # не удалять иначе alembic не видит модели
-from models import *   # не удалять иначе alembic не видит модели
 
 config = context.config
 config.set_main_option('sqlalchemy.url', settings.pg_dsn)  # добавляет ключ sqlalchemy.url в alembic.ini

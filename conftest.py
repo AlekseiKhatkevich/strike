@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy import text
 from sqlalchemy.event import listens_for
 
-from database import engine, Base, async_session
+from internal.database import engine, Base, async_session
 from main import app
 
 

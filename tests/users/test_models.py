@@ -5,6 +5,7 @@ from email_validator import EmailSyntaxError
 from sqlalchemy import exc as so_exc, insert
 
 from models import User
+from security.hashers import make_hash
 
 
 async def test_user_model_creation_positive(db_session, user_in_factory):
@@ -36,16 +37,35 @@ def test_user_model_email_validator_negative(user_in_factory):
         user_in_factory.build(email='nonsense')
 
 
-async def test_user_model_email_check_constraint_negative(db_session):
+@pytest.mark.parametrize('field, value', [('email', 'wrong_email'), ('hashed_password', 'wrong_hp')])
+async def test_user_model_email_check_constraint_negative(db_session, field, value):
     """
-    Негативный тест чек констрейнта на поле email. Используем SA.insert так как в таком случае
-    валидация модели не срабатывает.
+    Тесты чек констренйтов модели User.
+    """
+    data = dict(
+        name='test',
+        email='qw@email.com',
+        hashed_password=make_hash('password'),
+    )
+    data[field] = value
+
+    with pytest.raises(so_exc.IntegrityError):
+        async with db_session.begin():
+            stmt = insert(User).values(
+               **data
+            )
+            await db_session.execute(stmt)
+
+
+async def test_user_model_hashed_password_check_constraint_negative(db_session):
+    """
+
     """
     with pytest.raises(so_exc.IntegrityError):
         async with db_session.begin():
             stmt = insert(User).values(
                 name='test',
-                email='test',
+                email='qwerty12345@email.com',
                 hashed_password='test',
             )
             await db_session.execute(stmt)
