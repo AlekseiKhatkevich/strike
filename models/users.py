@@ -9,16 +9,17 @@ from sqlalchemy import (
 from sqlalchemy.orm import validates, Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from constants import EMAIL_REGEXP
+from internal.constants import EMAIL_REGEXP
 from database import Base
 from .annotations import BigIntPk
+from .mixins import UpdatedAtMixin
 
 __all__ = (
     'User',
 )
 
 
-class User(Base):
+class User(UpdatedAtMixin, Base):
     __tablename__ = 'users'
 
     id: Mapped[BigIntPk]
@@ -38,10 +39,6 @@ class User(Base):
     )
     registration_date: Mapped[datetime.datetime] = mapped_column(
         server_default=func.now(),
-    )
-    updated_at: Mapped[datetime.datetime | None] = mapped_column(
-        onupdate=func.now(),
-        deferred=True,  # await a1.awaitable_attrs.bs
     )
 
     __table_args__ = (

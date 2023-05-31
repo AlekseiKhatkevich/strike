@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, HTTPException
 from sqlalchemy import exc as so_exc
 
-from dependencies import SessionDep
+from internal.dependencies import SessionDep
 from serializers.crud.users import create_new_user
 from serializers.users import UserRegistrationSerializer
 

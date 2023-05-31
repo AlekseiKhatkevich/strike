@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     pg_dsn_direct: PostgresDsn
     redis_dsn: RedisDsn
     secret_string: SecretStr
+    debug: bool = False
 
     class Config:
         env_file = '.env'

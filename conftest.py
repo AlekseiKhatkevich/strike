@@ -13,7 +13,10 @@ from main import app
 #  фикстура eventloop встроена и доступна через pytest-asyncio
 
 @pytest.fixture(scope='module')
-def client():
+def client() -> TestClient:
+    """
+    Клиент для тестирования API.
+    """
     return TestClient(app)
 
 
@@ -96,7 +99,7 @@ async def db_session():
 
 
 @pytest.fixture(scope='session', autouse=True)
-def setup_database():
+def setup_database() -> None:
     async def _action():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

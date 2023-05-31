@@ -1,6 +1,6 @@
 import bcrypt
 
-from constants import HASH_ENCODING
+from internal.constants import HASH_ENCODING
 
 __all__ = (
     'make_hash',

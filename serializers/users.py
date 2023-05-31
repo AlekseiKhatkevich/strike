@@ -3,7 +3,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, EmailStr, SecretStr, validator, constr
 
-from constants import USER_PASSWORD_REGEXP
+from internal.constants import USER_PASSWORD_REGEXP
 
 __all__ = (
     'UserRegistrationSerializer',

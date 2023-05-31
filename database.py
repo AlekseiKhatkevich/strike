@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
 from config import settings
-from typing_and_types import BigIntType
+from internal.typing_and_types import BigIntType
 
 __all__ = (
     'Base',
