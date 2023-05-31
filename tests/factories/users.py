@@ -3,7 +3,6 @@ import datetime
 import factory
 from pydantic import SecretStr
 
-from internal.database import async_session
 from models import User
 from security.invitation import generate_invitation_token
 from serializers.users import UserRegistrationSerializer
@@ -30,16 +29,18 @@ class UserRegistrationSerializerFactory(factory.Factory):
     name = factory.Faker('name')
     email = factory.Faker('email')
     password = factory.Faker('password', length=20)
-    invitation_password = None
-
-    @factory.lazy_attribute
-    def invitation_token(self):
-        token = generate_invitation_token(
-            datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=100),
-                                          )
-        return SecretStr(token)
+    invitation_password = factory.lazy_attribute(
+        lambda o: SecretStr(o.invitation_password)
+    )
+    invitation_token = factory.LazyAttribute(
+        lambda o: SecretStr(generate_invitation_token(o.future))
+    )
 
     class Meta:
         model = UserRegistrationSerializer
+
+    class Params:
+        future = factory.Faker('future_datetime', tzinfo=datetime.UTC)
+        invitation_password = factory.Faker('password')
 
 
