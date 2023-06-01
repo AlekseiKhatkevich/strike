@@ -33,5 +33,4 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
             )
     async with session.begin():
         session.add(user)
-    # await session.commit()
     return user

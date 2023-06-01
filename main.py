@@ -15,7 +15,7 @@ app.include_router(users.router, prefix='/users')
 
 
 @app.exception_handler(InvitationTokenDeclinedException)
-async def invitation_toke_exception_handler(_, exc: InvitationTokenDeclinedException) -> JSONResponse:
+async def invitation_token_exception_handler(_, exc: InvitationTokenDeclinedException) -> JSONResponse:
     """
 
     """
