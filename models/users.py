@@ -72,7 +72,7 @@ class User(UpdatedAtMixin, Base):
 
     __repr__ = __str__ = lambda self: f'User "{self.name}" with id={self.id}'
 
-    @validates("email")
+    @validates('email')
     def validate_email(self, _, value: str) -> str:
         emailinfo = validate_email(value, check_deliverability=False)
         return emailinfo.normalized

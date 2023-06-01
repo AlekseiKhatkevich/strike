@@ -26,8 +26,3 @@ async def register_new_user(session: SessionDep, user_data: UserRegistrationSeri
         ) from err
 
     return {'id': created_user.id}
-
-
-@router.get('/ping/')
-async def ping():
-    return {"ping": "pong!"}

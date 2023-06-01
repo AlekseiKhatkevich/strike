@@ -19,7 +19,7 @@ async def invitation_toke_exception_handler(_, exc: InvitationTokenDeclinedExcep
     """
 
     """
-    return JSONResponse(
+    return ORJSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={'detail': exc.text},
     )

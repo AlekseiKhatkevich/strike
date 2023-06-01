@@ -24,8 +24,8 @@ __all__ = (
 engine = create_async_engine(
     settings.pg_dsn,
     poolclass=NullPool,
-    echo=True,
-    echo_pool=True,
+    echo=settings.debug,
+    echo_pool=settings.debug,
     connect_args={
             'prepared_statement_name_func': lambda: f'__asyncpg_{uuid.uuid4()}__',
         },
