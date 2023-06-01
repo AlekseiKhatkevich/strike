@@ -10,9 +10,7 @@ __all__ = (
 
 def make_hash(raw_value: str) -> str:
     """
-
-    :param raw_value:
-    :return:
+    Создает хаш.
     """
     bytes_value = raw_value.encode(HASH_ENCODING)
     salt = bcrypt.gensalt()
@@ -22,10 +20,7 @@ def make_hash(raw_value: str) -> str:
 
 def verify_hash(raw_value: str, _hash: str) -> bool:
     """
-
-    :param raw_value:
-    :param _hash:
-    :return:
+    Валидирует хаш.
     """
     return bcrypt.checkpw(
         raw_value.encode(HASH_ENCODING),

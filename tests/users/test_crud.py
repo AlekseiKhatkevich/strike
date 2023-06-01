@@ -1,7 +1,8 @@
+import re
+
 from crud.users import create_new_user
 from internal.constants import BCRYPT_REGEXP
 from models import User
-import re
 
 
 async def test_create_new_user_positive(db_session, user_registration_serializer_factory):

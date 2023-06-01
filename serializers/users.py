@@ -49,7 +49,3 @@ class UserRegistrationSerializer(BaseModel):
         """
         # todo
         return value
-
-
-
-

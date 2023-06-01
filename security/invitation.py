@@ -20,6 +20,9 @@ ALGORYTHM = 'HS256'
 
 
 class InvitationTokenDeclinedException(Exception):
+    """
+    Общее исключение связанное с неправильностью токена приглашения.
+    """
     text = 'Invitation token was declined.'
 
 
@@ -28,11 +31,11 @@ def generate_invitation_token(valid_util: datetime.datetime,
                               invitation_password: str = None,
                               ) -> str:
     """
-
-    :param valid_util:
-    :param for_username_only:
-    :param invitation_password:
-    :return:
+    Создать токен приглашения юзера к регистрации.
+    :param valid_util: До какого момента токен считается действительным.
+    :param for_username_only: Можно ограничить username для которого будет действительным токен. Не обязателен.
+    :param invitation_password: Пароль для токена. Не обязателен.
+    :return: Токен приглашения в формате JWT
     """
     if valid_util.tzinfo is None:
         raise ValueError('Valid until should be TZ aware!')
@@ -53,10 +56,10 @@ def generate_invitation_token(valid_util: datetime.datetime,
 def verify_invitation_token(token: 'SecretStr', username: str = None, password: 'SecretStr' = None) -> dict:
     """
 
-    :param token:
-    :param username:
-    :param password:
-    :return:
+    :param token: Токен авторизации.
+    :param username: Имя пользователя.
+    :param password: Пароль токена.
+    :return: Расшифрованный токен в формате JWT
     """
     try:
         decoded = jwt.decode(

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, status
-from fastapi.responses import JSONResponse, ORJSONResponse
+from fastapi.responses import ORJSONResponse
 
 from routers import users
 from security.invitation import InvitationTokenDeclinedException
@@ -15,7 +15,7 @@ app.include_router(users.router, prefix='/users')
 
 
 @app.exception_handler(InvitationTokenDeclinedException)
-async def invitation_token_exception_handler(_, exc: InvitationTokenDeclinedException) -> JSONResponse:
+async def invitation_token_exception_handler(_, exc: InvitationTokenDeclinedException) -> ORJSONResponse:
     """
 
     """

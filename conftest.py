@@ -1,20 +1,17 @@
-import asyncio
+from typing import TYPE_CHECKING
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
-from sqlalchemy import text
-from sqlalchemy.event import listens_for
 
-from internal.database import engine, Base, async_session
 from internal.dependencies import get_session, get_db_session_test
 from main import app
 
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
-
-
-@pytest.fixture(scope='module')
+@pytest.fixture
 def client() -> TestClient:
     """
     Клиент для тестирования API.
@@ -23,9 +20,26 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-async def async_client_httpx():
+async def async_client_httpx() -> AsyncClient:
+    """
+    Ассинхронный клиент для тестирования апи.
+    """
     async with AsyncClient(app=app, base_url='http://localhost:8000/') as client:
         yield client
+
+
+db_session: 'AsyncSession' = pytest.fixture(get_db_session_test)
+"""
+Фикстура сессии БД
+"""
+
+
+@pytest.fixture(scope='session', autouse=True)
+def override_session_for_tests() -> None:
+    """
+    Замена обычной сессии БД на сессию полностью транзакционную.
+    """
+    app.dependency_overrides[get_session] = get_db_session_test
 
 
 # @pytest.fixture
@@ -77,12 +91,6 @@ async def async_client_httpx():
 #         transaction.rollback()
 
 
-db_session = pytest.fixture(get_db_session_test)
-
-
-@pytest.fixture(scope='session', autouse=True)
-def override_session_for_tests():
-    app.dependency_overrides[get_session] = get_db_session_test
 
 
 # @pytest.fixture(scope='session', autouse=True)

@@ -16,8 +16,9 @@ __all__ = (
 )
 
 
-async def get_db_session_test():
+async def get_db_session_test() -> AsyncGenerator[AsyncSession, None]:
     """
+    Сессия которая не коммитит в БД. Нужна для тестирования.
     https://github.com/sqlalchemy/sqlalchemy/issues/5811#issuecomment-755871691
     """
     async with engine.connect() as conn:

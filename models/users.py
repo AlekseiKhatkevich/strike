@@ -20,6 +20,9 @@ __all__ = (
 
 
 class User(UpdatedAtMixin, Base):
+    """
+    Основная модель пользователя.
+    """
     __tablename__ = 'users'
 
     id: Mapped[BigIntPk]

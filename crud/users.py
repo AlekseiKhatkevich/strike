@@ -15,9 +15,7 @@ __all__ = (
 
 async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> User:
     """
-    :param session:
-    :param user_data:
-    :return:
+    Создание нового пользователя в БД.
     """
     verify_invitation_token(
         token=user_data.invitation_token,

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status, HTTPException
 from sqlalchemy import exc as so_exc
 
-from internal.dependencies import SessionDep
 from crud.users import create_new_user
+from internal.dependencies import SessionDep
 from serializers.users import UserRegistrationSerializer
 
 __all__ = (
@@ -16,6 +16,7 @@ router = APIRouter(tags=['users'])
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def register_new_user(session: SessionDep, user_data: UserRegistrationSerializer) -> dict[str, int]:
     """
+    Создание пользователя.
     """
     try:
         created_user = await create_new_user(session, user_data)

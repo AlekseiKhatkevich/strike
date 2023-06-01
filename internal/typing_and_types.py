@@ -4,4 +4,4 @@ __all__ = (
     'BigIntType',
 )
 
-BigIntType = NewType('BigIntType', int)
+BigIntType = NewType('BigIntType', int)  # 32 битовый интегер

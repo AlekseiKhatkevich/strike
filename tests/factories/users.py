@@ -26,6 +26,9 @@ class UserInFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 
 class UserRegistrationSerializerFactory(factory.Factory):
+    """
+    Сериалайзер для данных получаемых от фронта при регистрации пользователя.
+    """
     name = factory.Faker('name')
     email = factory.Faker('email')
     password = factory.Faker('password', length=30)
@@ -42,5 +45,3 @@ class UserRegistrationSerializerFactory(factory.Factory):
     class Params:
         future = factory.Faker('future_datetime', tzinfo=datetime.UTC)
         invitation_password = factory.Faker('password')
-
-
