@@ -7,7 +7,14 @@ from sqlalchemy import text
 from sqlalchemy.event import listens_for
 
 from internal.database import engine, Base, async_session
+from internal.dependencies import get_db_session_test
 from main import app
+from internal.dependencies import get_session, get_db_session_test
+
+
+@pytest.fixture(scope='session', autouse=True)
+def override_session_for_tests():
+    app.dependency_overrides[get_session] = get_db_session_test
 
 
 #  фикстура eventloop встроена и доступна через pytest-asyncio
@@ -96,11 +103,12 @@ async def db_session():
                     conn.sync_connection.begin_nested()
 
             yield session
+    # yield await get_db_session_test()
 
 
-@pytest.fixture(scope='session', autouse=True)
-def setup_database() -> None:
-    async def _action():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-    asyncio.run(_action())
+# @pytest.fixture(scope='session', autouse=True)
+# def setup_database() -> None:
+#     async def _action():
+#         async with engine.begin() as conn:
+#             await conn.run_sync(Base.metadata.create_all)
+#     asyncio.run(_action())

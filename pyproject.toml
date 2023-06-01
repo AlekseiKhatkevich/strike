@@ -19,7 +19,7 @@ python-dotenv = "^1.0.0"
 email-validator = "^2.0.0"
 bcrypt = "4.*"
 pyjwt = {extras = ["crypto"], version = "2.*"}
-yarl = "^1.9.2"
+yarl = "1.9.*"
 
 
 [tool.poetry.group.dev.dependencies]

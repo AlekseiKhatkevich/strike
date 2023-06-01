@@ -28,7 +28,7 @@ class UserInFactory(factory.alchemy.SQLAlchemyModelFactory):
 class UserRegistrationSerializerFactory(factory.Factory):
     name = factory.Faker('name')
     email = factory.Faker('email')
-    password = factory.Faker('password', length=20)
+    password = factory.Faker('password', length=30)
     invitation_password = factory.lazy_attribute(
         lambda o: SecretStr(o.invitation_password)
     )
