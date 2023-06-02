@@ -1,33 +1,49 @@
-from pathlib import Path
 import shutil
-import tempfile
+from pathlib import Path
+
+from sqlalchemy import text, select
 
 from internal.database import async_session
-from sqlalchemy import text, select
 from models.users import CommonPassword
+
+__all__ = ()
 
 data_file_path = Path('internal/data/10-million-password-list-top-1000000.txt')
 tmp_file_path = Path('/tmp/10-million-password-list-top-1000000.txt')
 
-shutil.copy(data_file_path, tmp_file_path)
 
-async with async_session() as session:
-    stmt = select(CommonPassword.id).limit(1)
-    data_exists = bool(await session.scalar(stmt))
+async def write_data_in_db() -> None:
+    """
+    Проверяет есть ли записи в таблице "common_passwords". Если нет, то читает
+    данные из файла и записывает их в таблицу.
+    """
+    async with async_session() as session:
+        stmt = select(CommonPassword.id).limit(1)
+        data_exists = bool(await session.scalar(stmt))
 
-    if not data_exists:
-        await session.execute(text(
-            f"""
-                COPY {CommonPassword.__tablename__} ({CommonPassword.password.name})
-                FROM '{tmp_file_path}';
-            """
+        if not data_exists:
+            await session.execute(
+                text(
+                    f"""
+                    COPY {CommonPassword.__tablename__} ({CommonPassword.password.name})
+                    FROM '{tmp_file_path}';
+                    """
+                )
             )
-        )
-        await session.commit()
-    else:
-        print('There are data already in the table. Aborting!!!')
+            await session.commit()
+            print('Done!')
+        else:
+            print('There are data already in the table. Aborting!!!')
 
-    await session.close()
-    print('Done!')
+        await session.close()
 
-#delete tmp.file
+
+async def populate():
+    """
+    Копирует файл с паролями в /tmp, и затем запускает запись данных в таблицу из файла.
+    """
+    try:
+        shutil.copy(data_file_path, tmp_file_path)
+        await write_data_in_db()
+    finally:
+        tmp_file_path.unlink(missing_ok=True)
