@@ -247,3 +247,4 @@ cython_debug/
 /.idea/inspectionProfiles/profiles_settings.xml
 /.idea/strike.iml
 /.idea/vcs.xml
+/internal/data/10-million-password-list-top-1000000.txt

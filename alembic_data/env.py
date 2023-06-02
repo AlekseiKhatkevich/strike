@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from config import settings
 from internal.database import Base
+from models import *
 # from models import *   # не удалять иначе alembic не видит модели
 
 config = context.config
