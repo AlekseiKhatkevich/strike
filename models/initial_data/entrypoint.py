@@ -26,7 +26,7 @@ async def main() -> None:
     results = await asyncio.gather(*awaitables, return_exceptions=True)
     for result in results:
         if isinstance(result, Exception):
-            print(f'Got an exception {result} ')
+            print(f'Got an exception {result}')
 
 
 if __name__ == '__main__':

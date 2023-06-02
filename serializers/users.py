@@ -1,17 +1,20 @@
 import re
 from typing import Annotated
-
+import asyncio
 from pydantic import BaseModel, Field, EmailStr, SecretStr, validator, constr
 
+from crud.users import check_password_commonness
 from internal.constants import USER_PASSWORD_REGEXP
 
 __all__ = (
     'UserRegistrationSerializer',
 )
 
+from internal.database import async_session
 
 password_regexp = re.compile(USER_PASSWORD_REGEXP)
 password_strength_error_message = 'Password is not strong enough.'
+password_commonness_error_message = 'Password is common hence weak.'
 
 
 class UserRegistrationSerializer(BaseModel):
@@ -47,5 +50,13 @@ class UserRegistrationSerializer(BaseModel):
         """
         Проверка пароля по базе самых распространенных паролей.
         """
-        # todo
+        async def _check() -> bool:
+            async with async_session() as session:
+                return await check_password_commonness(session, value.get_secret_value())
+
+        if asyncio.run(_check()):
+            raise ValueError(
+                password_commonness_error_message,
+            )
         return value
+

@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
-from models import User
+from sqlalchemy import select
+
+from models import User, CommonPassword
 from security.hashers import make_hash
 from security.invitation import verify_invitation_token
 
@@ -10,6 +12,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     'create_new_user',
+    'check_password_commonness',
 )
 
 
@@ -32,3 +35,13 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
     async with session.begin():
         session.add(user)
     return user
+
+
+async def check_password_commonness(session,  password) -> bool:
+    """
+    """
+    stmt = select(CommonPassword.id).where(CommonPassword.password == password).limit(1)
+    password_exists = bool(await session.scalar(stmt))
+    return password_exists
+
+
