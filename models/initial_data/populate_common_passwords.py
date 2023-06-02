@@ -6,7 +6,9 @@ from sqlalchemy import text, select
 from internal.database import async_session
 from models.users import CommonPassword
 
-__all__ = ()
+__all__ = (
+    'populate'
+)
 
 data_file_path = Path('internal/data/10-million-password-list-top-1000000.txt')
 tmp_file_path = Path('/tmp/10-million-password-list-top-1000000.txt')
@@ -34,7 +36,6 @@ async def write_data_in_db() -> None:
             print('Done!')
         else:
             print('There are data already in the table. Aborting!!!')
-
         await session.close()
 
 
