@@ -1,9 +1,12 @@
+import asyncio
 from typing import TYPE_CHECKING
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+from sqlalchemy import text
 
+from internal.database import Base, async_session
 from internal.dependencies import get_session, get_db_session_test
 from main import app
 
@@ -29,11 +32,6 @@ async def async_client_httpx() -> AsyncClient:
 
 
 db_session: 'AsyncSession' = pytest.fixture(get_db_session_test)
-# @pytest.fixture
-# async def db_session():
-#     coro = get_db_session_test()
-#     async for s in coro:
-#         yield s
 """
 Фикстура сессии БД
 """
@@ -47,60 +45,18 @@ def override_session_for_tests() -> None:
     app.dependency_overrides[get_session] = get_db_session_test
 
 
-# @pytest.fixture
-# async def db_session_with_truncate():
-#
-#     async with engine.begin() as conn:
-#         # await conn.run_sync(Base.metadata.drop_all)
-#         await conn.run_sync(Base.metadata.create_all)
-#
-#         tables = [table.name for table in Base.metadata.sorted_tables]
-#         statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-#         await conn.execute(statement)
-#         await conn.commit()
-#
-#     async with async_session() as _session:
-#         yield _session
-#
-#
-# @pytest.fixture
-# async def recreate_database():
-#     async with engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.drop_all(engine))
-#         await conn.run_sync(Base.metadata.create_all(engine))
-#
-#
-# @pytest.fixture
-# async def db_session_old_version():
-#     """
-#     https://stackoverflow.com/questions/67255653/how-to-set-up-and-tear-down-a-database-between-tests-in-fastapi
-#     """
-#     async with engine.connect() as connection:
-#         transaction = connection.begin()
-#         async with async_session(bind=connection) as session:
-#
-#             # Begin a nested transaction (using SAVEPOINT).
-#             nested = await connection.begin_nested()
-#
-#             # If the application code calls session.commit, it will end the nested
-#             # transaction. Need to start a new one when that happens.
-#             @listens_for(session.sync_session, 'after_transaction_end')
-#             async def end_savepoint(session, transaction):
-#                 nonlocal nested
-#                 if not nested.is_active:
-#                     nested = await connection.begin_nested()
-#
-#             yield session
-#
-#         # Rollback the overall transaction, restoring the state before the test ran.
-#         transaction.rollback()
+@pytest.fixture(scope='session', autouse=True)
+def truncate_db():
+    """
+    Чистим базу после каждой сессии на всякий случай.
+    """
+    yield None
 
+    async def _trunc():
+        tables = [table.name for table in Base.metadata.sorted_tables]
+        statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+        async with async_session() as session:
+            await session.execute(statement)
+            await session.commit()
 
-
-
-# @pytest.fixture(scope='session', autouse=True)
-# def setup_database() -> None:
-#     async def _action():
-#         async with engine.begin() as conn:
-#             await conn.run_sync(Base.metadata.create_all)
-#     asyncio.run(_action())
+    asyncio.run(_trunc())
