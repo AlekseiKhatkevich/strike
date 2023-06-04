@@ -13,7 +13,7 @@ def test_UserRegistrationSerializer_positive(user_registration_serializer_factor
 
 
 # noinspection PyPep8Naming
-def test_UserRegistrationSerializer_negative(user_registration_serializer_factory):
+def test_UserRegistrationSerializer_negative_week_password(user_registration_serializer_factory):
     """
     Негативный тест сериалайзера UserRegistrationSerializer. Слабый пароль.
     """
