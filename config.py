@@ -1,4 +1,5 @@
 from functools import cache
+from pathlib import Path
 
 from pydantic import (
     BaseSettings,
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     redis_dsn: RedisDsn
     secret_string: SecretStr
     debug: bool = False
+    root_path: Path = Path(__file__).resolve().parent
 
     class Config:
         env_file = '.env'

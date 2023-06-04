@@ -2,9 +2,9 @@ import datetime
 
 import pytest
 from email_validator import EmailSyntaxError
-from sqlalchemy import exc as so_exc, insert
+from sqlalchemy import exc as so_exc, insert, select
 
-from models import User
+from models import User, CommonPassword
 from security.hashers import make_hash
 
 
@@ -52,7 +52,7 @@ async def test_user_model_email_check_constraint_negative(db_session, field, val
     with pytest.raises(so_exc.IntegrityError):
         async with db_session.begin():
             stmt = insert(User).values(
-               **data
+                **data
             )
             await db_session.execute(stmt)
 
@@ -84,3 +84,17 @@ async def test_updated_at_positive(db_session, user_in_db):
 
         await user_in_db.awaitable_attrs.updated_at
         assert user_in_db.updated_at is not None
+
+#  //  CommonPassword
+
+
+async def test_common_password_positive(db_session):
+    """
+    Позитивный тест модели "CommonPassword"
+    """
+    password_example = '1q2w3e'
+    async with db_session.begin():
+        db_session.add(CommonPassword(password=password_example))
+
+    stmt = select(CommonPassword.id).where(CommonPassword.password == password_example).limit(1)
+    assert bool(await db_session.scalar(stmt))

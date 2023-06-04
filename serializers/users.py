@@ -1,6 +1,8 @@
-import re
-from typing import Annotated
 import asyncio
+import re
+from concurrent.futures import ThreadPoolExecutor
+from typing import Annotated
+
 from pydantic import BaseModel, Field, EmailStr, SecretStr, validator, constr
 
 from crud.users import check_password_commonness
@@ -54,7 +56,10 @@ class UserRegistrationSerializer(BaseModel):
             async with async_session() as session:
                 return await check_password_commonness(session, value.get_secret_value())
 
-        if asyncio.run(_check()):
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            is_common = pool.submit(asyncio.run, _check()).result()
+
+        if is_common:
             raise ValueError(
                 password_commonness_error_message,
             )

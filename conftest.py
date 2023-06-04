@@ -29,6 +29,11 @@ async def async_client_httpx() -> AsyncClient:
 
 
 db_session: 'AsyncSession' = pytest.fixture(get_db_session_test)
+# @pytest.fixture
+# async def db_session():
+#     coro = get_db_session_test()
+#     async for s in coro:
+#         yield s
 """
 Фикстура сессии БД
 """
