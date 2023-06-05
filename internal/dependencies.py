@@ -12,7 +12,6 @@ __all__ = (
     'SettingsDep',
     'get_session',
     'get_db_session_test',
-
 )
 
 
