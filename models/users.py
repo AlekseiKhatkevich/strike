@@ -5,7 +5,6 @@ from sqlalchemy import (
     String,
     Index,
     CheckConstraint,
-    Text,
 )
 from sqlalchemy.orm import validates, Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -17,32 +16,7 @@ from .mixins import UpdatedAtMixin
 
 __all__ = (
     'User',
-    'CommonPassword',
 )
-
-
-class CommonPassword(Base):
-    """
-
-    """
-    __tablename__ = 'common_passwords'
-
-    id: Mapped[BigIntPk]
-
-    password: Mapped[str] = mapped_column(
-        Text(collation='english_ci'),
-    )
-
-    __table_args__ = (
-        Index(
-            'password_hash_idx',
-            password,
-            postgresql_using='hash',
-            postgresql_with={'fillfactor': 100},
-        ),
-    )
-
-    __repr__ = __str__ = lambda self: self.password
 
 
 class User(UpdatedAtMixin, Base):
