@@ -43,7 +43,9 @@ class UsedToken(Base):
         server_default=func.now(),
     )
 
-    user: Mapped['User'] = relationship()
+    user: Mapped['User'] = relationship(
+        back_populates='used_token',
+    )
 
     __table_args__ = (
         Index(

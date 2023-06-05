@@ -14,7 +14,9 @@ router = APIRouter(tags=['users'])
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-async def register_new_user(session: SessionDep, user_data: UserRegistrationSerializer) -> dict[str, int]:
+async def register_new_user(session: SessionDep,
+                            user_data: UserRegistrationSerializer,
+                            ) -> dict[str, int]:
     """
     Создание пользователя.
     """

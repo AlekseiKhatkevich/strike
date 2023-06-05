@@ -6,13 +6,22 @@ from sqlalchemy import (
     Index,
     CheckConstraint,
 )
-from sqlalchemy.orm import validates, Mapped, mapped_column
+from sqlalchemy.orm import (
+    validates,
+    Mapped,
+    mapped_column,
+    relationship,
+)
 from sqlalchemy.sql import func
 
 from internal.constants import EMAIL_REGEXP, BCRYPT_REGEXP
 from internal.database import Base
 from .annotations import BigIntPk
 from .mixins import UpdatedAtMixin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .auth import UsedToken
 
 __all__ = (
     'User',
@@ -42,6 +51,9 @@ class User(UpdatedAtMixin, Base):
     )
     registration_date: Mapped[datetime.datetime] = mapped_column(
         server_default=func.now(),
+    )
+    used_token: Mapped['UsedToken'] = relationship(
+        back_populates='user'
     )
 
     __table_args__ = (
