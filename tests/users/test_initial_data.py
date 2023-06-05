@@ -26,4 +26,4 @@ async def test_populate_common_passwords(monkeypatch, db_session, capsys):
     assert 'There are data already in the table. Aborting!!!' in captured.out
     assert await db_session.scalar(func.count(CommonPassword.id)) == 10
 
-    assert not tmp_file_path.exists()
+    assert not await tmp_file_path.exists()

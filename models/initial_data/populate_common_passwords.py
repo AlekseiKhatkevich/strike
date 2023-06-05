@@ -1,17 +1,16 @@
-import shutil
-from pathlib import Path
-
+import aioshutil
+from aiopath import AsyncPath
 from sqlalchemy import text, select
 
 from internal.database import async_session
 from models.users import CommonPassword
 
 __all__ = (
-    'populate'
+    'populate',
 )
 
-data_file_path = Path('internal/data/10-million-password-list-top-1000000.txt')
-tmp_file_path = Path('/tmp/10-million-password-list-top-1000000.txt')
+data_file_path = AsyncPath('internal/data/10-million-password-list-top-1000000.txt')
+tmp_file_path = AsyncPath('/tmp/10-million-password-list-top-1000000.txt')
 
 
 async def write_data_in_db() -> None:
@@ -44,7 +43,7 @@ async def populate():
     Копирует файл с паролями в /tmp, и затем запускает запись данных в таблицу из файла.
     """
     try:
-        shutil.copy(data_file_path, tmp_file_path)
+        await aioshutil.copy(data_file_path, tmp_file_path)
         await write_data_in_db()
     finally:
-        tmp_file_path.unlink(missing_ok=True)
+        await tmp_file_path.unlink(missing_ok=True)
