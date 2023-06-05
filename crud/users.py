@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-
-from models import User, CommonPassword
+from crud.auth import check_invitation_token_used_already
+from models import User
 from security.hashers import make_hash
 from security.invitation import verify_invitation_token
 
@@ -12,7 +11,6 @@ if TYPE_CHECKING:
 
 __all__ = (
     'create_new_user',
-    'check_password_commonness',
 )
 
 
@@ -20,7 +18,8 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
     """
     Создание нового пользователя в БД.
     """
-    verify_invitation_token(
+    await check_invitation_token_used_already(session, user_data.invitation_token)
+    decoded_token = verify_invitation_token(
         token=user_data.invitation_token,
         username=user_data.name,
         password=user_data.invitation_password,
@@ -32,16 +31,9 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
                 email=user_data.email,
                 hashed_password=hashed_password,
             )
-    async with session.begin():
-        session.add(user)
+
+    session.add(user)
+    await session.commit()
     return user
-
-
-async def check_password_commonness(session,  password) -> bool:
-    """
-    """
-    stmt = select(CommonPassword.id).where(CommonPassword.password == password).limit(1)
-    password_exists = bool(await session.scalar(stmt))
-    return password_exists
 
 

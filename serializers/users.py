@@ -5,7 +5,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, EmailStr, SecretStr, validator, constr
 
-from crud.users import check_password_commonness
+from crud.auth import check_password_commonness
 from internal.constants import USER_PASSWORD_REGEXP
 
 __all__ = (

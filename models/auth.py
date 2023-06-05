@@ -1,4 +1,5 @@
 import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Index,
@@ -13,8 +14,10 @@ from sqlalchemy.orm import (
 
 from internal.database import Base
 from internal.typing_and_types import BigIntType
-from . import User
 from .annotations import BigIntPk
+
+if TYPE_CHECKING:
+    from .users import User
 
 
 __all__ = (
@@ -40,9 +43,7 @@ class UsedToken(Base):
         server_default=func.now(),
     )
 
-    user: Mapped[User] = relationship(
-        back_populates='used_token',
-    )
+    user: Mapped['User'] = relationship()
 
     __table_args__ = (
         Index(
@@ -52,7 +53,7 @@ class UsedToken(Base):
         ),
     )
 
-    __repr__ = __str__ = lambda self: f'Token user by user {self.user_id}'
+    __repr__ = __str__ = lambda self: f'Token used by user {self.user_id = }'
 
 
 class CommonPassword(Base):
