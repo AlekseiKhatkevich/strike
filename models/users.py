@@ -45,7 +45,7 @@ class User(UpdatedAtMixin, Base):
     hashed_password: Mapped[str] = mapped_column(
         String(256),
         deferred=True,
-    )  # await session.scalars(select(User).limit(1).options(undefer(User.hashed_password)))
+    )
     is_active: Mapped[bool] = mapped_column(
         default=True,
     )

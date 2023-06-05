@@ -3,7 +3,7 @@ from aiopath import AsyncPath
 from sqlalchemy import text, select
 
 from internal.database import async_session
-from models.users import CommonPassword
+from models.auth import CommonPassword
 
 __all__ = (
     'populate',

@@ -4,7 +4,7 @@ import pytest
 from email_validator import EmailSyntaxError
 from sqlalchemy import exc as so_exc, insert, select
 
-from models import User, CommonPassword
+from models import User, CommonPassword, UsedToken
 from security.hashers import make_hash
 
 
@@ -98,3 +98,13 @@ async def test_common_password_positive(db_session):
 
     stmt = select(CommonPassword.id).where(CommonPassword.password == password_example).limit(1)
     assert bool(await db_session.scalar(stmt))
+
+#  // UserToken
+
+
+async def test_user_token_positive(used_token_in_db, db_session):
+    """
+    Сохраняется ли использованный токен в БД.
+    """
+    token_from_db = await db_session.get(UsedToken, used_token_in_db.id)
+    assert token_from_db.user_id is not None

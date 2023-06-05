@@ -19,7 +19,7 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
     """
     Создание нового пользователя в БД.
     """
-    await check_invitation_token_used_already(session, user_data.invitation_token)
+    await check_invitation_token_used_already(session, user_data.invitation_token.get_secret_value())
     decoded_token = verify_invitation_token(
         token=user_data.invitation_token,
         username=user_data.name,

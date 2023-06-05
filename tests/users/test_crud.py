@@ -1,10 +1,14 @@
 import re
 
+import pytest
+from pydantic import SecretStr
 from sqlalchemy import insert
 
-from crud.users import create_new_user, check_password_commonness
+from crud.auth import check_password_commonness, check_invitation_token_used_already
+from crud.users import create_new_user
 from internal.constants import BCRYPT_REGEXP
 from models import User, CommonPassword
+from security.invitation import InvitationTokenDeclinedException
 
 
 async def test_create_new_user_positive(db_session, user_registration_serializer_factory):
@@ -18,6 +22,18 @@ async def test_create_new_user_positive(db_session, user_registration_serializer
 
     assert user_from_db is not None
     assert re.match(BCRYPT_REGEXP, user_from_db.hashed_password) is not None
+
+
+async def test_create_new_user_negative(db_session, user_registration_serializer_factory, used_token_in_db):
+    """
+    Негативный тест CRUD ф-ции create_new_user. В случае если пригласительный токен уже был
+    использован и находится в таблице использованных токенов - возбуждаем исключение.
+    """
+    with pytest.raises(InvitationTokenDeclinedException):
+        await create_new_user(
+            db_session,
+            user_registration_serializer_factory.build(invitation_token=SecretStr(used_token_in_db.token)),
+        )
 
 
 async def test_check_password_commonness_negative(db_session):
@@ -40,3 +56,19 @@ async def test_check_password_commonness_positive(db_session):
     """
     common_password = 'trgHH65**654gsdUY'
     assert not await check_password_commonness(db_session, common_password)
+
+
+async def test_check_check_invitation_token_used_already_positive(used_token_in_db, db_session):
+    """
+    Если токен не был использован - то все ОК.
+    """
+    was_used_already = await check_invitation_token_used_already(db_session, 'test')
+    assert not was_used_already
+
+
+async def test_check_check_invitation_token_used_already_negative(used_token_in_db, db_session):
+    """
+    Если токен был уже использован - то возбуждаем исключение.
+    """
+    with pytest.raises(InvitationTokenDeclinedException):
+        await check_invitation_token_used_already(db_session, used_token_in_db.token)
