@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    'exists_ib_db',
+    'exists_in_db',
 )
 
 
-async def exists_ib_db(session: 'AsyncSession',
+async def exists_in_db(session: 'AsyncSession',
                        model: 'Base',
                        condition: 'OperatorExpression',
                        ) -> bool:

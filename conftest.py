@@ -14,6 +14,11 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
+pytest_plugins = [
+    'tests.users.fixtures',
+]
+
+
 @pytest.fixture
 def client() -> TestClient:
     """

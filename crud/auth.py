@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
+from crud.helpers import exists_in_db
 from models import CommonPassword, UsedToken
 from security.invitation import InvitationTokenDeclinedException
 
@@ -18,16 +19,13 @@ async def check_password_commonness(session: 'AsyncSession',  password) -> bool:
     """
     Проверка пароля по базе распространенных паролей.
     """
-    stmt = select(CommonPassword.id).where(CommonPassword.password == password).limit(1)
-    password_exists = bool(await session.scalar(stmt))
-    return password_exists
+    return await exists_in_db(session, CommonPassword, CommonPassword.password == password)
 
 
 async def check_invitation_token_used_already(session: 'AsyncSession', token: str) -> None:
     """
     Проверка того был ли пригласительный токен уже использован.
     """
-    stmt = select(UsedToken.id).filter_by(token=token).limit(1)
-    was_used_before = bool(await session.scalar(stmt))
+    was_used_before = await exists_in_db(session, UsedToken, UsedToken.token == token)
     if was_used_before:
         raise InvitationTokenDeclinedException()
