@@ -248,3 +248,4 @@ cython_debug/
 /.idea/strike.iml
 /.idea/vcs.xml
 /internal/data/10-million-password-list-top-1000000.txt
+/logs/

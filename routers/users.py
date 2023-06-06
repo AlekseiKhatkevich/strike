@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, status, HTTPException
 from sqlalchemy import exc as so_exc
 
@@ -9,8 +11,9 @@ __all__ = (
     'router',
 )
 
-
 router = APIRouter(tags=['users'])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
@@ -33,4 +36,5 @@ async def register_new_user(session: SessionDep,
 
 @router.get('/ping/')
 async def ping():
+    logger.warning("some warnings")
     return 'pong'

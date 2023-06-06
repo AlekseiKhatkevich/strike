@@ -5,3 +5,4 @@ USER_PASSWORD_REGEXP = r'((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{12,32}
 HASH_ENCODING = encodings.utf_8.getregentry().name
 BCRYPT_REGEXP = r'^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$'
 EN_US_CE_COLLATION_NAME = 'english_ci'
+LOGGING_CONFIG_FILE_PATH = 'internal/logging/configuration.yaml'

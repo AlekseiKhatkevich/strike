@@ -43,5 +43,4 @@ async def exists_in_db(session: 'AsyncSession',
     :return: Есть ли хотя бы одна запись в БД удовлетворяющая условиям.
     """
     stmt = select(getattr(model, 'id')).where(condition).limit(1)
-    exists = bool(await session.scalar(stmt))
-    return exists
+    return bool(await session.scalar(stmt))
