@@ -36,6 +36,7 @@ async_session = async_sessionmaker(
     autocommit=False,
     bind=engine,
     expire_on_commit=False,
+    # autobegin=False,
 )
 
 
