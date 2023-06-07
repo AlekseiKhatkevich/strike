@@ -1,4 +1,6 @@
 import logging
+from contextlib import asynccontextmanager
+from typing import AsyncContextManager
 
 from fastapi import FastAPI, status
 from fastapi.responses import ORJSONResponse
@@ -12,11 +14,16 @@ __all__ = (
     'app',
 )
 
-configure_loggers()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncContextManager[None]:
+    configure_loggers()
+    yield
 
 app = FastAPI(
     default_response_class=ORJSONResponse,
     debug=settings.debug,
+    lifespan=lifespan,
 )
 
 logger = logging.getLogger(__name__)
