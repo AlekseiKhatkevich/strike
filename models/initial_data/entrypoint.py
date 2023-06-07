@@ -2,14 +2,15 @@ import asyncio
 import contextlib
 import inspect
 import sys
-import logging
+from loguru import logger
 
+from internal.logging import configure_loggers
 from . import *
 # Не удалять импорт from . *  !!!
 
 # python3 -m  models.initial_data.entrypoint  запускать так
 
-logger = logging.getLogger(__name__)
+configure_loggers()
 
 
 def pred(obj) -> bool:

@@ -1,4 +1,5 @@
 import datetime
+from typing import TYPE_CHECKING
 
 from email_validator import validate_email
 from sqlalchemy import (
@@ -18,7 +19,6 @@ from internal.constants import EMAIL_REGEXP, BCRYPT_REGEXP
 from internal.database import Base
 from .annotations import BigIntPk
 from .mixins import UpdatedAtMixin
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .auth import UsedToken

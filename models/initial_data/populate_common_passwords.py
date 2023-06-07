@@ -1,9 +1,9 @@
 import aioshutil
 from aiopath import AsyncPath
+from loguru import logger
 from sqlalchemy import text, select
-import logging
+
 from internal.database import async_session
-from internal.logging import configure_loggers
 from models.auth import CommonPassword
 
 __all__ = (
@@ -12,9 +12,6 @@ __all__ = (
 
 data_file_path = AsyncPath('internal/data/10-million-password-list-top-1000000.txt')
 tmp_file_path = AsyncPath('/tmp/10-million-password-list-top-1000000.txt')
-
-configure_loggers()
-logger = logging.getLogger(__name__)
 
 
 async def write_data_in_db() -> None:

@@ -3,8 +3,10 @@ import datetime
 from typing import TYPE_CHECKING
 
 import jwt
+from loguru import logger
 
 from config import settings
+from security import sensitive
 
 if TYPE_CHECKING:
     from pydantic import SecretStr
@@ -61,22 +63,28 @@ def verify_invitation_token(token: 'SecretStr', username: str = None, password: 
     :param password: Пароль токена.
     :return: Расшифрованный токен в формате JWT
     """
+    token = token.get_secret_value()
     try:
         decoded = jwt.decode(
-            token.get_secret_value(),
+            token,
             settings.secret_string.get_secret_value(),
             audience=[username, ALL_USERS],
             algorithms=ALGORYTHM,
         )
-    except (jwt.InvalidAudienceError, jwt.ExpiredSignatureError, jwt.InvalidSignatureError) as err:
-        # todo logging
+    except jwt.InvalidAudienceError as err:
+        logger.info(f'Token {sensitive(token)} not issued for user {username}.')
+        raise InvitationTokenDeclinedException() from err
+    except jwt.ExpiredSignatureError as err:
+        logger.info(f'Token {sensitive(token)} has expired.')
+        raise InvitationTokenDeclinedException() from err
+    except jwt.InvalidSignatureError as err:
+        logger.info(f'Token {sensitive(token)} is not valid or corrupted.')
         raise InvitationTokenDeclinedException() from err
 
     with contextlib.suppress(KeyError):
         invitation_password = decoded['invitation_password']
         if invitation_password != password.get_secret_value():
-            # todo logging
+            logger.info(f'Password mismatch for user {username}')
             raise InvitationTokenDeclinedException()
 
     return decoded
-

@@ -7,7 +7,7 @@ from models import CommonPassword
 from models.initial_data.populate_common_passwords import populate, tmp_file_path
 
 
-async def test_populate_common_passwords(monkeypatch, db_session, capsys):
+async def test_populate_common_passwords(monkeypatch, db_session, caplog):
     """
     1) Записываем пароли в таблицу CommonPassword.
     2) Если таблица не пустая, то запись должна не начаться.
@@ -22,8 +22,7 @@ async def test_populate_common_passwords(monkeypatch, db_session, capsys):
 
     await populate()
 
-    captured = capsys.readouterr()
-    assert 'There are data already in the table. Aborting!!!' in captured.out
+    assert 'There are data already in the table. Aborting!!!' in caplog.text
     assert await db_session.scalar(func.count(CommonPassword.id)) == 10
 
     assert not await tmp_file_path.exists()

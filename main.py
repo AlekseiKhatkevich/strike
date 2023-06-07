@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
@@ -26,8 +25,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-logger = logging.getLogger(__name__)
-
 app.include_router(users.router, prefix='/users')
 
 
@@ -40,5 +37,3 @@ async def invitation_token_exception_handler(_, exc: InvitationTokenDeclinedExce
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={'detail': exc.text},
     )
-
-

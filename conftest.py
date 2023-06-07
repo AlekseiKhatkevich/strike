@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING
+from typing import AsyncGenerator
 
 import pytest
 from _pytest.logging import LogCaptureFixture
@@ -7,13 +7,11 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from loguru import logger
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from internal.database import Base, async_session
 from internal.dependencies import get_session, get_db_session_test
 from main import app
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 pytest_plugins = [
@@ -54,7 +52,7 @@ async def async_client_httpx() -> AsyncClient:
         yield client
 
 
-db_session: 'AsyncSession' = pytest.fixture(get_db_session_test)
+db_session: AsyncGenerator[AsyncSession, None] = pytest.fixture(get_db_session_test)
 """
 Фикстура сессии БД
 """

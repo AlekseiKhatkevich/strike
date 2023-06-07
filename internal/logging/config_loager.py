@@ -1,4 +1,4 @@
-from logging.config import dictConfig
+from loguru import logger
 
 import yaml
 
@@ -23,4 +23,6 @@ def configure_loggers() -> None:
     """
     Конфигурирует логер конфигом из yaml файла.
     """
-    dictConfig(load_yaml_logging_config())
+    # dictConfig(load_yaml_logging_config())
+    logger.add('logs/warn+.log', rotation='10 MB', level='WARNING', enqueue=True)
+

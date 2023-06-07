@@ -1,6 +1,5 @@
-import logging
-
 from fastapi import APIRouter, status, HTTPException
+from loguru import logger
 from sqlalchemy import exc as so_exc
 
 from crud.users import create_new_user
@@ -12,8 +11,6 @@ __all__ = (
 )
 
 router = APIRouter(tags=['users'])
-
-logger = logging.getLogger(__name__)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)

@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-
+from loguru import logger
 from crud.helpers import exists_in_db
 from models import CommonPassword, UsedToken
+from security import sensitive
 from security.invitation import InvitationTokenDeclinedException
 
 if TYPE_CHECKING:
@@ -28,4 +28,5 @@ async def check_invitation_token_used_already(session: 'AsyncSession', token: st
     """
     was_used_before = await exists_in_db(session, UsedToken, UsedToken.token == token)
     if was_used_before:
+        logger.info(f'Invitation token {sensitive(token)} has been already used.')
         raise InvitationTokenDeclinedException()
