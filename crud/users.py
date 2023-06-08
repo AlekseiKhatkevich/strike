@@ -1,7 +1,10 @@
 import datetime
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select
+
 from crud.auth import check_invitation_token_used_already
+from crud.helpers import commit_if_not_in_transaction
 from models import User, UsedToken
 from security.hashers import make_hash
 from security.invitation import verify_invitation_token
@@ -12,7 +15,18 @@ if TYPE_CHECKING:
 
 __all__ = (
     'create_new_user',
+    'get_user_by_id',
 )
+
+
+@commit_if_not_in_transaction
+async def get_user_by_id(session, user_id):
+    """
+
+    """
+    return session.scalar(
+        select(User).where(User.id == user_id)
+    )
 
 
 async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> User:

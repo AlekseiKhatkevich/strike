@@ -6,7 +6,7 @@ from fastapi.responses import ORJSONResponse
 
 from config import settings
 from internal.logging import configure_loggers
-from routers import users
+from routers import users, token
 from security.invitation import InvitationTokenDeclinedException
 
 __all__ = (
@@ -26,6 +26,8 @@ app = FastAPI(
 )
 
 app.include_router(users.router, prefix='/users')
+app.include_router(users.router_without_jwt, prefix='/users')
+app.include_router(token.router, prefix='/token')
 
 
 @app.exception_handler(InvitationTokenDeclinedException)

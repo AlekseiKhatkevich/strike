@@ -1,8 +1,7 @@
+import yaml
 from loguru import logger
 
-import yaml
-
-from internal.constants import LOGGING_CONFIG_FILE_PATH
+from config import settings
 
 __all__ = (
     'load_yaml_logging_config',
@@ -14,7 +13,7 @@ def load_yaml_logging_config() -> dict:
     """
     Загружает конфиг для логирования из yaml файла.
     """
-    with open(LOGGING_CONFIG_FILE_PATH, 'r') as file:
+    with open(settings.logging_config_file_path, 'r') as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
     return config
 

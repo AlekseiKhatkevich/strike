@@ -10,6 +10,7 @@ from internal.constants import USER_PASSWORD_REGEXP
 
 __all__ = (
     'UserRegistrationSerializer',
+    'UserLoginSerializer',
 )
 
 from internal.database import async_session
@@ -17,6 +18,22 @@ from internal.database import async_session
 password_regexp = re.compile(USER_PASSWORD_REGEXP)
 password_strength_error_message = 'Password is not strong enough.'
 password_commonness_error_message = 'Password is common hence weak.'
+
+
+class UserLoginSerializer(BaseModel):
+    """
+
+    """
+    name: str
+    password: SecretStr
+
+    class Config:
+        schema_extra = {
+            'example': {
+                'name': 'test@email.com',
+                'password': '1q2w3e',
+            },
+        }
 
 
 class UserRegistrationSerializer(BaseModel):

@@ -1,9 +1,13 @@
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from crud.helpers import exists_in_db
-from models import CommonPassword, UsedToken
+from sqlalchemy import select
+from sqlalchemy.orm import undefer
+
+from crud.helpers import exists_in_db, commit_if_not_in_transaction
+from models import CommonPassword, UsedToken, User
 from security import sensitive
+from security.hashers import verify_hash
 from security.invitation import InvitationTokenDeclinedException
 
 if TYPE_CHECKING:
@@ -12,6 +16,7 @@ if TYPE_CHECKING:
 __all__ = (
     'check_password_commonness',
     'check_invitation_token_used_already',
+    'authenticate_user',
 )
 
 
@@ -30,3 +35,27 @@ async def check_invitation_token_used_already(session: 'AsyncSession', token: st
     if was_used_before:
         logger.info(f'Invitation token {sensitive(token)} has been already used.')
         raise InvitationTokenDeclinedException()
+
+
+@commit_if_not_in_transaction
+async def authenticate_user(session, name, password) -> bool | User:
+    """
+
+    :param session:
+    :param name:
+    :param password:
+    :return:
+    """
+    user = await session.scalar(
+        select(User).where(User.name == name, User.is_active == True).options(undefer(User.hashed_password))
+    )
+    if user is None:
+        logger.info(f'User with name {name} does not exists or inactive.')
+        return False
+
+    password_ok = verify_hash(password, user.hashed_password)
+    if not password_ok:
+        logger.info(f'User with name {name} provided incorrect password')
+        return False
+
+    return user

@@ -1,18 +1,26 @@
 from typing import Annotated, AsyncGenerator
 
-from fastapi import Depends
+import jwt
+from fastapi import Depends, status, HTTPException, Request
+from fastapi.security import OAuth2PasswordBearer
+from loguru import logger
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import get_settings, Settings
 from internal.database import async_session, engine
+from security import sensitive
+from security.jwt import validate_jwt_token
 
 __all__ = (
     'SessionDep',
     'SettingsDep',
-    'get_session',
-    'get_db_session_test',
+    'AuthDep',
+    'jwt_authorize',
 )
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 
 async def get_db_session_test() -> AsyncGenerator[AsyncSession, None]:
@@ -46,5 +54,24 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield _session
 
 
+async def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Request) -> int:
+    """
+
+    """
+    try:
+        user_id = validate_jwt_token(jwt_token.strip())
+    except jwt.PyJWTError as err:
+        logger.info(f'Token {sensitive(jwt_token)} was rejected. Exception - {err}')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        ) from err
+    else:
+        request.state.user_id = user_id
+        return user_id
+
+
 SessionDep = Annotated[AsyncSession, Depends(get_session, use_cache=False)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
+UserIdDep = Annotated[int, Depends(jwt_authorize)]

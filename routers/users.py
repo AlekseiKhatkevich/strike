@@ -1,19 +1,21 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Request, Depends
 from loguru import logger
 from sqlalchemy import exc as so_exc
 
 from crud.users import create_new_user
-from internal.dependencies import SessionDep
+from internal.dependencies import SessionDep, jwt_authorize
 from serializers.users import UserRegistrationSerializer
 
 __all__ = (
     'router',
+    'router_without_jwt',
 )
 
-router = APIRouter(tags=['users'])
+router = APIRouter(tags=['users'], dependencies=[Depends(jwt_authorize)])
+router_without_jwt = APIRouter(tags=['users'])
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router_without_jwt.post('/', status_code=status.HTTP_201_CREATED)
 async def register_new_user(session: SessionDep,
                             user_data: UserRegistrationSerializer,
                             ) -> dict[str, int]:
@@ -32,6 +34,6 @@ async def register_new_user(session: SessionDep,
 
 
 @router.get('/ping/')
-async def ping():
+async def ping(request: Request):
     logger.warning("some warnings")
-    return 'pong'
+    return request.state.user_id
