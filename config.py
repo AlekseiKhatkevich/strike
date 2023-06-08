@@ -6,6 +6,7 @@ from pydantic import (
     RedisDsn,
     PostgresDsn,
     SecretStr,
+    FilePath,
 )
 
 
@@ -26,7 +27,7 @@ class Settings(BaseSettings):
     secret_string: SecretStr
     debug: bool = False
     root_path: Path = Path(__file__).resolve().parent
-    logging_config_file_path: str = 'internal/logging/configuration.yaml'
+    logging_config_file_path: FilePath = 'internal/logging/configuration.yaml'
     access_token_expire_minutes: int
 
     class Config:

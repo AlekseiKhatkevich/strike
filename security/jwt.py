@@ -12,9 +12,9 @@ __all__ = (
 )
 
 
-def generate_jwt_token(user_id):
+def generate_jwt_token(user_id: int) -> str:
     """
-
+    Генерирует JWT токен с user_id внутри.
     """
     now = datetime.datetime.now(tz=datetime.UTC)
 
@@ -37,10 +37,9 @@ def generate_jwt_token(user_id):
     )
 
 
-def validate_jwt_token(token):
+def validate_jwt_token(token: str) -> int:
     """
-
-
+    Валидирует JWT токен и возвращает user_id.
     """
     payload = jwt.decode(token, settings.secret_string.get_secret_value(), algorithms=ALGORYTHM)
     return payload['sub']

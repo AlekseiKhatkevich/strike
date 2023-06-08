@@ -15,7 +15,7 @@ from security.jwt import validate_jwt_token
 __all__ = (
     'SessionDep',
     'SettingsDep',
-    'AuthDep',
+    'UserIdDep',
     'jwt_authorize',
 )
 
@@ -56,7 +56,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Request) -> int:
     """
-
+    Достает JWT токен из хедера запроса, валидирует его возвращая user_id в случае успеха.
     """
     try:
         user_id = validate_jwt_token(jwt_token.strip())

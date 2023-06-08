@@ -1,11 +1,10 @@
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-
 from crud.auth import check_invitation_token_used_already
 from crud.helpers import commit_if_not_in_transaction
 from models import User, UsedToken
+from models.exceptions import ModelEntryDoesNotExistsInDbError
 from security.hashers import make_hash
 from security.invitation import verify_invitation_token
 
@@ -20,13 +19,16 @@ __all__ = (
 
 
 @commit_if_not_in_transaction
-async def get_user_by_id(session, user_id):
+async def get_user_by_id(session: 'AsyncSession', user_id: int, *, raise_exc: bool = False) -> User | None:
     """
-
+    Получение юзера по id
     """
-    return session.scalar(
-        select(User).where(User.id == user_id)
-    )
+    user = await session.get(User, user_id)
+    if user is None and raise_exc:
+        raise ModelEntryDoesNotExistsInDbError(
+            f'User with user_id {user_id} does not exists.'
+        )
+    return user
 
 
 async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> User:

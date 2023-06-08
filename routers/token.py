@@ -1,5 +1,5 @@
 from typing import Annotated, TYPE_CHECKING
-from fastapi.security import OAuth2PasswordBearer
+
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -18,14 +18,12 @@ __all__ = (
 router = APIRouter(tags=['token'])
 
 
-async def authenticate_user_by_creds(session: SessionDep, form_data: OAuth2PasswordRequestForm = Depends()):
+async def authenticate_user_by_creds(session: SessionDep, form_data: OAuth2PasswordRequestForm = Depends()) -> 'User':
     """
-
-    :param form_data:
-    :param session:
-    :param name:
-    :param password:
-    :return:
+    Пытаемся аутентифицировать юзера пое го имени и паролю.
+    :param form_data: Форма с именем юзера и паролем.
+    :param session: Сессия БД.
+    :return: Инстанс модели юзера.
     """
     user = await authenticate_user(session, form_data.username, form_data.password)
     if not user:
@@ -39,6 +37,6 @@ async def authenticate_user_by_creds(session: SessionDep, form_data: OAuth2Passw
 @router.post('/')
 async def obtain_token(user: Annotated['User', Depends(authenticate_user_by_creds)]) -> dict:
     """
-
+    Получение JWT токена авторизации по имени и паролю пользователя.
     """
     return {'access_token': generate_jwt_token(user.id), 'token_type': 'bearer'}

@@ -20,7 +20,7 @@ __all__ = (
 )
 
 
-async def check_password_commonness(session: 'AsyncSession',  password) -> bool:
+async def check_password_commonness(session: 'AsyncSession',  password: str) -> bool:
     """
     Проверка пароля по базе распространенных паролей.
     """
@@ -38,13 +38,10 @@ async def check_invitation_token_used_already(session: 'AsyncSession', token: st
 
 
 @commit_if_not_in_transaction
-async def authenticate_user(session, name, password) -> bool | User:
+async def authenticate_user(session: 'AsyncSession', name: str, password: str) -> bool | User:
     """
-
-    :param session:
-    :param name:
-    :param password:
-    :return:
+    Аутентифицирует юзера по пришедшему имени и паролю. Возвращает запись модели Юзера или False
+    если она не была найдена или не была аутентифицирована.
     """
     user = await session.scalar(
         select(User).where(User.name == name, User.is_active == True).options(undefer(User.hashed_password))

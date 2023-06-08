@@ -3,37 +3,27 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated
 
-from pydantic import BaseModel, Field, EmailStr, SecretStr, validator, constr
+from pydantic import (
+    BaseModel,
+    Field,
+    EmailStr,
+    SecretStr,
+    validator,
+    constr,
+)
 
 from crud.auth import check_password_commonness
 from internal.constants import USER_PASSWORD_REGEXP
+from internal.database import async_session
 
 __all__ = (
     'UserRegistrationSerializer',
-    'UserLoginSerializer',
 )
 
-from internal.database import async_session
 
 password_regexp = re.compile(USER_PASSWORD_REGEXP)
 password_strength_error_message = 'Password is not strong enough.'
 password_commonness_error_message = 'Password is common hence weak.'
-
-
-class UserLoginSerializer(BaseModel):
-    """
-
-    """
-    name: str
-    password: SecretStr
-
-    class Config:
-        schema_extra = {
-            'example': {
-                'name': 'test@email.com',
-                'password': '1q2w3e',
-            },
-        }
 
 
 class UserRegistrationSerializer(BaseModel):
@@ -81,4 +71,3 @@ class UserRegistrationSerializer(BaseModel):
                 password_commonness_error_message,
             )
         return value
-

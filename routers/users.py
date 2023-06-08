@@ -1,4 +1,10 @@
-from fastapi import APIRouter, status, HTTPException, Request, Depends
+from fastapi import (
+    APIRouter,
+    status,
+    HTTPException,
+    Request,
+    Depends,
+)
 from loguru import logger
 from sqlalchemy import exc as so_exc
 
