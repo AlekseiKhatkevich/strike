@@ -13,7 +13,6 @@ from internal.database import Base, async_session
 from internal.dependencies import get_session, get_db_session_test
 from main import app
 
-
 pytest_plugins = [
     'tests.users.fixtures',
 ]
