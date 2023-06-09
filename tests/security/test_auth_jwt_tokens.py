@@ -1,8 +1,10 @@
 import jwt
+import pytest
 
 from security.jwt import generate_jwt_token, validate_jwt_token, ALGORYTHM
 
 
+@pytest.mark.no_db_calls
 def test_generate_and_validate_jwt_token():
     """
     Тест генерации и валидации jwt токена функциями generate_jwt_token и validate_jwt_token.

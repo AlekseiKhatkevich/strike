@@ -13,6 +13,7 @@ valid_until = datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=1
 expired = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=100)
 
 
+@pytest.mark.no_db_calls
 def test_generate_invitation_token_positive():
     """
     Позитивный тест генерации jwt токена приглашения для регистрации юзера.
@@ -21,6 +22,7 @@ def test_generate_invitation_token_positive():
     assert isinstance(token, str)
 
 
+@pytest.mark.no_db_calls
 def test_generate_invitation_token_negative():
     """
     Негативный тест генерации jwt токена приглашения для регистрации юзера.
@@ -30,6 +32,7 @@ def test_generate_invitation_token_negative():
         generate_invitation_token(valid_until.utcnow())
 
 
+@pytest.mark.no_db_calls
 def test_verify_invitation_token_base_positive():
     """
     Позитивный тест верификации токена.
@@ -38,6 +41,7 @@ def test_verify_invitation_token_base_positive():
     verify_invitation_token(SecretStr(token))
 
 
+@pytest.mark.no_db_calls
 def test_verify_invitation_token_base_expired_negative():
     """
     Негативный тест верификации токена.
@@ -48,6 +52,7 @@ def test_verify_invitation_token_base_expired_negative():
         verify_invitation_token(SecretStr(token))
 
 
+@pytest.mark.no_db_calls
 def test_verify_invitation_token_base_wrong_secret_key_negative(monkeypatch):
     """
     Негативный тест верификации токена.
@@ -61,6 +66,7 @@ def test_verify_invitation_token_base_wrong_secret_key_negative(monkeypatch):
         verify_invitation_token(SecretStr(token))
 
 
+@pytest.mark.no_db_calls
 def test_verify_invitation_token_username_positive():
     """
     Позитивный тест верификации токена который валиден только для какого то конкретного username.
@@ -69,6 +75,7 @@ def test_verify_invitation_token_username_positive():
     verify_invitation_token(SecretStr(token), username='test')
 
 
+@pytest.mark.no_db_calls
 def test_verify_invitation_token_username_negative():
     """
     Негативный тест верификации токена который валиден только для какого то конкретного username.
@@ -79,6 +86,7 @@ def test_verify_invitation_token_username_negative():
         verify_invitation_token(SecretStr(token), username='wrong')
 
 
+@pytest.mark.no_db_calls
 def test_verify_invitation_token_password_positive():
     """
     Позитивный тест верификации токена с дополнительно передаваемым паролем.
@@ -87,6 +95,7 @@ def test_verify_invitation_token_password_positive():
     verify_invitation_token(SecretStr(token), password=SecretStr('test'))
 
 
+@pytest.mark.no_db_calls
 def test_verify_invitation_token_password_negative():
     """
     Негативный тест верификации токена с дополнительно передаваемым паролем.

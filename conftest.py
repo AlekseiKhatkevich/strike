@@ -66,7 +66,7 @@ db_session: AsyncGenerator[AsyncSession, None] = pytest.fixture(get_session)
 
 
 @pytest.fixture(scope='function', autouse=True)
-async def truncate_db():
+async def truncate_db(request):
     """
     Чистим базу после каждой сессии на всякий случай.
     """
@@ -80,8 +80,9 @@ async def truncate_db():
     #         await session.commit()
     #
     # asyncio.run(_trunc())
-    tables = [table.name for table in Base.metadata.sorted_tables]
-    statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-    async with async_session() as session:
-        await session.execute(statement)
-        await session.commit()
+    if 'no_db_calls' not in request.keywords:
+        tables = [table.name for table in Base.metadata.sorted_tables]
+        statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+        async with async_session() as session:
+            await session.execute(statement)
+            await session.commit()

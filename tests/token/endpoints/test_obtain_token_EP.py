@@ -34,6 +34,7 @@ async def test_authenticate_user_by_creds_dependency_positive(db_session, user_i
     assert authenticated_user is user_in_db
 
 
+@pytest.mark.no_db_calls
 async def test_authenticate_user_by_creds_dependency_negative(db_session):
     """
     Негативный тест зависимости authenticate_user_by_creds. Если юзер не существует или логин

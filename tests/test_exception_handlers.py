@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from fastapi import status
 
 from main import invitation_token_exception_handler, model_does_not_exists_exception_handler
@@ -7,6 +8,7 @@ from models.exceptions import ModelEntryDoesNotExistsInDbError
 from security.invitation import InvitationTokenDeclinedException
 
 
+@pytest.mark.no_db_calls
 async def test_invitation_token_exception_handler():
     """
     Тест обработчика исключений InvitationTokenDeclinedException.
@@ -17,6 +19,7 @@ async def test_invitation_token_exception_handler():
     assert json.loads(resp.body)['detail'] == InvitationTokenDeclinedException.text
 
 
+@pytest.mark.no_db_calls
 async def test_model_does_not_exists_exception_handler():
     """
     Тест обработчика исключений ModelEntryDoesNotExistsInDbError.

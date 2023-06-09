@@ -14,6 +14,7 @@ def fake_request() -> Request:
     return Request(scope={'type': 'http'})
 
 
+@pytest.mark.no_db_calls
 def test_jwt_authorize_positive(fake_request):
     """
     Позитивный тест зависимости jwt_authorize. Должна отдать юзера из жвт токена.
@@ -26,6 +27,7 @@ def test_jwt_authorize_positive(fake_request):
     assert fake_request.state.user_id == user_id
 
 
+@pytest.mark.no_db_calls
 def test_jwt_authorize_negative(monkeypatch, fake_request):
     """
     Негативный тест зависимости jwt_authorize. Если токен скомпрометирован или истек срок его -

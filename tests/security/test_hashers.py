@@ -16,6 +16,7 @@ def hashed() -> str:
     return make_hash(initial_password)
 
 
+@pytest.mark.no_db_calls
 def test_make_hash_positive(hashed):
     """
     Пробуем хэшировать пароль.
@@ -23,6 +24,7 @@ def test_make_hash_positive(hashed):
     assert re.match(BCRYPT_REGEXP, hashed)
 
 
+@pytest.mark.no_db_calls
 def test_verify_hash_positive(hashed):
     """
     Сравниваем полученный хеш пароля с ним самим.

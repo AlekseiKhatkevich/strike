@@ -1,3 +1,5 @@
+import pytest
+
 from crud.auth import authenticate_user
 
 
@@ -9,6 +11,7 @@ async def test_authenticate_user_positive(db_session, user_in_db):
     assert authenticated_user is user_in_db
 
 
+@pytest.mark.no_db_calls
 async def test_authenticate_user_no_user(db_session, caplog):
     """
     Негативные тест ф-ции аутентификации изера по логину и паролю authenticate_user.
