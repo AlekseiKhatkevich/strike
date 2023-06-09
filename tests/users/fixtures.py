@@ -6,7 +6,11 @@ from pytest_factoryboy import register
 
 from security.invitation import generate_invitation_token
 from tests.factories.auth import UsedTokenFactory
-from tests.factories.users import UserInFactory, UserRegistrationSerializerFactory
+from tests.factories.users import (
+    UserInFactory,
+    UserRegistrationSerializerFactory,
+    UserInDbFactory,
+)
 
 if TYPE_CHECKING:
     from models.users import User
@@ -14,12 +18,12 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-async def user_in_db(db_session, user_in_factory) -> Awaitable['User']:
+async def user_in_db(db_session, user_in_db_factory) -> Awaitable['User']:
     """
     Созданная в БД запись юзера.
     """
     async with db_session.begin():
-        user = user_in_factory.build()
+        user = user_in_db_factory.build()
         db_session.add(user)
         return user
 
@@ -50,3 +54,4 @@ async def used_token_in_db(user_in_db, db_session, used_token_factory) -> Awaita
 register(UserInFactory)
 register(UserRegistrationSerializerFactory)
 register(UsedTokenFactory)
+register(UserInDbFactory)

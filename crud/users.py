@@ -21,7 +21,7 @@ __all__ = (
 @commit_if_not_in_transaction
 async def get_user_by_id(session: 'AsyncSession', user_id: int, *, raise_exc: bool = False) -> User | None:
     """
-    Получение юзера по id
+    Получение юзера по id.
     """
     user = await session.get(User, user_id)
     if user is None and raise_exc:

@@ -4,12 +4,14 @@ import factory
 from pydantic import SecretStr
 
 from models import User
+from security.hashers import make_hash
 from security.invitation import generate_invitation_token
 from serializers.users import UserRegistrationSerializer
 
 __all__ = (
     'UserInFactory',
     'UserRegistrationSerializerFactory',
+    'UserInDbFactory',
 )
 
 
@@ -23,6 +25,18 @@ class UserInFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     class Meta:
         model = User
+
+
+class UserInDbFactory(UserInFactory):
+    """
+    Модель юзера сохраненная в БД. Хеш сделан по известному паролю.
+    """
+    hashed_password = factory.lazy_attribute(
+        lambda o: make_hash(o.password)
+    )
+
+    class Params:
+        password = '1q2w3e'
 
 
 class UserRegistrationSerializerFactory(factory.Factory):
