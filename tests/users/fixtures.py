@@ -22,10 +22,11 @@ async def user_in_db(db_session, user_in_db_factory) -> Awaitable['User']:
     """
     Созданная в БД запись юзера.
     """
-    async with db_session.begin():
-        user = user_in_db_factory.build()
-        db_session.add(user)
-        return user
+    # async with db_session.begin():
+    user = user_in_db_factory.build()
+    db_session.add(user)
+    await db_session.commit()
+    return user
 
 
 @pytest.fixture

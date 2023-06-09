@@ -51,32 +51,37 @@ async def async_client_httpx() -> AsyncClient:
         yield client
 
 
-db_session: AsyncGenerator[AsyncSession, None] = pytest.fixture(get_db_session_test)
+db_session: AsyncGenerator[AsyncSession, None] = pytest.fixture(get_session)
 """
 Фикстура сессии БД
 """
 
 
-@pytest.fixture(scope='session', autouse=True)
-def override_session_for_tests() -> None:
-    """
-    Замена обычной сессии БД на сессию полностью транзакционную.
-    """
-    app.dependency_overrides[get_session] = get_db_session_test
+# @pytest.fixture(scope='session', autouse=True)
+# def override_session_for_tests() -> None:
+#     """
+#     Замена обычной сессии БД на сессию полностью транзакционную.
+#     """
+#     app.dependency_overrides[get_session] = get_db_session_test
 
 
-@pytest.fixture(scope='session', autouse=True)
-def truncate_db():
+@pytest.fixture(scope='function', autouse=True)
+async def truncate_db():
     """
     Чистим базу после каждой сессии на всякий случай.
     """
     yield None
 
-    async def _trunc():
-        tables = [table.name for table in Base.metadata.sorted_tables]
-        statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-        async with async_session() as session:
-            await session.execute(statement)
-            await session.commit()
-
-    asyncio.run(_trunc())
+    # async def _trunc():
+    #     tables = [table.name for table in Base.metadata.sorted_tables]
+    #     statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+    #     async with async_session() as session:
+    #         await session.execute(statement)
+    #         await session.commit()
+    #
+    # asyncio.run(_trunc())
+    tables = [table.name for table in Base.metadata.sorted_tables]
+    statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+    async with async_session() as session:
+        await session.execute(statement)
+        await session.commit()

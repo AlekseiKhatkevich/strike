@@ -1,8 +1,10 @@
+import re
+
 import pytest
 from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from models import User
+from internal.constants import JWT_TOKEN_REGEXP
 from routers.token import authenticate_user_by_creds
 
 EP_URL = '/token/'
@@ -50,22 +52,16 @@ async def test_authenticate_user_by_creds_dependency_negative(db_session):
         assert err.detail == expected_error_message
 
 
-async def test_obtain_toke_ep_positive(user_in_db, async_client_httpx, db_session, client):
+async def test_obtain_toke_ep_positive(user_in_db, async_client_httpx):
     """
-
+    Позитивный тест эндпоинта получения JWT токена по логину и паролю.
     """
     post_data = dict(
         username=user_in_db.name,
         password='1q2w3e',
     )
 
-    user = await db_session.get(User, user_in_db.id)
-    assert user is not None
-    print(user, 'here228')
-
-
     response = await async_client_httpx.post(EP_URL, data=post_data)
 
     assert response.status_code == status.HTTP_200_OK
-
-
+    assert re.match(JWT_TOKEN_REGEXP, response.json()['access_token'])

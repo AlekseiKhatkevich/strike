@@ -54,7 +54,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield _session
 
 
-async def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Request) -> int:
+def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Request) -> int:
     """
     Достает JWT токен из хедера запроса, валидирует его возвращая user_id в случае успеха.
     """
