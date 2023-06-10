@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, Awaitable
+from typing import TYPE_CHECKING
 
 import pytest
 from pytest_factoryboy import register
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-async def user_in_db(db_session, user_in_db_factory) -> Awaitable['User']:
+async def user_in_db(db_session, user_in_db_factory) -> 'User':
     """
     Созданная в БД запись юзера.
     """
@@ -38,7 +38,7 @@ def invitation_token(faker) -> str:
 
 
 @pytest.fixture
-async def used_token_in_db(user_in_db, db_session, used_token_factory) -> Awaitable['UsedToken']:
+async def used_token_in_db(user_in_db, db_session, used_token_factory) -> 'UsedToken':
     """
     Создаем в БД использованный токен и ассоциированного с ним пользователя.
     """
