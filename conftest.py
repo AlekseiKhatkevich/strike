@@ -7,10 +7,11 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from loguru import logger
 from sqlalchemy import text
+from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from internal.database import Base, async_session
-from internal.dependencies import get_session, get_db_session_test
+from internal.database import Base, async_session, engine
+from internal.dependencies import get_session
 from main import app
 
 pytest_plugins = [
@@ -51,38 +52,55 @@ async def async_client_httpx() -> AsyncClient:
         yield client
 
 
-db_session: AsyncGenerator[AsyncSession, None] = pytest.fixture(get_session)
-"""
-Фикстура сессии БД
-"""
+@pytest.fixture
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Сессия которая не коммитит в БД. Нужна для тестирования.
+    https://github.com/sqlalchemy/sqlalchemy/issues/5811#issuecomment-755871691
+    """
+    async with engine.connect() as conn:
+        await conn.begin()
+
+        await conn.begin_nested()
+
+        async with async_session(bind=conn) as session:
+
+            @listens_for(session.sync_session, 'after_transaction_end')
+            def end_savepoint(*args, **kwargs):
+                if conn.closed:
+                    return
+
+                if not conn.in_nested_transaction():
+                    conn.sync_connection.begin_nested()
+
+            yield session
 
 
-# @pytest.fixture(scope='session', autouse=True)
-# def override_session_for_tests() -> None:
-#     """
-#     Замена обычной сессии БД на сессию полностью транзакционную.
-#     """
-#     app.dependency_overrides[get_session] = get_db_session_test
+@pytest.fixture(autouse=True)
+def override_session_for_tests(db_session) -> None:
+    """
+    Замена обычной сессии БД на сессию полностью транзакционную.
+    https://www.fastapitutorial.com/blog/unit-testing-in-fastapi/
+    """
+    def _get_test_db():
+        yield db_session
+
+    app.dependency_overrides[get_session] = _get_test_db
 
 
-@pytest.fixture(scope='function', autouse=True)
-async def truncate_db(request):
+@pytest.fixture(scope='session', autouse=True)
+def truncate_db(request):
     """
     Чистим базу после каждой сессии на всякий случай.
     """
     yield None
 
-    # async def _trunc():
-    #     tables = [table.name for table in Base.metadata.sorted_tables]
-    #     statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-    #     async with async_session() as session:
-    #         await session.execute(statement)
-    #         await session.commit()
-    #
-    # asyncio.run(_trunc())
-    if 'no_db_calls' not in request.keywords:
-        tables = [table.name for table in Base.metadata.sorted_tables]
-        statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-        async with async_session() as session:
-            await session.execute(statement)
-            await session.commit()
+    async def _trunc():
+        if 'no_db_calls' not in request.keywords:
+            tables = [table.name for table in Base.metadata.sorted_tables]
+            statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+            async with async_session() as session:
+                await session.execute(statement)
+                await session.commit()
+
+    asyncio.run(_trunc())

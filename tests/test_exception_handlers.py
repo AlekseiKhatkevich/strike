@@ -23,7 +23,6 @@ async def test_invitation_token_exception_handler():
 async def test_model_does_not_exists_exception_handler():
     """
     Тест обработчика исключений ModelEntryDoesNotExistsInDbError.
-
     """
     expected_error_message = 'test'
     resp = await model_does_not_exists_exception_handler(

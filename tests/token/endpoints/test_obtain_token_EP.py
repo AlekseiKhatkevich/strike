@@ -53,7 +53,7 @@ async def test_authenticate_user_by_creds_dependency_negative(db_session):
         assert err.detail == expected_error_message
 
 
-async def test_obtain_toke_ep_positive(user_in_db, async_client_httpx):
+async def test_obtain_toke_ep_positive(user_in_db, async_client_httpx, db_session):
     """
     Позитивный тест эндпоинта получения JWT токена по логину и паролю.
     """
