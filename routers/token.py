@@ -1,10 +1,12 @@
 from typing import Annotated, TYPE_CHECKING
 
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, status, HTTPException, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
+from config import settings
 from crud.auth import authenticate_user
 from internal.dependencies import SessionDep
+from internal.ratelimit import limiter
 from security.jwt import generate_jwt_token
 
 if TYPE_CHECKING:
@@ -35,7 +37,8 @@ async def authenticate_user_by_creds(session: SessionDep, form_data: OAuth2Passw
 
 
 @router.post('/')
-async def obtain_token(user: Annotated['User', Depends(authenticate_user_by_creds)]) -> dict:
+@limiter.limit(settings.obtain_jwt_token_ratelimit)
+async def obtain_token(user: Annotated['User', Depends(authenticate_user_by_creds)], request: Request ) -> dict:
     """
     Получение JWT токена авторизации по имени и паролю пользователя.
     """

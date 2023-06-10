@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     root_path: Path = Path(__file__).resolve().parent
     logging_config_file_path: FilePath = 'internal/logging/configuration.yaml'
     access_token_expire_minutes: int
+    obtain_jwt_token_ratelimit: str = '10/minute'
 
     class Config:
         env_file = '.env'

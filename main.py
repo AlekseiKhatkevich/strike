@@ -3,9 +3,12 @@ from typing import AsyncContextManager
 
 from fastapi import FastAPI, status
 from fastapi.responses import ORJSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from config import settings
 from internal.logging import configure_loggers
+from internal.ratelimit import limiter
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 from routers import users, token
 from security.invitation import InvitationTokenDeclinedException
@@ -18,6 +21,7 @@ __all__ = (
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncContextManager[None]:
     configure_loggers()
+    app.state.limiter = limiter
     yield
 
 app = FastAPI(
@@ -25,6 +29,8 @@ app = FastAPI(
     debug=settings.debug,
     lifespan=lifespan,
 )
+
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(users.router, prefix='/users')
 app.include_router(users.router_without_jwt, prefix='/users')

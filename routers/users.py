@@ -8,8 +8,10 @@ from fastapi import (
 from loguru import logger
 from sqlalchemy import exc as so_exc
 
+from config import settings
 from crud.users import create_new_user
 from internal.dependencies import SessionDep, jwt_authorize
+from internal.ratelimit import limiter
 from serializers.users import UserRegistrationSerializer
 
 __all__ = (
@@ -22,8 +24,10 @@ router_without_jwt = APIRouter(tags=['users'])
 
 
 @router_without_jwt.post('/', status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.obtain_jwt_token_ratelimit)
 async def register_new_user(session: SessionDep,
                             user_data: UserRegistrationSerializer,
+                            request: Request,
                             ) -> dict[str, int]:
     """
     Создание пользователя.
