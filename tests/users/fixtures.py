@@ -31,7 +31,7 @@ async def user_in_db(db_session, user_in_db_factory) -> Awaitable['User']:
 @pytest.fixture
 def invitation_token(faker) -> str:
     """
-    JST токен приглашения.
+    JVT токен приглашения.
     """
     future_dt = faker.future_datetime(tzinfo=datetime.UTC)
     return generate_invitation_token(future_dt)

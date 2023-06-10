@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from fastapi import (
     APIRouter,
     status,
@@ -9,10 +11,10 @@ from loguru import logger
 from sqlalchemy import exc as so_exc
 
 from config import settings
-from crud.users import create_new_user
-from internal.dependencies import SessionDep, jwt_authorize
+from crud.users import create_new_user, get_user_by_id
+from internal.dependencies import SessionDep, jwt_authorize, UserIdDep
 from internal.ratelimit import limiter
-from serializers.users import UserRegistrationSerializer
+from serializers.users import UserRegistrationSerializer, UserOutMeSerializer
 
 __all__ = (
     'router',
@@ -43,7 +45,9 @@ async def register_new_user(session: SessionDep,
     return {'id': created_user.id}
 
 
-@router.get('/ping/')
-async def ping(request: Request):
-    logger.warning("some warnings")
-    return request.state.user_id
+@router.get('/me/')
+async def get_current_user(session: SessionDep, user_id: UserIdDep) -> UserOutMeSerializer:
+    """
+    Сведения о юзере.
+    """
+    return await get_user_by_id(session, user_id)

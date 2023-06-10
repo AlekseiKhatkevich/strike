@@ -1,3 +1,4 @@
+import contextvars
 from typing import Annotated, AsyncGenerator
 
 import jwt
@@ -21,6 +22,7 @@ __all__ = (
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+user_id_context_var: contextvars.ContextVar[int] = contextvars.ContextVar('user_id')
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -48,6 +50,7 @@ def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Re
         ) from err
     else:
         request.state.user_id = user_id
+        user_id_context_var.set(user_id)
         return user_id
 
 

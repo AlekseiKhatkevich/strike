@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated
@@ -18,12 +19,27 @@ from internal.database import async_session
 
 __all__ = (
     'UserRegistrationSerializer',
+    'UserOutMeSerializer',
 )
 
 
 password_regexp = re.compile(USER_PASSWORD_REGEXP)
 password_strength_error_message = 'Password is not strong enough.'
 password_commonness_error_message = 'Password is common hence weak.'
+
+
+class UserOutMeSerializer(BaseModel):
+    """
+    Для отдачи основных данных юзера.
+    """
+    id: int
+    name: str
+    registration_date: datetime.datetime
+    email: EmailStr | None
+    is_active: bool
+
+    class Config:
+        orm_mode = True
 
 
 class UserRegistrationSerializer(BaseModel):
