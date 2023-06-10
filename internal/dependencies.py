@@ -7,7 +7,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import get_settings, Settings
-from internal.database import async_session
+from internal.database import async_session, db_session_context_var
 from security import sensitive
 from security.jwt import validate_jwt_token
 
@@ -28,6 +28,8 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     Асинхронная сессия БД.
     """
     async with async_session() as _session:
+        #  получить сессию через s = db_session_context_var.get()
+        db_session_context_var.set(_session)
         yield _session
 
 
