@@ -1,6 +1,8 @@
 import datetime
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select
+
 from crud.auth import check_invitation_token_used_already
 from crud.helpers import commit_if_not_in_transaction
 from models import User, UsedToken
@@ -19,11 +21,19 @@ __all__ = (
 
 
 @commit_if_not_in_transaction
-async def get_user_by_id(session: 'AsyncSession', user_id: int, *, raise_exc: bool = False) -> User | None:
+async def get_user_by_id(session: 'AsyncSession',
+                         user_id: int,
+                         *,
+                         raise_exc: bool = False,
+                         only_active: bool = False,
+                         ) -> User | None:
     """
     Получение юзера по id.
     """
-    user = await session.get(User, user_id)
+    stmt = select(User).where(User.id == user_id)
+    if only_active:
+        stmt = stmt.where(User.is_active == True)
+    user = await session.scalar(stmt)
     if user is None and raise_exc:
         raise ModelEntryDoesNotExistsInDbError(
             f'User with user_id {user_id} does not exists.'
