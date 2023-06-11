@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from email_validator import validate_email
 from sqlalchemy import (
@@ -84,7 +84,7 @@ class User(UpdatedAtMixin, Base):
             name='hashed_password',
         ),
     )
-
+    _cached_at: ClassVar[datetime.datetime]
     __repr__ = __str__ = lambda self: f'User "{self.name}" with id={self.id}'
 
     @validates('email')
