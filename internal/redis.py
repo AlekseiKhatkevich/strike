@@ -1,6 +1,6 @@
 import datetime
 import pickle
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import redis.asyncio as redis
 
@@ -76,7 +76,7 @@ class UsersCache:
         async with RedisConnectionContextManager(self._connection) as conn:
             await conn.hset(self.users_hash_name, user.id, pickle.dumps(user))
 
-    async def _get_user_from_redis(self, user_id: int) -> 'User' | None:
+    async def _get_user_from_redis(self, user_id: int) -> Optional['User']:
         """
         Получаем данные юзера из редиса и десериализуем их до инстанса модели юзера.
         """

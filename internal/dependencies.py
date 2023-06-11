@@ -1,5 +1,5 @@
 import contextvars
-from typing import Annotated, AsyncGenerator
+from typing import Annotated, AsyncGenerator, TYPE_CHECKING
 
 import jwt
 from fastapi import Depends, status, HTTPException, Request
@@ -9,20 +9,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import get_settings, Settings
 from internal.database import async_session, db_session_context_var
+from internal.redis import UsersCache
 from security import sensitive
 from security.jwt import validate_jwt_token
+
+if TYPE_CHECKING:
+    from models.users import User
 
 __all__ = (
     'SessionDep',
     'SettingsDep',
     'UserIdDep',
+    'UserModelInstDep',
     'jwt_authorize',
     'get_session',
+    'get_user_instance',
 )
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 user_id_context_var: contextvars.ContextVar[int] = contextvars.ContextVar('user_id')
+user_cache = UsersCache(only_active=True)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -57,3 +64,13 @@ def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Re
 SessionDep = Annotated[AsyncSession, Depends(get_session, use_cache=False)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UserIdDep = Annotated[int, Depends(jwt_authorize)]
+
+
+async def get_user_instance(session: SessionDep, user_id: UserIdDep) -> 'User':
+    """
+    Отдает инстанс модели юзера.
+    """
+    return await user_cache.get_user(session, user_id)
+
+
+UserModelInstDep = Annotated['User', Depends(get_user_instance)]

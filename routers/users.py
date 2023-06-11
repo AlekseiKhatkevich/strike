@@ -12,7 +12,7 @@ from sqlalchemy import exc as so_exc
 
 from config import settings
 from crud.users import create_new_user, get_user_by_id
-from internal.dependencies import SessionDep, jwt_authorize, UserIdDep
+from internal.dependencies import SessionDep, jwt_authorize, UserIdDep, UserModelInstDep
 from internal.ratelimit import limiter
 from serializers.users import UserRegistrationSerializer, UserOutMeSerializer
 
@@ -46,8 +46,8 @@ async def register_new_user(session: SessionDep,
 
 
 @router.get('/me/')
-async def get_current_user(session: SessionDep, user_id: UserIdDep) -> UserOutMeSerializer:
+async def get_current_user(user: UserModelInstDep) -> UserOutMeSerializer:
     """
     Сведения о юзере.
     """
-    return await get_user_by_id(session, user_id)
+    return user
