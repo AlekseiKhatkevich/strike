@@ -4,6 +4,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated
 
+import orjson
 from pydantic import (
     BaseModel,
     Field,
@@ -20,6 +21,7 @@ from internal.database import async_session
 __all__ = (
     'UserRegistrationSerializer',
     'UserOutMeSerializer',
+    'UserForRedisCacheSerializer',
 )
 
 
@@ -40,6 +42,22 @@ class UserOutMeSerializer(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+def orjson_dumps(v, *, default):
+    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+    return orjson.dumps(v, default=default).decode()
+
+
+class UserForRedisCacheSerializer(UserOutMeSerializer):
+    """
+    Для кеширования в редисе.
+    """
+    updated_at: datetime.datetime | None
+
+    class Config:
+        json_loads = orjson.loads
+        json_dumps = orjson_dumps
 
 
 class UserRegistrationSerializer(BaseModel):

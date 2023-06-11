@@ -17,7 +17,6 @@ from sqlalchemy.sql import func
 
 from internal.constants import EMAIL_REGEXP, BCRYPT_REGEXP
 from internal.database import Base
-from security.jwt import generate_jwt_token
 from .annotations import BigIntPk
 from .mixins import UpdatedAtMixin
 
