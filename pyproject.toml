@@ -26,7 +26,7 @@ pyyaml = "6.*"
 loguru = "0.7.*"
 python-multipart = "^0.0.6"
 slowapi = "0.1.*"
-redis = {extras = ["hiredis"], version = "4.*"}
+redis = {extras = ["hiredis"], version = "^4.5.5"}
 
 
 [tool.poetry.group.dev.dependencies]

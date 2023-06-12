@@ -19,7 +19,7 @@ __all__ = (
 
 # https://redis.readthedocs.io/en/stable/examples/asyncio_examples.html
 
-redis_connection = redis.from_url(settings.redis_dsn + '/1')
+redis_connection = redis.from_url(settings.redis_dsn)
 
 
 class RedisConnectionContextManager:

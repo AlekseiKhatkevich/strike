@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import AbstractEventLoop
 from typing import AsyncGenerator
 
 import pytest
@@ -12,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from internal.database import Base, async_session, engine
 from internal.dependencies import get_session
+from internal.redis import redis_connection
 from main import app
 
 pytest_plugins = [
@@ -104,3 +106,31 @@ def truncate_db(request):
                 await session.commit()
 
     asyncio.run(_trunc())
+
+
+@pytest.fixture(autouse=True)
+async def clean_redis_after_each_test() -> None:
+    """
+    Подчищаем редис после каждого теста.
+    """
+    yield None
+    try:
+        await redis_connection.flushdb()
+    finally:
+        await redis_connection.close()
+
+
+@pytest.fixture(scope='session')
+def event_loop() -> AbstractEventLoop:
+    """
+    Заменяем стандартную фикстуру event_loop так как с ней есть проблемы.
+    https://stackoverflow.com/questions/61022713/pytest-asyncio-has-a-closed-event-loop-but-only-when-running-all-tests
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        yield loop
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        yield loop
+    finally:
+        loop.close()
