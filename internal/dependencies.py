@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import get_settings, Settings
 from internal.database import async_session, db_session_context_var
-from internal.redis import UsersCache
+from internal.redis import user_cache
 from security import sensitive
 from security.jwt import validate_jwt_token
 
@@ -29,7 +29,6 @@ __all__ = (
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 user_id_context_var: contextvars.ContextVar[int] = contextvars.ContextVar('user_id')
-user_cache = UsersCache(only_active=True)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -60,8 +59,8 @@ def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Re
         user_id_context_var.set(user_id)
         return user_id
 
-
-SessionDep = Annotated[AsyncSession, Depends(get_session, use_cache=False)]
+# SessionDep = Annotated[AsyncSession, Depends(get_session, use_cache=False)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UserIdDep = Annotated[int, Depends(jwt_authorize)]
 

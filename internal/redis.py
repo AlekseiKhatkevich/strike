@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 __all__ = (
     'redis_connection',
     'UsersCache',
+    'user_cache'
 )
 
 # https://redis.readthedocs.io/en/stable/examples/asyncio_examples.html
@@ -46,6 +47,13 @@ class UsersCache:
         self._connection = connection or redis_connection
         self.only_active = only_active
 
+    async def delete_from_cache_by_id(self, user_id: int) -> None:
+        """
+        Удаляет запись кеша юзера по его id.
+        """
+        async with RedisConnectionContextManager(self._connection) as conn:
+            await conn.hdel(self.users_hash_name, user_id)
+
     @staticmethod
     def _should_update_from_db(user: 'User') -> bool:
         """
@@ -63,8 +71,9 @@ class UsersCache:
             if self._should_update_from_db(user):  # смотрим не просрочен ли срок его хранения в кеше
                 return await self._get_user_from_db(session, user_id)  # если да - то обновляем из бд
             else:
-                return await session.merge(user, load=False)  # если нет, то добавляем его в сессию.
-        else:  # если его нет в кеше - то получаем юзера и бд
+                # если нет, то добавляем его в сессию (если нужно).
+                return await session.merge(user, load=False) if user not in session else user
+        else:  # если его нет в кеше - то получаем юзера из бд
             return await self._get_user_from_db(session, user_id)
 
     async def _add_user_into_redis(self, user: 'User') -> None:
@@ -94,3 +103,6 @@ class UsersCache:
         user = await get_user_by_id(session, user_id, raise_exc=True, only_active=self.only_active)
         await self._add_user_into_redis(user)
         return user
+
+
+user_cache = UsersCache(only_active=True)

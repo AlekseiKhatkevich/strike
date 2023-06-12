@@ -7,6 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from config import settings
+from events import register_all_sqlalchemy_events
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
 from models.exceptions import ModelEntryDoesNotExistsInDbError
@@ -22,6 +23,7 @@ __all__ = (
 async def lifespan(app: FastAPI) -> AsyncContextManager[None]:
     configure_loggers()
     app.state.limiter = limiter
+    register_all_sqlalchemy_events()
     yield
 
 app = FastAPI(

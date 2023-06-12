@@ -1,6 +1,6 @@
+import contextvars
 import datetime
 import uuid
-import contextvars
 
 from sqlalchemy import (
     BigInteger,
@@ -10,7 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from config import settings
 from internal.typing_and_types import BigIntType
@@ -34,11 +34,13 @@ engine = create_async_engine(
 )
 
 
+sync_maker = sessionmaker()
 async_session = async_sessionmaker(
     autocommit=False,
     bind=engine,
     expire_on_commit=False,
     # autobegin=False,
+    sync_session_class=sync_maker,
 )
 
 db_session_context_var: contextvars.ContextVar[AsyncSession] = contextvars.ContextVar('db_session')
