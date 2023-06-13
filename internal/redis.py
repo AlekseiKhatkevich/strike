@@ -34,7 +34,7 @@ redis_connection = redis.from_url(
     socket_connect_timeout=settings.redis_socket_connection_timeout,
     socket_timeout=settings.redis_socket_timeout,
     retry=retry,
-    retry_on_error=[BusyLoadingError, ConnectionError, TimeoutError]
+    retry_on_error=[BusyLoadingError, ConnectionError, TimeoutError],
 )
 
 

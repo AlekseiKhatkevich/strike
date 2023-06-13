@@ -86,6 +86,7 @@ def override_session_for_tests(db_session) -> None:
     Замена обычной сессии БД на сессию полностью транзакционную.
     https://www.fastapitutorial.com/blog/unit-testing-in-fastapi/
     """
+
     def _get_test_db():
         yield db_session
 
@@ -93,21 +94,18 @@ def override_session_for_tests(db_session) -> None:
 
 
 @pytest.fixture(scope='session', autouse=True)
-def truncate_db(request):
+async def truncate_db(request):
     """
     Чистим базу после каждой сессии на всякий случай.
     """
     yield None
 
-    async def _trunc():
-        if 'no_db_calls' not in request.keywords:
-            tables = [table.name for table in Base.metadata.sorted_tables]
-            statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-            async with async_session() as session:
-                await session.execute(statement)
-                await session.commit()
-
-    asyncio.run(_trunc())
+    if 'no_db_calls' not in request.keywords:
+        tables = [table.name for table in Base.metadata.sorted_tables]
+        statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+        async with async_session() as session:
+            await session.execute(statement)
+            await session.commit()
 
 
 @pytest.fixture(autouse=True)
