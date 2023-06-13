@@ -14,10 +14,10 @@ if TYPE_CHECKING:
 __all__ = (
     'redis_connection',
     'UsersCache',
-    'user_cache'
+    'user_cache',
+    'RedisConnectionContextManager',
 )
 
-# https://redis.readthedocs.io/en/stable/examples/asyncio_examples.html
 
 redis_connection = redis.from_url(settings.redis_dsn)
 
@@ -25,8 +25,8 @@ redis_connection = redis.from_url(settings.redis_dsn)
 class RedisConnectionContextManager:
     """
     Закрывает соединение по выходу, как и рекомендуют в документации.
+    # https://redis.readthedocs.io/en/stable/examples/asyncio_examples.html
     """
-
     def __init__(self, connection: redis.Redis):
         self._connection = connection
 
@@ -91,10 +91,8 @@ class UsersCache:
         """
         async with RedisConnectionContextManager(self._connection) as conn:
             user_data = await conn.hget(self.users_hash_name, user_id)
-        if user_data is None:
-            return None
-        user = pickle.loads(user_data)
-        return user
+
+        return pickle.loads(user_data) if user_data is not None else None
 
     async def _get_user_from_db(self, session: 'AsyncSession', user_id: int) -> 'User':
         """

@@ -3,6 +3,7 @@ from asyncio import AbstractEventLoop
 from typing import AsyncGenerator
 
 import pytest
+import redis
 from _pytest.logging import LogCaptureFixture
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
@@ -13,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from internal.database import Base, async_session, engine
 from internal.dependencies import get_session
-from internal.redis import redis_connection
+from internal.redis import redis_connection, RedisConnectionContextManager
 from main import app
 
 pytest_plugins = [
@@ -134,3 +135,9 @@ def event_loop() -> AbstractEventLoop:
         yield loop
     finally:
         loop.close()
+
+
+@pytest.fixture
+async def redis_conn() -> redis.Redis:
+    async with RedisConnectionContextManager(redis_connection) as conn:
+        yield conn
