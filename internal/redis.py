@@ -15,6 +15,7 @@ from redis.retry import Retry
 
 from config import settings
 from crud.users import get_user_by_id
+from internal.pickle import restricted_loads
 
 if TYPE_CHECKING:
     from models import User
@@ -123,7 +124,7 @@ class UsersCache:
         """
         async with self.redis_cm() as conn:
             user_data = await conn.hget(self.users_hash_name, user_id)
-            return pickle.loads(user_data) if user_data is not None else None
+            return restricted_loads(user_data) if user_data is not None else None
 
     async def _get_user_from_db(self, session: 'AsyncSession', user_id: int) -> 'User':
         """
