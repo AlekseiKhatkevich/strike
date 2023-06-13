@@ -47,6 +47,13 @@ class UsersCache:
         self._connection = connection or redis_connection
         self.only_active = only_active
 
+    async def exists_in_cache(self, user_id: str) -> bool:
+        """
+        Есть ли юзер в кеше?
+        """
+        async with RedisConnectionContextManager(self._connection) as conn:
+            return await conn.hexists(self.users_hash_name, user_id)
+
     async def delete_from_cache_by_id(self, user_id: int) -> None:
         """
         Удаляет запись кеша юзера по его id.

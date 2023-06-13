@@ -12,6 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from events import register_all_sqlalchemy_events
 from internal.database import Base, async_session, engine
 from internal.dependencies import get_session
 from internal.redis import redis_connection, RedisConnectionContextManager
@@ -139,5 +140,16 @@ def event_loop() -> AbstractEventLoop:
 
 @pytest.fixture
 async def redis_conn() -> redis.Redis:
+    """
+    Коннект к редису.
+    """
     async with RedisConnectionContextManager(redis_connection) as conn:
         yield conn
+
+
+@pytest.fixture(scope='session', autouse=True)
+def register_sqlalchemy_events():
+    """
+    Регистрируем эвенты sqlalchemy
+    """
+    register_all_sqlalchemy_events()

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_factoryboy import register
 
+from internal.redis import UsersCache
 from security.invitation import generate_invitation_token
 from tests.factories.auth import UsedTokenFactory
 from tests.factories.users import (
@@ -15,6 +16,23 @@ from tests.factories.users import (
 if TYPE_CHECKING:
     from models.users import User
     from models.auth import UsedToken
+
+
+@pytest.fixture
+def users_cache() -> UsersCache:
+    """
+    Отдает экз. кл. кеша юзеров.
+    """
+    return UsersCache(only_active=True)
+
+
+@pytest.fixture
+async def user_in_redis_cache(user_in_db, users_cache) -> 'User':
+    """
+    Сохраняет юзера в кеше редиса.
+    """
+    await users_cache._add_user_into_redis(user_in_db)
+    return user_in_db
 
 
 @pytest.fixture

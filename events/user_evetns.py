@@ -20,6 +20,7 @@ def clear_user_cache(mapper, connection, target):
     # https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task (weak refs!!!)
     _background_tasks.add(task)
     task.add_done_callback(_background_tasks.discard)
+    return task
 
 
 def register():
