@@ -1,8 +1,17 @@
 import datetime
 import pickle
+from functools import partial
 from typing import TYPE_CHECKING, Optional
 
 import redis.asyncio as redis
+from loguru import logger
+from redis.backoff import ExponentialBackoff
+from redis.exceptions import (
+    BusyLoadingError,
+    ConnectionError,
+    TimeoutError,
+)
+from redis.retry import Retry
 
 from config import settings
 from crud.users import get_user_by_id
@@ -18,8 +27,15 @@ __all__ = (
     'RedisConnectionContextManager',
 )
 
+retry = Retry(ExponentialBackoff(), 1)
 
-redis_connection = redis.from_url(settings.redis_dsn)
+redis_connection = redis.from_url(
+    settings.redis_dsn,
+    socket_connect_timeout=settings.redis_socket_connection_timeout,
+    socket_timeout=settings.redis_socket_timeout,
+    retry=retry,
+    retry_on_error=[BusyLoadingError, ConnectionError, TimeoutError]
+)
 
 
 class RedisConnectionContextManager:
@@ -27,14 +43,22 @@ class RedisConnectionContextManager:
     Закрывает соединение по выходу, как и рекомендуют в документации.
     # https://redis.readthedocs.io/en/stable/examples/asyncio_examples.html
     """
-    def __init__(self, connection: redis.Redis):
+    def __init__(self, connection: redis.Redis, supress_exc=False):
+        """
+        :param connection: Соединение с редисом.
+        :param supress_exc: Подавлять ли полученные внутри блока with исключения или нет.
+        """
         self._connection = connection
+        self._supress_exc = supress_exc
 
     async def __aenter__(self) -> redis.Redis:
         return self._connection
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
         await self._connection.close()
+        if any([exc_type, exc_val, exc_tb]):
+            logger.exception(exc_val)
+        return self._supress_exc
 
 
 class UsersCache:
@@ -46,19 +70,20 @@ class UsersCache:
     def __init__(self, connection: redis.Redis = None, only_active: bool = False) -> None:
         self._connection = connection or redis_connection
         self.only_active = only_active
+        self.redis_cm = partial(RedisConnectionContextManager, self._connection, True)
 
     async def exists_in_cache(self, user_id: str) -> bool:
         """
         Есть ли юзер в кеше?
         """
-        async with RedisConnectionContextManager(self._connection) as conn:
+        async with self.redis_cm() as conn:
             return await conn.hexists(self.users_hash_name, user_id)
 
     async def delete_from_cache_by_id(self, user_id: int) -> None:
         """
         Удаляет запись кеша юзера по его id.
         """
-        async with RedisConnectionContextManager(self._connection) as conn:
+        async with self.redis_cm() as conn:
             await conn.hdel(self.users_hash_name, user_id)
 
     @staticmethod
@@ -89,17 +114,16 @@ class UsersCache:
         """
         # noinspection PyClassVar
         user._cached_at = datetime.datetime.now(tz=datetime.UTC)
-        async with RedisConnectionContextManager(self._connection) as conn:
+        async with self.redis_cm() as conn:
             await conn.hset(self.users_hash_name, user.id, pickle.dumps(user))
 
     async def _get_user_from_redis(self, user_id: int) -> Optional['User']:
         """
         Получаем данные юзера из редиса и десериализуем их до инстанса модели юзера.
         """
-        async with RedisConnectionContextManager(self._connection) as conn:
+        async with self.redis_cm() as conn:
             user_data = await conn.hget(self.users_hash_name, user_id)
-
-        return pickle.loads(user_data) if user_data is not None else None
+            return pickle.loads(user_data) if user_data is not None else None
 
     async def _get_user_from_db(self, session: 'AsyncSession', user_id: int) -> 'User':
         """
