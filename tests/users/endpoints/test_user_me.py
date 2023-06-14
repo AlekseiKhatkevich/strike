@@ -1,19 +1,12 @@
-import pytest
 from fastapi import status
 
-from security.jwt import generate_jwt_token
+from crud.helpers import exists_in_db
+from models import User
 
 EP_URl = '/users/me/'
 
 
-@pytest.fixture
-def auth_header(user_in_db):
-    return {
-        'Authorization': f'Bearer {generate_jwt_token(user_in_db.id)}'
-    }
-
-
-async def test_users_me_ep_positive(user_in_db, async_client_httpx, auth_header):
+async def test_users_me_ep_positive(user_in_db, async_client_httpx):
     """
     Тест эндпойнта users/me который отдает данные о текущем юзере.
     """
@@ -25,7 +18,17 @@ async def test_users_me_ep_positive(user_in_db, async_client_httpx, auth_header)
         is_active=user_in_db.is_active,
     )
 
-    response = await async_client_httpx.get(EP_URl, headers=auth_header)
+    response = await async_client_httpx.get(EP_URl)
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == expected_response_json
+
+
+async def test_user_me_delete(user_in_db, async_client_httpx, db_session):
+    """
+    Тест эндпойнта users/me через DELETE. Удаление текущего юзера.
+    """
+    response = await async_client_httpx.delete(EP_URl)
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not await exists_in_db(db_session, User, User.id == user_in_db.id)

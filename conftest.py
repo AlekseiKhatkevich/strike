@@ -17,6 +17,7 @@ from internal.database import Base, async_session, engine
 from internal.dependencies import get_session
 from internal.redis import redis_connection, RedisConnectionContextManager
 from main import app
+from security.jwt import generate_jwt_token
 
 pytest_plugins = [
     'tests.users.fixtures',
@@ -48,11 +49,15 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-async def async_client_httpx() -> AsyncClient:
+async def async_client_httpx(user_in_db) -> AsyncClient:
     """
     Ассинхронный клиент для тестирования апи.
     """
-    async with AsyncClient(app=app, base_url='http://localhost:8000/') as client:
+    async with AsyncClient(
+            app=app,
+            base_url='http://localhost:8000/',
+            headers={'Authorization': f'Bearer {generate_jwt_token(user_in_db.id)}'}
+    ) as client:
         yield client
 
 

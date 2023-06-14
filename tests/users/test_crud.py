@@ -5,7 +5,8 @@ from pydantic import SecretStr
 from sqlalchemy import insert
 
 from crud.auth import check_password_commonness, check_invitation_token_used_already
-from crud.users import create_new_user
+from crud.helpers import exists_in_db
+from crud.users import create_new_user, delete_user
 from internal.constants import BCRYPT_REGEXP
 from models import User, CommonPassword
 from security.invitation import InvitationTokenDeclinedException
@@ -72,3 +73,12 @@ async def test_check_check_invitation_token_used_already_negative(used_token_in_
     """
     with pytest.raises(InvitationTokenDeclinedException):
         await check_invitation_token_used_already(db_session, used_token_in_db.token)
+
+
+async def test_delete_user(db_session, user_in_db):
+    """
+    Тест ф-ции delete_user которая должна удалить юзера.
+    """
+    await delete_user(db_session, user_in_db)
+
+    assert not await exists_in_db(db_session, User, User.id == user_in_db.id)
