@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from fastapi import (
     APIRouter,
     status,
@@ -7,12 +5,11 @@ from fastapi import (
     Request,
     Depends,
 )
-from loguru import logger
 from sqlalchemy import exc as so_exc
 
 from config import settings
-from crud.users import create_new_user, get_user_by_id
-from internal.dependencies import SessionDep, jwt_authorize, UserIdDep, UserModelInstDep
+from crud.users import create_new_user, delete_user
+from internal.dependencies import SessionDep, jwt_authorize, UserModelInstDep
 from internal.ratelimit import limiter
 from serializers.users import UserRegistrationSerializer, UserOutMeSerializer
 
@@ -51,3 +48,11 @@ async def get_current_user(user: UserModelInstDep) -> UserOutMeSerializer:
     Сведения о юзере.
     """
     return user
+
+
+@router.delete('/me/', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_current_user(session: SessionDep, user: UserModelInstDep):
+    """
+    Удаляет текущего пользователя.
+    """
+    await delete_user(session, user)

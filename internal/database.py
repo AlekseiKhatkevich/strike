@@ -32,8 +32,6 @@ engine = create_async_engine(
             'prepared_statement_name_func': lambda: f'__asyncpg_{uuid.uuid4()}__',
         },
 )
-
-
 sync_maker = sessionmaker()
 async_session = async_sessionmaker(
     autocommit=False,

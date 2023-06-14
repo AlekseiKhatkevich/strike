@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 __all__ = (
     'create_new_user',
     'get_user_by_id',
+    'delete_user',
 )
 
 
@@ -39,6 +40,14 @@ async def get_user_by_id(session: 'AsyncSession',
             f'User with user_id {user_id} does not exists.'
         )
     return user
+
+
+async def delete_user(session: 'AsyncSession', user: 'User') -> None:
+    """
+    Удаление юзера.
+    """
+    await session.delete(user)
+    await session.commit()
 
 
 async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> User:
