@@ -8,10 +8,14 @@ from fastapi import (
 from sqlalchemy import exc as so_exc
 
 from config import settings
-from crud.users import create_new_user, delete_user
+from crud.users import create_new_user, delete_user, update_user
 from internal.dependencies import SessionDep, jwt_authorize, UserModelInstDep
 from internal.ratelimit import limiter
-from serializers.users import UserRegistrationSerializer, UserOutMeSerializer
+from serializers.users import (
+    UserRegistrationSerializer,
+    UserOutMeSerializer,
+    UserInModificationSerializer,
+)
 
 __all__ = (
     'router',
@@ -56,3 +60,15 @@ async def delete_current_user(session: SessionDep, user: UserModelInstDep):
     Удаляет текущего пользователя.
     """
     await delete_user(session, user)
+
+
+@router.put('/me/')
+async def update_current_user(session: SessionDep,
+                              user: UserModelInstDep,
+                              user_data: UserInModificationSerializer,
+                              ) -> UserOutMeSerializer:
+    """
+    Обновляет текущего юзера. Так же можно поменять пароль если передать его в поле password.
+    """
+    # noinspection PyTypeChecker
+    return await update_user(session, user, user_data.dict(exclude_unset=True))

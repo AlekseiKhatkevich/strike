@@ -18,6 +18,7 @@ __all__ = (
     'create_new_user',
     'get_user_by_id',
     'delete_user',
+    'update_user',
 )
 
 
@@ -48,6 +49,21 @@ async def delete_user(session: 'AsyncSession', user: 'User') -> None:
     """
     await session.delete(user)
     await session.commit()
+
+
+async def update_user(session: 'AsyncSession',
+                      user: 'User',
+                      user_data: dict,
+                      ) -> 'User':
+    """
+    Обновляем данный юзера.
+    """
+    if (new_password := user_data.get('password')) is not None:
+        user.hashed_password = make_hash(new_password.get_secret_value())
+    for field, value in user_data.items():
+        setattr(user, field, value)
+    await session.commit()
+    return user
 
 
 async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationSerializer') -> User:

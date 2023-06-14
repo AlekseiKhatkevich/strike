@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from email_validator import validate_email
 from sqlalchemy import (
@@ -26,6 +26,8 @@ if TYPE_CHECKING:
 __all__ = (
     'User',
 )
+
+_T_EMAIL = TypeVar('_T_EMAIL', str, None)
 
 
 class User(UpdatedAtMixin, Base):
@@ -88,6 +90,8 @@ class User(UpdatedAtMixin, Base):
     __repr__ = __str__ = lambda self: f'User "{self.name}" with id={self.id}'
 
     @validates('email')
-    def validate_email(self, _, value: str) -> str:
+    def validate_email(self, _, value: _T_EMAIL) -> _T_EMAIL:
+        if value is None:
+            return None
         emailinfo = validate_email(value, check_deliverability=False)
         return emailinfo.normalized

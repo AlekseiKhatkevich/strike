@@ -20,6 +20,7 @@ from internal.database import async_session
 __all__ = (
     'UserRegistrationSerializer',
     'UserOutMeSerializer',
+    'UserInModificationSerializer',
 )
 
 
@@ -42,26 +43,26 @@ class UserOutMeSerializer(BaseModel):
         orm_mode = True
 
 
-class UserRegistrationSerializer(BaseModel):
+class UserBaseSerializer(BaseModel):
     """
-    Для первоначального создания юзера через апи.
+
     """
     name: constr(max_length=64)
-    email: EmailStr | None
     password: Annotated[SecretStr, Field(max_length=72)]
-    invitation_token: SecretStr
-    invitation_password: SecretStr | None
+    email: EmailStr | None
 
     class Config:
         anystr_strip_whitespace = True
         min_anystr_length = 1
         frozen = True
 
-    @validator('password')
-    def password_strength(cls, value: SecretStr) -> SecretStr:
+    @validator('password', allow_reuse=True)
+    def password_strength(cls, value: SecretStr | None) -> SecretStr | None:
         """
         Проверка пароля на минимально допустимую сложность.
         """
+        # if value is None:
+        #     return value
         password = value.get_secret_value()
         match = password_regexp.match(password)
         if match is None:
@@ -70,11 +71,14 @@ class UserRegistrationSerializer(BaseModel):
             )
         return value
 
-    @validator('password')
-    def password_commonness(cls, value: SecretStr) -> SecretStr:
+    @validator('password', allow_reuse=True)
+    def password_commonness(cls, value: SecretStr | None) -> SecretStr | None:
         """
         Проверка пароля по базе самых распространенных паролей.
         """
+        # if value is None:
+        #     return value
+
         async def _check() -> bool:
             async with async_session() as session:
                 return await check_password_commonness(session, value.get_secret_value())
@@ -87,3 +91,20 @@ class UserRegistrationSerializer(BaseModel):
                 password_commonness_error_message,
             )
         return value
+
+
+class UserInModificationSerializer(UserBaseSerializer):
+    """
+    Для изменения данных юзера.
+    """
+    email: EmailStr | None = Field(...)
+    password: Annotated[SecretStr, Field(max_length=72)] | None
+    is_active: bool
+
+
+class UserRegistrationSerializer(UserBaseSerializer):
+    """
+    Для первоначального создания юзера через апи.
+    """
+    invitation_token: SecretStr
+    invitation_password: SecretStr | None
