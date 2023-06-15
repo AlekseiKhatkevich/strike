@@ -1,25 +1,55 @@
 import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
-    Text,
+    Text, Table, Column, ForeignKey,
 )
 from sqlalchemy.orm import (
     validates,
     Mapped,
-    mapped_column,
+    mapped_column, relationship,
 )
 from sqlalchemy.sql import func
 
 from internal.database import Base
+from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
 from models.mixins import UpdatedAtMixin
+from models.validators import positive_integer_only
+
+if TYPE_CHECKING:
+    from .users import User
 
 __all__ = (
     'Strike',
+    # 'strike_user_association_table',
+    'StrikeToUserAssociation'
 )
 
-from models.validators import positive_integer_only
+#  todo сделать через нормальную декларативную основу
+# strike_user_association_table = Table(
+#     'strike_to_user_association_table',
+#     Base.metadata,
+#     Column('strike_id', ForeignKey('strikes.id'), nullable=False, primary_key=True),
+#     Column('user_id', ForeignKey('users.id'), nullable=False),
+# )
+
+
+class StrikeToUserAssociation(Base):
+    """
+
+    """
+    __tablename__ = 'strike_to_user_associations'
+
+    strike_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('strikes.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+    user_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('users.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
 
 
 class Strike(UpdatedAtMixin, Base):
@@ -29,7 +59,6 @@ class Strike(UpdatedAtMixin, Base):
     __tablename__ = 'strikes'
 
     id: Mapped[BigIntPk]
-    # users_involved m2m
     started_at: Mapped[datetime.datetime | None]
     finished_at: Mapped[datetime.datetime | None]
     planned_on_date: Mapped[datetime.date | None]
@@ -40,6 +69,10 @@ class Strike(UpdatedAtMixin, Base):
     # places m2m
     # union_in_charge o2o
     # created_by_user
+
+    users_involved: Mapped[list['User']] = relationship(
+        secondary=StrikeToUserAssociation.__table__,
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -56,10 +89,8 @@ class Strike(UpdatedAtMixin, Base):
         ),
     )
 
-    def __str__(self):
+    def __repr__(self):
         return f'Strike {self.id} on enterprise %ENTERPRISE PLACEHOLDER%'
-
-    __repr__ = __str__
 
     @validates('overall_num_of_employees_involved')
     def validate_overall_num_of_employees_involved(self, field, value):
