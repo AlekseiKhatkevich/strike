@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
-    Text, Table, Column, ForeignKey,
+    Text,
+    ForeignKey,
 )
 from sqlalchemy.orm import (
     validates,
@@ -23,17 +24,8 @@ if TYPE_CHECKING:
 
 __all__ = (
     'Strike',
-    # 'strike_user_association_table',
-    'StrikeToUserAssociation'
+    'StrikeToUserAssociation',
 )
-
-#  todo сделать через нормальную декларативную основу
-# strike_user_association_table = Table(
-#     'strike_to_user_association_table',
-#     Base.metadata,
-#     Column('strike_id', ForeignKey('strikes.id'), nullable=False, primary_key=True),
-#     Column('user_id', ForeignKey('users.id'), nullable=False),
-# )
 
 
 class StrikeToUserAssociation(Base):
@@ -72,6 +64,7 @@ class Strike(UpdatedAtMixin, Base):
 
     users_involved: Mapped[list['User']] = relationship(
         secondary=StrikeToUserAssociation.__table__,
+        back_populates='strikes',
     )
 
     __table_args__ = (
