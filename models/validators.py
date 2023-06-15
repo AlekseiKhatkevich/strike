@@ -1,9 +1,10 @@
+import functools
+import operator
 from numbers import Number
 from typing import TypeVar
 
-
 __all__ = (
-    'limit_value_validator',
+    'positive_integer_only',
 )
 
 
@@ -30,3 +31,6 @@ def limit_value_validator(field_name: str,
         )
     else:
         return value
+
+
+positive_integer_only = functools.partial(limit_value_validator, limit=1, condition_f=operator.ge)

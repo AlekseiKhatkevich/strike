@@ -12,5 +12,4 @@ __all__ = (
 class UpdatedAtMixin:
     updated_at: Mapped[datetime.datetime | None] = mapped_column(
         onupdate=func.now(),
-        # deferred=True,
     )
