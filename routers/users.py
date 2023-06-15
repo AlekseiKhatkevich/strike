@@ -62,6 +62,7 @@ async def delete_current_user(session: SessionDep, user: UserModelInstDep):
     await delete_user(session, user)
 
 
+@router.patch('/me/')
 @router.put('/me/')
 async def update_current_user(session: SessionDep,
                               user: UserModelInstDep,

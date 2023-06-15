@@ -6,7 +6,7 @@ from sqlalchemy import insert
 
 from crud.auth import check_password_commonness, check_invitation_token_used_already
 from crud.helpers import exists_in_db
-from crud.users import create_new_user, delete_user
+from crud.users import create_new_user, delete_user, update_user
 from internal.constants import BCRYPT_REGEXP
 from models import User, CommonPassword
 from security.invitation import InvitationTokenDeclinedException
@@ -82,3 +82,27 @@ async def test_delete_user(db_session, user_in_db):
     await delete_user(db_session, user_in_db)
 
     assert not await exists_in_db(db_session, User, User.id == user_in_db.id)
+
+
+async def test_update_user(db_session, user_in_db):
+    """
+    Тест CRUD ф-ции update_user обновляющей юзера.
+    """
+    user_data = {'name': 'new_test_name'}
+
+    new_user_instance = await update_user(db_session, user_in_db, user_data)
+
+    assert new_user_instance.name == user_data['name']
+    assert await exists_in_db(db_session, User, User.name == user_data['name'])
+
+
+async def test_update_user_new_password(db_session, user_in_db, faker):
+    """
+    Тест CRUD ф-ции update_user обновляющей юзера. Обновляем парольюзера.
+    """
+    old_hashed_password = user_in_db.hashed_password
+    user_data = {'password': SecretStr(faker.password())}
+
+    new_user_instance = await update_user(db_session, user_in_db, user_data)
+
+    assert new_user_instance.hashed_password != old_hashed_password

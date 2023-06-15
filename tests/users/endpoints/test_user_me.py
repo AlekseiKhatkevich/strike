@@ -32,3 +32,20 @@ async def test_user_me_delete(user_in_db, async_client_httpx, db_session):
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not await exists_in_db(db_session, User, User.id == user_in_db.id)
+
+
+async def test_user_me_update(user_in_db, async_client_httpx, db_session):
+    """
+    Позитивный тест эндпойтна  PUT /me/, который обновляет данные текущего юзера.
+    """
+    new_user_data = {'name': 'new_test_name', 'email': 'hardcase@inbox.ru', 'is_active': True}
+
+    response = await async_client_httpx.put(EP_URl, json=new_user_data)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert await exists_in_db(
+        db_session,
+        User,
+        (User.id == user_in_db.id) & (User.name == new_user_data['name']) &
+        (User.email == new_user_data['email']) & (User.is_active == new_user_data['is_active'])
+    )
