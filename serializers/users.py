@@ -45,7 +45,7 @@ class UserOutMeSerializer(BaseModel):
 
 class UserBaseSerializer(BaseModel):
     """
-
+    Базовый сериалайзер юзера.
     """
     name: constr(max_length=64)
     password: Annotated[SecretStr, Field(max_length=72)]
@@ -55,14 +55,13 @@ class UserBaseSerializer(BaseModel):
         anystr_strip_whitespace = True
         min_anystr_length = 1
         frozen = True
+        allow_mutation = False
 
     @validator('password', allow_reuse=True)
     def password_strength(cls, value: SecretStr | None) -> SecretStr | None:
         """
         Проверка пароля на минимально допустимую сложность.
         """
-        # if value is None:
-        #     return value
         password = value.get_secret_value()
         match = password_regexp.match(password)
         if match is None:
@@ -76,9 +75,6 @@ class UserBaseSerializer(BaseModel):
         """
         Проверка пароля по базе самых распространенных паролей.
         """
-        # if value is None:
-        #     return value
-
         async def _check() -> bool:
             async with async_session() as session:
                 return await check_password_commonness(session, value.get_secret_value())
