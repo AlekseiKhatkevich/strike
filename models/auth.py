@@ -12,6 +12,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
+from internal.constants import EN_US_CE_COLLATION_NAME
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from .annotations import BigIntPk
@@ -67,7 +68,7 @@ class CommonPassword(Base):
     id: Mapped[BigIntPk]
 
     password: Mapped[str] = mapped_column(
-        Text(collation='english_ci'),
+        Text(collation=EN_US_CE_COLLATION_NAME),
     )
 
     __table_args__ = (
