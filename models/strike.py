@@ -1,12 +1,14 @@
 import datetime
 from typing import TYPE_CHECKING
+import enum
 
 from sqlalchemy import (
     CheckConstraint,
     Text,
     ForeignKey,
+    Enum,
 )
-from sqlalchemy.dialects.postgresql import TSTZRANGE
+from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
 from sqlalchemy.orm import (
     validates,
     Mapped,
@@ -27,7 +29,21 @@ if TYPE_CHECKING:
 __all__ = (
     'Strike',
     'StrikeToUserAssociation',
+    'UserRole',
 )
+
+
+class UserRole(enum.Enum):
+    """
+
+    """
+    employee = 'EMPLOYEE'
+    union_member = 'UNION_MEMBER'
+    observer = 'OBSERVER'
+    guest = 'GUEST'
+    spy = 'SPY'
+    volunteer = 'VOLUNTEER'
+    coordinator = 'COORDINATOR'
 
 
 class StrikeToUserAssociation(Base):
@@ -44,6 +60,12 @@ class StrikeToUserAssociation(Base):
         ForeignKey('users.id', ondelete='CASCADE',),
         primary_key=True,
     )
+    role: Mapped[Enum | None] = mapped_column(
+        Enum(UserRole, validate_strings=True),
+    )
+
+    def __repr__(self):
+        return f'Strike intermediate table: strike {self.strike_id}, user {self.user_id}'
 
 
 class Strike(UpdatedAtMixin, Base):
@@ -53,8 +75,6 @@ class Strike(UpdatedAtMixin, Base):
     __tablename__ = 'strikes'
 
     id: Mapped[BigIntPk]
-    # started_at: Mapped[datetime.datetime | None]
-    # finished_at: Mapped[datetime.datetime | None]
     duration = mapped_column(TSTZRANGE(), nullable=True)
     planned_on_date: Mapped[datetime.date | None]
     # enterprise o2o
@@ -80,6 +100,9 @@ class Strike(UpdatedAtMixin, Base):
             func.num_nonnulls("duration", "planned_on_date") >= 1,
             name='one_of_dates_is_not_null',
         ),
+        # ExcludeConstraint(
+        #     (duration, '&&')
+        # ),
     )
 
     def __repr__(self):
