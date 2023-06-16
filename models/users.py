@@ -22,7 +22,7 @@ from .mixins import UpdatedAtMixin
 
 if TYPE_CHECKING:
     from .auth import UsedToken
-    from . import Strike, StrikeToUserAssociation
+    from . import StrikeToUserAssociation
 
 __all__ = (
     'User',
@@ -47,7 +47,7 @@ class User(UpdatedAtMixin, Base):
     )
     hashed_password: Mapped[str] = mapped_column(
         String(256),
-        # deferred=True,
+        deferred=True,
     )
     is_active: Mapped[bool] = mapped_column(
         default=True,

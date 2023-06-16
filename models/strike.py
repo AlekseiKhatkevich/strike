@@ -22,6 +22,8 @@ from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
 from models.mixins import UpdatedAtMixin
 from models.validators import positive_integer_only
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.associationproxy import AssociationProxy
 
 if TYPE_CHECKING:
     from .users import User
@@ -100,6 +102,7 @@ class Strike(UpdatedAtMixin, Base):
         back_populates='strike',
         passive_deletes=True,
     )
+    user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
 
     __table_args__ = (
         CheckConstraint(
