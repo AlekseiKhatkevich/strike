@@ -61,6 +61,7 @@ class User(UpdatedAtMixin, Base):
     strikes: Mapped[list['Strike']] = relationship(
         secondary='strike_to_user_associations',
         back_populates='users_involved',
+        passive_deletes=True,
     )
 
     __table_args__ = (

@@ -9,7 +9,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import (
     validates,
     Mapped,
-    mapped_column, relationship,
+    mapped_column,
+    relationship,
 )
 from sqlalchemy.sql import func
 
@@ -35,11 +36,11 @@ class StrikeToUserAssociation(Base):
     __tablename__ = 'strike_to_user_associations'
 
     strike_id: Mapped[BigIntType] = mapped_column(
-        ForeignKey('strikes.id', ondelete='CASCADE'),
+        ForeignKey('strikes.id', ondelete='CASCADE',),
         primary_key=True,
     )
     user_id: Mapped[BigIntType] = mapped_column(
-        ForeignKey('users.id', ondelete='CASCADE'),
+        ForeignKey('users.id', ondelete='CASCADE',),
         primary_key=True,
     )
 
@@ -65,6 +66,7 @@ class Strike(UpdatedAtMixin, Base):
     users_involved: Mapped[list['User']] = relationship(
         secondary=StrikeToUserAssociation.__table__,
         back_populates='strikes',
+        passive_deletes=True,
     )
 
     __table_args__ = (
