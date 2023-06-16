@@ -6,6 +6,7 @@ from sqlalchemy import (
     Text,
     ForeignKey,
 )
+from sqlalchemy.dialects.postgresql import TSTZRANGE
 from sqlalchemy.orm import (
     validates,
     Mapped,
@@ -52,8 +53,9 @@ class Strike(UpdatedAtMixin, Base):
     __tablename__ = 'strikes'
 
     id: Mapped[BigIntPk]
-    started_at: Mapped[datetime.datetime | None]
-    finished_at: Mapped[datetime.datetime | None]
+    # started_at: Mapped[datetime.datetime | None]
+    # finished_at: Mapped[datetime.datetime | None]
+    duration = mapped_column(TSTZRANGE(), nullable=True)
     planned_on_date: Mapped[datetime.date | None]
     # enterprise o2o
     goals: Mapped[str] = mapped_column(Text())
@@ -75,12 +77,8 @@ class Strike(UpdatedAtMixin, Base):
             name='overall_num_of_employees_involved_positive',
         ),
         CheckConstraint(
-            func.num_nonnulls("started_at", "finished_at", "planned_on_date") >= 1,
+            func.num_nonnulls("duration", "planned_on_date") >= 1,
             name='one_of_dates_is_not_null',
-        ),
-        CheckConstraint(
-            r'finished_at > started_at',
-            name='finished_gt_started',
         ),
     )
 
