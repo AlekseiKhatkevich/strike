@@ -1,12 +1,11 @@
 from sqlalchemy import String, ForeignKey, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
 from models.mixins import UpdatedAtMixin
-
 
 __all__ = (
     'Enterprise',
@@ -15,7 +14,7 @@ __all__ = (
 
 class Enterprise(UpdatedAtMixin, Base):
     """
-
+    Модель компании.
     """
     __tablename__ = 'enterprises'
 
@@ -24,7 +23,7 @@ class Enterprise(UpdatedAtMixin, Base):
         String(256),
     )
     region_name: Mapped[BigIntType] = mapped_column(
-        ForeignKey('regions.name', ondelete='PROTECT',),
+        ForeignKey('regions.name', ondelete='RESTRICT', onupdate='CASCADE',),
     )
     place: Mapped[str] = mapped_column(
         Text(collation=RU_RU_CE_COLLATION_NAME),
@@ -35,7 +34,11 @@ class Enterprise(UpdatedAtMixin, Base):
     field_of_activity: Mapped[str | None] = mapped_column(
         String(256),
     )
+    region: Mapped['Region'] = relationship(innerjoin=True)
 
     __table_args__ = (
         UniqueConstraint(name, region_name, place),
     )
+
+    def __repr__(self):
+        return f'Enterprise "{self.name} in region {self.region}"'

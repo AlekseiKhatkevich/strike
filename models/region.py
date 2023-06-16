@@ -9,9 +9,13 @@ __all__ = (
 
 class Region(Base):
     """
+    Регион РФ.
     """
     __tablename__ = 'regions'
 
     name: Mapped[str] = mapped_column(
         primary_key=True,
     )
+
+    def __repr__(self):
+        return f'Region {self.name}'
