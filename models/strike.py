@@ -63,6 +63,12 @@ class StrikeToUserAssociation(Base):
     role: Mapped[Enum | None] = mapped_column(
         Enum(UserRole, validate_strings=True),
     )
+    user: Mapped['User'] = relationship(
+        back_populates='strikes',
+    )
+    strike: Mapped['Strike'] = relationship(
+        back_populates='users_involved',
+    )
 
     def __repr__(self):
         return f'Strike intermediate table: strike {self.strike_id}, user {self.user_id}'
@@ -85,9 +91,13 @@ class Strike(UpdatedAtMixin, Base):
     # union_in_charge o2o
     # created_by_user
 
-    users_involved: Mapped[list['User']] = relationship(
-        secondary=StrikeToUserAssociation.__table__,
-        back_populates='strikes',
+    # users_involved: Mapped[list['User']] = relationship(
+    #     secondary=StrikeToUserAssociation.__table__,
+    #     back_populates='strikes',
+    #     passive_deletes=True,
+    # )
+    users_involved: Mapped[list[StrikeToUserAssociation]] = relationship(
+        back_populates='strike',
         passive_deletes=True,
     )
 

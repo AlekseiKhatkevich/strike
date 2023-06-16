@@ -22,7 +22,7 @@ from .mixins import UpdatedAtMixin
 
 if TYPE_CHECKING:
     from .auth import UsedToken
-    from . import Strike
+    from . import Strike, StrikeToUserAssociation
 
 __all__ = (
     'User',
@@ -58,11 +58,15 @@ class User(UpdatedAtMixin, Base):
     used_token: Mapped['UsedToken'] = relationship(
         back_populates='user'
     )
-    strikes: Mapped[list['Strike']] = relationship(
-        secondary='strike_to_user_associations',
-        back_populates='users_involved',
-        passive_deletes=True,
-    )
+    # strikes: Mapped[list['Strike']] = relationship(
+    #     secondary='strike_to_user_associations',
+    #     back_populates='users_involved',
+    #     passive_deletes=True,
+    # )
+    strikes: Mapped[list['StrikeToUserAssociation']] = relationship(
+            back_populates='user',
+            passive_deletes=True,
+        )
 
     __table_args__ = (
         Index(
