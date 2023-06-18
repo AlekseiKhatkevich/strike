@@ -1,18 +1,15 @@
-from geoalchemy2 import Geometry
+from geoalchemy2 import Geography
 from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
 from internal.database import Base
-
+from internal.typing_and_types import BigIntType
+from models.annotations import BigIntPk
 
 __all__ = (
     'Place',
 )
-
-from internal.typing_and_types import BigIntType
-
-from models.annotations import BigIntPk
 
 
 class Place(Base):
@@ -32,12 +29,14 @@ class Place(Base):
         ForeignKey('regions.name', ondelete='RESTRICT', onupdate='CASCADE',),
     )
     coordinates: Mapped[tuple[float, float] | None] = mapped_column(
-        Geometry(geometry_type='POINT', spatial_index=True),
+        Geography(geometry_type='POINT', spatial_index=True),
     )
 
     def __repr__(self):
-        return f'Place "{self.name} in region {self.region_name}."'
+        return f'Place "{self.name}" in region {self.region_name}.'
 
     __table_args__ = (
         UniqueConstraint(name, region_name,),
     )
+# p.coordinates = WKTElement('POINT(5.33 45.44)')
+# a = await  session.scalar(select(functions.ST_AsText(Place.coordinates)).where(Place.id==1))
