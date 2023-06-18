@@ -23,7 +23,7 @@ from sqlalchemy.sql import func
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
-from models.mixins import UpdatedAtMixin
+from models.mixins import UpdatedAtMixin, CreatedAtMixin
 from models.validators import positive_integer_only
 
 if TYPE_CHECKING:
@@ -77,6 +77,22 @@ class StrikeToUserAssociation(Base):
         return f'Strike intermediate table: strike {self.strike_id}, user {self.user_id}'
 
 
+class StrikeToPlaceAssociation(CreatedAtMixin, Base):
+    """
+
+    """
+    __tablename__ = 'strike_to_place_associations'
+
+    strike_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('strikes.id', ondelete='CASCADE', ),
+        primary_key=True,
+    )
+    place_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('places.id', ondelete='CASCADE', ),
+        primary_key=True,
+    )
+
+
 class Strike(UpdatedAtMixin, Base):
     """
     Забастовка.
@@ -108,6 +124,7 @@ class Strike(UpdatedAtMixin, Base):
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
     user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
+
 
     __table_args__ = (
         CheckConstraint(

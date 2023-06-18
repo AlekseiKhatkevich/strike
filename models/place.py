@@ -40,3 +40,4 @@ class Place(Base):
     )
 # p.coordinates = WKTElement('POINT(5.33 45.44)')
 # a = await  session.scalar(select(functions.ST_AsText(Place.coordinates)).where(Place.id==1))
+# SELECT (ST_AsLatLonText(ST_AsText(coordinates), 'D°M''S.SSS"C')) from places
