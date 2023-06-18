@@ -69,7 +69,8 @@ async def get_user_instance(session: SessionDep, user_id: UserIdDep) -> 'User':
     """
     Отдает инстанс модели юзера.
     """
-    return await user_cache.get_user(session, user_id)
-
+    user = await user_cache.get_user(session, user_id)
+    session.info['current_user'] = user
+    return user
 
 UserModelInstDep = Annotated['User', Depends(get_user_instance)]

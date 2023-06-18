@@ -1,6 +1,6 @@
 import datetime
-from typing import TYPE_CHECKING
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
@@ -8,7 +8,9 @@ from sqlalchemy import (
     ForeignKey,
     Enum,
 )
-from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
+from sqlalchemy.dialects.postgresql import TSTZRANGE
+from sqlalchemy.ext.associationproxy import AssociationProxy
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import (
     validates,
     Mapped,
@@ -22,8 +24,6 @@ from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
 from models.mixins import UpdatedAtMixin
 from models.validators import positive_integer_only
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.associationproxy import AssociationProxy
 
 if TYPE_CHECKING:
     from .users import User
@@ -85,13 +85,16 @@ class Strike(UpdatedAtMixin, Base):
     id: Mapped[BigIntPk]
     duration = mapped_column(TSTZRANGE(), nullable=True)
     planned_on_date: Mapped[datetime.date | None]
-    # enterprise o2o
     goals: Mapped[str] = mapped_column(Text())
     results: Mapped[str | None] = mapped_column(Text())
     overall_num_of_employees_involved: Mapped[int]
+    enterprise_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('enterprises.id'),
+    )
     # places m2m
     # union_in_charge o2o
     # created_by_user
+    # group m2m to itself
 
     # users_involved: Mapped[list['User']] = relationship(
     #     secondary=StrikeToUserAssociation.__table__,
@@ -102,6 +105,7 @@ class Strike(UpdatedAtMixin, Base):
         back_populates='strike',
         passive_deletes=True,
     )
+    enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
     user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
 
     __table_args__ = (
@@ -119,7 +123,7 @@ class Strike(UpdatedAtMixin, Base):
     )
 
     def __repr__(self):
-        return f'Strike {self.id} on enterprise %ENTERPRISE PLACEHOLDER%'
+        return f'Strike {self.id} on enterprise {self.enterprise_id} .'
 
     @validates('overall_num_of_employees_involved')
     def validate_overall_num_of_employees_involved(self, field, value):

@@ -35,10 +35,11 @@ class Enterprise(UpdatedAtMixin, Base):
         String(256),
     )
     region: Mapped['Region'] = relationship(innerjoin=True)
+    strikes: Mapped[list['Strike']] = relationship(back_populates='enterprise')
 
     __table_args__ = (
         UniqueConstraint(name, region_name, place),
     )
 
     def __repr__(self):
-        return f'Enterprise "{self.name} in region {self.region}"'
+        return f'Enterprise "{self.name} in region {self.region_name}"'
