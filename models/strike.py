@@ -7,8 +7,9 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     Enum,
+    Column,
 )
-from sqlalchemy.dialects.postgresql import TSTZRANGE
+from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
 from sqlalchemy.ext.associationproxy import AssociationProxy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import (
@@ -117,9 +118,11 @@ class Strike(UpdatedAtMixin, Base):
             func.num_nonnulls("duration", "planned_on_date") >= 1,
             name='one_of_dates_is_not_null',
         ),
-        # ExcludeConstraint(
-        #     (duration, '&&')
-        # ),
+        ExcludeConstraint(
+            (Column('duration'), '&&'),
+            (Column('enterprise_id'), '='),
+            name='duration_enterprise_exc_constraint',
+        ),
     )
 
     def __repr__(self):
