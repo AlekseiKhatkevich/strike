@@ -34,6 +34,7 @@ __all__ = (
     'StrikeToUserAssociation',
     'UserRole',
     'StrikeToPlaceAssociation',
+    'StrikeToItself',
 )
 
 
@@ -90,6 +91,22 @@ class StrikeToPlaceAssociation(CreatedAtMixin, Base):
     )
     place_id: Mapped[BigIntType] = mapped_column(
         ForeignKey('places.id', ondelete='CASCADE', ),
+        primary_key=True,
+    )
+
+
+class StrikeToItself(CreatedAtMixin, Base):
+    """
+
+    """
+    __tablename__ = 'strike_to_itself_associations'
+
+    strike_left_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('strikes.id', ondelete='CASCADE', ),
+        primary_key=True,
+    )
+    strike_right_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('strikes.id', ondelete='CASCADE', ),
         primary_key=True,
     )
 
