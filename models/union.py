@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.database import Base
 from models.annotations import BigIntPk
@@ -11,6 +11,7 @@ __all__ = (
 
 class Union(UpdatedAtMixin, CreatedAtMixin, Base):
     """
+    Профсоюз.
     """
     __tablename__ = 'unions'
 
@@ -22,4 +23,9 @@ class Union(UpdatedAtMixin, CreatedAtMixin, Base):
         default=False,
     )
 
+    strikes: Mapped[list['Strike']] = relationship(
+        back_populates='union',
+    )
 
+    def __repr__(self):
+        return f'Union "{self.name}"'
