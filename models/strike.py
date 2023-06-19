@@ -109,7 +109,6 @@ class Strike(UpdatedAtMixin, Base):
     enterprise_id: Mapped[BigIntType] = mapped_column(
         ForeignKey('enterprises.id'),
     )
-    # places m2m
     # union_in_charge o2o
     # created_by_user
     # group m2m to itself
@@ -119,6 +118,11 @@ class Strike(UpdatedAtMixin, Base):
     #     back_populates='strikes',
     #     passive_deletes=True,
     # )
+    places: Mapped[list['Place']] = relationship(
+        secondary='strike_to_place_associations',
+        passive_deletes=True,
+        back_populates='strikes',
+    )
     users_involved: Mapped[list[StrikeToUserAssociation]] = relationship(
         back_populates='strike',
         passive_deletes=True,
@@ -143,7 +147,7 @@ class Strike(UpdatedAtMixin, Base):
     )
 
     def __repr__(self):
-        return f'Strike {self.id} on enterprise {self.enterprise_id} .'
+        return f'Strike {self.id} on enterprise {self.enterprise_id}'
 
     @validates('overall_num_of_employees_involved')
     def validate_overall_num_of_employees_involved(self, field, value):

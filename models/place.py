@@ -2,7 +2,7 @@ from geoalchemy2 import Geography
 from geoalchemy2.functions import ST_Buffer
 from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
 from internal.database import Base
@@ -32,6 +32,12 @@ class Place(Base):
     )
     coordinates: Mapped[tuple[float, float] | None] = mapped_column(
         Geography(geometry_type='POINT', spatial_index=True),
+    )
+
+    strikes: Mapped[list['Strike']] = relationship(
+        secondary='strike_to_place_associations',
+        passive_deletes=True,
+        back_populates='places',
     )
 
     def __repr__(self):
