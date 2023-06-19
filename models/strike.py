@@ -112,8 +112,9 @@ class Strike(UpdatedAtMixin, Base):
     created_by_id: Mapped[BigIntType] = mapped_column(
         ForeignKey('users.id'),
     )
-
-    # union_in_charge o2o
+    union_in_charge: Mapped[BigIntType | None] = mapped_column(
+        ForeignKey('unions.id', ondelete='SET NULL'),
+    )
     # group m2m to itself
 
     created_by: Mapped['User'] = relationship(
