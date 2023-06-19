@@ -116,11 +116,6 @@ class Strike(UpdatedAtMixin, Base):
     # union_in_charge o2o
     # group m2m to itself
 
-    # users_involved: Mapped[list['User']] = relationship(
-    #     secondary=StrikeToUserAssociation.__table__,
-    #     back_populates='strikes',
-    #     passive_deletes=True,
-    # )
     created_by: Mapped['User'] = relationship(
         back_populates='strikes_created_by_user',
     )
