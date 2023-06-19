@@ -69,7 +69,7 @@ class StrikeToUserAssociation(Base):
         Enum(UserRole, validate_strings=True),
     )
     user: Mapped['User'] = relationship(
-        back_populates='strikes',
+        back_populates='strikes_where_involved',
     )
     strike: Mapped['Strike'] = relationship(
         back_populates='users_involved',
@@ -146,11 +146,11 @@ class Strike(UpdatedAtMixin, Base):
         back_populates='strikes',
     )
     users_involved: Mapped[list[StrikeToUserAssociation]] = relationship(
-        back_populates='strikes_where_involved',
+        back_populates='strike',
         passive_deletes=True,
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
-    user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
+    # user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
 
     __table_args__ = (
         CheckConstraint(

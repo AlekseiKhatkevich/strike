@@ -58,11 +58,6 @@ class User(UpdatedAtMixin, Base):
     used_token: Mapped['UsedToken'] = relationship(
         back_populates='user'
     )
-    # strikes: Mapped[list['Strike']] = relationship(
-    #     secondary='strike_to_user_associations',
-    #     back_populates='users_involved',
-    #     passive_deletes=True,
-    # )
     strikes_where_involved: Mapped[list['StrikeToUserAssociation']] = relationship(
             back_populates='user',
             passive_deletes=True,
