@@ -63,10 +63,13 @@ class User(UpdatedAtMixin, Base):
     #     back_populates='users_involved',
     #     passive_deletes=True,
     # )
-    strikes: Mapped[list['StrikeToUserAssociation']] = relationship(
+    strikes_where_involved: Mapped[list['StrikeToUserAssociation']] = relationship(
             back_populates='user',
             passive_deletes=True,
         )
+    strikes_created_by_user: Mapped[list['Strike']] = relationship(
+        back_populates='created_by',
+    )
 
     __table_args__ = (
         Index(

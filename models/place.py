@@ -30,8 +30,9 @@ class Place(Base):
     region_name: Mapped[BigIntType] = mapped_column(
         ForeignKey('regions.name', ondelete='RESTRICT', onupdate='CASCADE',),
     )
-    coordinates: Mapped[tuple[float, float] | None] = mapped_column(
-        Geography(geometry_type='POINT', spatial_index=True),
+    coordinates = mapped_column(
+        # https://github.com/geoalchemy/geoalchemy2/issues/137
+        Geography(geometry_type='POINT', nullable=True, spatial_index=False),
     )
 
     strikes: Mapped[list['Strike']] = relationship(

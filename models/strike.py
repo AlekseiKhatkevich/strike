@@ -109,8 +109,11 @@ class Strike(UpdatedAtMixin, Base):
     enterprise_id: Mapped[BigIntType] = mapped_column(
         ForeignKey('enterprises.id'),
     )
+    created_by_id: Mapped[BigIntType] = mapped_column(
+        ForeignKey('users.id'),
+    )
+
     # union_in_charge o2o
-    # created_by_user
     # group m2m to itself
 
     # users_involved: Mapped[list['User']] = relationship(
@@ -118,13 +121,16 @@ class Strike(UpdatedAtMixin, Base):
     #     back_populates='strikes',
     #     passive_deletes=True,
     # )
+    created_by: Mapped['User'] = relationship(
+        back_populates='strikes_created_by_user',
+    )
     places: Mapped[list['Place']] = relationship(
         secondary='strike_to_place_associations',
         passive_deletes=True,
         back_populates='strikes',
     )
     users_involved: Mapped[list[StrikeToUserAssociation]] = relationship(
-        back_populates='strike',
+        back_populates='strikes_where_involved',
         passive_deletes=True,
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
