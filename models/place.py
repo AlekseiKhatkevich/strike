@@ -1,5 +1,7 @@
 from geoalchemy2 import Geography
+from geoalchemy2.functions import ST_Buffer
 from sqlalchemy import String, ForeignKey, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
@@ -37,6 +39,11 @@ class Place(Base):
 
     __table_args__ = (
         UniqueConstraint(name, region_name,),
+        #  https://stackoverflow.com/questions/76500152/postgres-create-unique-index-on-point-within-certain-distance-around-it/76500390?noredirect=1#comment134891135_76500390
+        ExcludeConstraint(
+            (ST_Buffer(coordinates, 100, 'quad_segs=1'), '&&'),
+            name='close_points_exc_constraint',
+        ),
     )
 # p.coordinates = WKTElement('POINT(5.33 45.44)')
 # a = await  session.scalar(select(functions.ST_AsText(Place.coordinates)).where(Place.id==1))

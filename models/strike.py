@@ -33,6 +33,7 @@ __all__ = (
     'Strike',
     'StrikeToUserAssociation',
     'UserRole',
+    'StrikeToPlaceAssociation',
 )
 
 
@@ -124,7 +125,6 @@ class Strike(UpdatedAtMixin, Base):
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
     user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
-
 
     __table_args__ = (
         CheckConstraint(
