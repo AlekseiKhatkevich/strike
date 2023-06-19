@@ -7,11 +7,11 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     Enum,
-    Column, UniqueConstraint,
+    Column,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
-from sqlalchemy.ext.associationproxy import AssociationProxy
-from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.orm import (
     validates,
     Mapped,
@@ -40,7 +40,7 @@ __all__ = (
 
 class UserRole(enum.Enum):
     """
-
+    Роль юзера в забастовке.
     """
     employee = 'EMPLOYEE'
     union_member = 'UNION_MEMBER'
@@ -53,7 +53,7 @@ class UserRole(enum.Enum):
 
 class StrikeToUserAssociation(Base):
     """
-
+    М2М забастовка к юзеру (участие юзеров в забастовке).
     """
     __tablename__ = 'strike_to_user_associations'
 
@@ -81,7 +81,7 @@ class StrikeToUserAssociation(Base):
 
 class StrikeToPlaceAssociation(CreatedAtMixin, Base):
     """
-
+    М2М Места проведения к забастовке.
     """
     __tablename__ = 'strike_to_place_associations'
 
@@ -97,7 +97,7 @@ class StrikeToPlaceAssociation(CreatedAtMixin, Base):
 
 class StrikeToItself(CreatedAtMixin, Base):
     """
-
+    М2М забастовки на себя (групповая забастовка)
     """
     __tablename__ = 'strike_to_itself_associations'
 
@@ -184,6 +184,6 @@ class Strike(UpdatedAtMixin, Base):
     @validates('overall_num_of_employees_involved')
     def validate_overall_num_of_employees_involved(self, field, value):
         """
-
+        Кол-во юзеров должно быть положительным интегром.
         """
         return positive_integer_only(field, value)

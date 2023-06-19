@@ -16,7 +16,7 @@ __all__ = (
 
 class Place(Base):
     """
-
+    ЯМесто проведения забастовки.
     """
     __tablename__ = 'places'
 
