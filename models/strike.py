@@ -132,7 +132,13 @@ class Strike(UpdatedAtMixin, Base):
     union_in_charge_id: Mapped[BigIntType | None] = mapped_column(
         ForeignKey('unions.id', ondelete='SET NULL'),
     )
-    # group m2m to itself
+    group: Mapped[list['Strike']] = relationship(
+        'Strike',
+        secondary='strike_to_itself_associations',
+        passive_deletes=True,
+        primaryjoin='Strike.id==StrikeToItself.strike_left_id',
+        secondaryjoin='Strike.id==StrikeToItself.strike_right_id',
+    )
 
     union: Mapped['Union'] = relationship(
         back_populates='strikes',
@@ -150,7 +156,7 @@ class Strike(UpdatedAtMixin, Base):
         passive_deletes=True,
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
-    # user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
+    user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
 
     __table_args__ = (
         CheckConstraint(
