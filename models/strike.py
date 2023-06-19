@@ -7,7 +7,7 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     Enum,
-    Column,
+    Column, UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
 from sqlalchemy.ext.associationproxy import AssociationProxy
@@ -138,6 +138,7 @@ class Strike(UpdatedAtMixin, Base):
         passive_deletes=True,
         primaryjoin='Strike.id==StrikeToItself.strike_left_id',
         secondaryjoin='Strike.id==StrikeToItself.strike_right_id',
+        backref='left_nodes',
     )
 
     union: Mapped['Union'] = relationship(
@@ -172,6 +173,9 @@ class Strike(UpdatedAtMixin, Base):
             (Column('enterprise_id'), '='),
             name='duration_enterprise_exc_constraint',
         ),
+        UniqueConstraint(
+            'planned_on_date', enterprise_id,
+        )
     )
 
     def __repr__(self):
