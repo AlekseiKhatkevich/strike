@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import TYPE_CHECKING, Callable, Any
 
-from sqlalchemy import select
+from sqlalchemy import select, inspect
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,5 +42,7 @@ async def exists_in_db(session: 'AsyncSession',
     :param condition: Условия фильтрации кверисета.
     :return: Есть ли хотя бы одна запись в БД удовлетворяющая условиям.
     """
-    stmt = select(getattr(model, 'id')).where(condition).limit(1)
+    pk = inspect(model).primary_key
+    pk_name = pk[0].name
+    stmt = select(getattr(model, pk_name)).where(condition).limit(1)
     return bool(await session.scalar(stmt))
