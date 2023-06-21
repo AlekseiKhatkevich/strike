@@ -36,6 +36,6 @@ class SqlAlchemyAsyncMixin:
 
 class AsyncSQLAlchemyModelFactory(SqlAlchemyAsyncMixin, factory.alchemy.SQLAlchemyModelFactory):
     """
-    Субкласс SQLAlchemyModelFactoryдля сохранения фабрик в БД с asyncpg.
+    Субкласс SQLAlchemyModelFactory для сохранения фабрик в БД с asyncpg.
     """
     pass
