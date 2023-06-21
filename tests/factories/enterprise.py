@@ -2,14 +2,13 @@ import factory
 
 from internal.database import async_session
 from models import Enterprise
-from tests.factories.async_helpers import AsyncSQLAlchemyModelFactory
 
 __all__ = (
     'EnterpriseFactory',
 )
 
 
-class EnterpriseFactory(AsyncSQLAlchemyModelFactory):
+class EnterpriseFactory(factory.alchemy.SQLAlchemyModelFactory):
     """
     Фабрика модели Enterprise (капиталистическая компания).
     """
