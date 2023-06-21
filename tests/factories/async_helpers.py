@@ -1,7 +1,5 @@
 import factory
 from factory.alchemy import SESSION_PERSISTENCE_FLUSH, SESSION_PERSISTENCE_COMMIT
-import asyncio
-
 
 __all__ = (
     'AsyncSQLAlchemyModelFactory',

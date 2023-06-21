@@ -1,4 +1,5 @@
 import factory
+from factory import use_strategy
 
 from internal.database import async_session
 from models import Union
@@ -20,3 +21,4 @@ class UnionFactory(AsyncSQLAlchemyModelFactory):
         model = Union
         sqlalchemy_session = async_session()
         sqlalchemy_session_persistence = 'commit'
+        strategy = factory.CREATE_STRATEGY
