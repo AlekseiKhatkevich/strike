@@ -40,6 +40,7 @@ class Place(Base):
         passive_deletes=True,
         back_populates='places',
     )
+    region: Mapped['Region'] = relationship()
 
     def __repr__(self):
         return f'Place "{self.name}" in region {self.region_name}.'

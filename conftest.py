@@ -26,6 +26,7 @@ pytest_plugins = [
     'tests.region.fixtures',
     'tests.union.fixtures',
     'tests.enterprise.fixtures',
+    'tests.place.fixtures',
 ]
 
 

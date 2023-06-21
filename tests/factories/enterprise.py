@@ -22,4 +22,3 @@ class EnterpriseFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = Enterprise
         sqlalchemy_session = async_session()
         sqlalchemy_session_persistence = 'commit'
-
