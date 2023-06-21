@@ -1,5 +1,4 @@
 import factory
-from factory import use_strategy
 
 from internal.database import async_session
 from models import Union

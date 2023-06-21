@@ -2,6 +2,7 @@ import asyncio
 from asyncio import AbstractEventLoop
 from typing import AsyncGenerator
 
+import factory
 import pytest
 import redis
 from _pytest.logging import LogCaptureFixture
@@ -24,6 +25,7 @@ pytest_plugins = [
     'tests.plugins',
     'tests.region.fixtures',
     'tests.union.fixtures',
+    'tests.enterprise.fixtures',
 ]
 
 
@@ -159,3 +161,14 @@ def register_sqlalchemy_events():
     Регистрируем эвенты sqlalchemy
     """
     register_all_sqlalchemy_events()
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtestloop(session):
+    """
+    https://stackoverflow.com/questions/45773954/change-default-faker-locale-in-factory-boy
+    :param session:
+    :return:
+    """
+    with factory.Faker.override_default_locale('ru_RU'):
+        outcome = yield
