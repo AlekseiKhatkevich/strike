@@ -1,5 +1,7 @@
 import factory
 from factory.alchemy import SESSION_PERSISTENCE_FLUSH, SESSION_PERSISTENCE_COMMIT
+import asyncio
+
 
 __all__ = (
     'AsyncSQLAlchemyModelFactory',
@@ -23,15 +25,26 @@ class SqlAlchemyAsyncMixin:
 
     @classmethod
     async def _save(cls, model_class, session, args, kwargs):
-        session_persistence = cls._meta.sqlalchemy_session_persistence
-
         obj = model_class(*args, **kwargs)
         session.add(obj)
+        await cls._do_persist(session)
+        return obj
+
+    @classmethod
+    async def create_batch(cls, size, **kwargs):
+        instances = cls.build_batch(size, **kwargs)
+        session = cls._meta.sqlalchemy_session
+        session.add_all(instances)
+        await cls._do_persist(session)
+        return instances
+
+    @classmethod
+    async def _do_persist(cls, session):
+        session_persistence = cls._meta.sqlalchemy_session_persistence
         if session_persistence == SESSION_PERSISTENCE_FLUSH:
             await session.flush()
         elif session_persistence == SESSION_PERSISTENCE_COMMIT:
             await session.commit()
-        return obj
 
 
 class AsyncSQLAlchemyModelFactory(SqlAlchemyAsyncMixin, factory.alchemy.SQLAlchemyModelFactory):
