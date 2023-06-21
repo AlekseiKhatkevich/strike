@@ -21,6 +21,7 @@ from security.jwt import generate_jwt_token
 
 pytest_plugins = [
     'tests.users.fixtures',
+    'tests.plugins',
 ]
 
 
