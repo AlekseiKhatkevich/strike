@@ -12,8 +12,6 @@ __all__ = (
 )
 
 
-
-
 class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
     """
     Фабрика модели Strike (забастовка).
@@ -35,6 +33,11 @@ class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
     places = factory.lazy_attribute(
         lambda o: PlaceFactory.build_batch(size=o.num_places)
     )
+    users_involved = factory.lazy_attribute(
+        lambda o: StrikeToUserAssociationFactory.build_batch(
+           o.num_users_associated,
+        )
+    )
 
     class Meta:
         model = Strike
@@ -45,13 +48,13 @@ class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
         num_places = 2
         num_users_associated = 2
 
-    @factory.post_generation
-    def users_involved(obj, create, extracted, **kwargs):
-        users = StrikeToUserAssociationFactory.build_batch(
-           2,
-        )
-        obj.users_involved.extend(users)
-        return users
+    # @factory.post_generation
+    # def users_involved(obj, create, extracted, **kwargs):
+    #     users = StrikeToUserAssociationFactory.build_batch(
+    #        2,
+    #     )
+    #     obj.users_involved.extend(users)
+    #     return users
 
 
 class StrikeToUserAssociationFactory(factory.alchemy.SQLAlchemyModelFactory):
