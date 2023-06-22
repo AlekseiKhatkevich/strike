@@ -30,6 +30,7 @@ engine = create_async_engine(
     echo_pool=settings.debug,
     connect_args={
             'prepared_statement_name_func': lambda: f'__asyncpg_{uuid.uuid4()}__',
+            'timeout': 10,
         },
 )
 sync_maker = sessionmaker()

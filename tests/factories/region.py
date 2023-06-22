@@ -14,7 +14,7 @@ class RegionFactory(AsyncSQLAlchemyModelFactory):
     """
     Фабрика модели Region (регион РФ).
     """
-    name = factory.Faker('random_element', elements=RU_regions.names)
+    name = factory.Iterator(RU_regions.names)
 
     class Meta:
         model = Region

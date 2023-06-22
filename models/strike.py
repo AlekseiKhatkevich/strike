@@ -10,7 +10,7 @@ from sqlalchemy import (
     Column,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
+from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint, Range
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.orm import (
     validates,
@@ -118,7 +118,9 @@ class Strike(UpdatedAtMixin, Base):
     __tablename__ = 'strikes'
 
     id: Mapped[BigIntPk]
-    duration = mapped_column(TSTZRANGE(), nullable=True)
+    duration: Mapped[Range[datetime.datetime] | None] = mapped_column(
+        TSTZRANGE(),
+    )
     planned_on_date: Mapped[datetime.date | None]
     goals: Mapped[str] = mapped_column(Text())
     results: Mapped[str | None] = mapped_column(Text())
