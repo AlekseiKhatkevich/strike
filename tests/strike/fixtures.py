@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Awaitable
 
 import pytest
 from pytest_factoryboy import register
@@ -15,7 +15,7 @@ register(StrikeToUserAssociationFactory)
 
 
 @pytest.fixture
-async def strike(db_session: 'AsyncSession', strike_factory: StrikeFactory) -> 'Strike':
+async def strike(db_session: 'AsyncSession', strike_factory: StrikeFactory) -> Awaitable['Strike']:
     """
     Инстанс модели Strike сохраненный в БД.
     """
@@ -23,3 +23,15 @@ async def strike(db_session: 'AsyncSession', strike_factory: StrikeFactory) -> '
     db_session.add(instance)
     await db_session.commit()
     return instance
+
+
+@pytest.fixture()
+async def strike_extended(db_session, strike_factory):
+    async def _inner(*args, **kwargs):
+        instance = strike_factory.build(*args, **kwargs)
+        db_session.add(instance)
+        await db_session.commit()
+        return instance
+    return _inner
+
+

@@ -35,7 +35,7 @@ class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
     )
     users_involved = factory.lazy_attribute(
         lambda o: StrikeToUserAssociationFactory.build_batch(
-           o.num_users_associated,
+           size=o.num_users_associated,
         )
     )
 
