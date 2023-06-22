@@ -181,11 +181,11 @@ def pytest_runtestloop(session):
 
 
 @pytest.fixture
-async def create_instance_from_factory() -> Callable[['AsyncSession', 'Factory', Any, ...], Awaitable['Strike']]:
+async def create_instance_from_factory(db_session) -> Callable[['AsyncSession', 'Factory', Any, ...], Awaitable['Strike']]:
     """
     Создает инстанс модели из полученной фабрики и сохраняет его в БД.
     """
-    async def _inner(db_session, factory, *args, **kwargs):
+    async def _inner(factory, *args, **kwargs):
         instance = factory.build(*args, **kwargs)
         db_session.add(instance)
         await db_session.commit()

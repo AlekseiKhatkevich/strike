@@ -41,7 +41,7 @@ async def test_strike_negative_overall_num_of_employees_involved_positive(db_ses
         await db_session.execute(stmt)
 
 
-async def test_strike_negative_one_of_dates_is_not_null(db_session, strike_p):
+async def test_strike_negative_one_of_dates_is_not_null(strike_p):
     """
 
     """
