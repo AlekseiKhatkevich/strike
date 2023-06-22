@@ -41,8 +41,9 @@ async def test_strike_negative_overall_num_of_employees_involved_positive(db_ses
         await db_session.execute(stmt)
 
 
-async def test_strike_negative_one_of_dates_is_not_null(db_session, strike_extended):
+async def test_strike_negative_one_of_dates_is_not_null(db_session, strike_p):
     """
 
     """
-    strike = await strike_extended(duration=None)
+    with pytest.raises(IntegrityError, match='one_of_dates_is_not_null'):
+        await strike_p(duration=None)

@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import AbstractEventLoop
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Callable, Awaitable, TYPE_CHECKING, Any
 
 import factory
 import pytest
@@ -19,6 +19,10 @@ from internal.dependencies import get_session
 from internal.redis import redis_connection, RedisConnectionContextManager
 from main import app
 from security.jwt import generate_jwt_token
+
+if TYPE_CHECKING:
+    from factory import Factory
+
 
 pytest_plugins = [
     'tests.users.fixtures',
@@ -110,14 +114,14 @@ async def truncate_db(request):
     """
     Чистим базу после каждой сессии на всякий случай.
     """
-    yield None
-
     if 'no_db_calls' not in request.keywords:
         tables = [table.name for table in Base.metadata.sorted_tables]
         statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
         async with async_session() as session:
             await session.execute(statement)
             await session.commit()
+
+    yield None
 
 
 @pytest.fixture(autouse=True)
@@ -174,3 +178,16 @@ def pytest_runtestloop(session):
     """
     with factory.Faker.override_default_locale('ru_RU'):
         outcome = yield
+
+
+@pytest.fixture
+async def create_instance_from_factory() -> Callable[['AsyncSession', 'Factory', Any, ...], Awaitable['Strike']]:
+    """
+    Создает инстанс модели из полученной фабрики и сохраняет его в БД.
+    """
+    async def _inner(db_session, factory, *args, **kwargs):
+        instance = factory.build(*args, **kwargs)
+        db_session.add(instance)
+        await db_session.commit()
+        return instance
+    return _inner
