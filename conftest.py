@@ -173,8 +173,6 @@ def register_sqlalchemy_events():
 def pytest_runtestloop(session):
     """
     https://stackoverflow.com/questions/45773954/change-default-faker-locale-in-factory-boy
-    :param session:
-    :return:
     """
     with factory.Faker.override_default_locale('ru_RU'):
         outcome = yield
