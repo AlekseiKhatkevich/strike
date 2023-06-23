@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 from sqlalchemy import update
 
@@ -47,3 +49,11 @@ async def test_strike_negative_one_of_dates_is_not_null(strike_p):
     """
     with pytest.raises(IntegrityError, match='one_of_dates_is_not_null'):
         await strike_p(duration=None)
+
+
+async def test_strike_negative_duration_enterprise_exc_constraint(db_session, strike: Strike, strike_p):
+    """
+
+    """
+    with pytest.raises(IntegrityError, match='duration_enterprise_exc_constraint'):
+        await strike_p(enterprise=strike.enterprise, duration=strike.duration)

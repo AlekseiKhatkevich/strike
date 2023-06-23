@@ -31,5 +31,5 @@ async def strike_p(strike_factory: StrikeFactory,
     `strike` с возможностью передачи доп аргументов.
     """
     async def _inner(*args, **kwargs):
-        return await create_instance_from_factory( strike_factory, *args, **kwargs)
+        return await create_instance_from_factory(strike_factory, *args, **kwargs)
     return _inner
