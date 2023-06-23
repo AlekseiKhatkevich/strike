@@ -21,6 +21,6 @@ class Region(Base):
         Geography(geometry_type='MultiPolygon', spatial_index=True),
         nullable=False,
     )
-# MULTIPOLYGON (((1 5, 5 5, 5 1, 1 1, 1 5)), ((6 5, 9 1, 6 1, 6 5)))
+
     def __repr__(self):
         return f'Region {self.name}'

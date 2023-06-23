@@ -249,3 +249,5 @@ cython_debug/
 /.idea/vcs.xml
 /internal/data/10-million-password-list-top-1000000.txt
 /logs/
+/internal/data/admin_level_4.geojson
+/internal/data/admin_level_4.csv
