@@ -251,3 +251,4 @@ cython_debug/
 /logs/
 /internal/data/admin_level_4.geojson
 /internal/data/admin_level_4.csv
+/.idea/csv-editor.xml

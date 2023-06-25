@@ -34,7 +34,7 @@ async def populate() -> None:
     async with async_session() as session:
         data = [{'name': name, 'contour': contour} for name, contour in _get_parsed_csv()]
         await session.execute(
-            insert(Region).on_conflict_do_nothing(),
+            insert(Region).on_conflict_do_nothing().inline(),
             data,
         )
         await session.commit()

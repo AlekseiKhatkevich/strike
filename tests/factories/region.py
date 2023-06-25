@@ -1,4 +1,5 @@
 import factory
+from geoalchemy2 import WKTElement
 
 from internal.database import async_session
 from models import Region
@@ -15,6 +16,9 @@ class RegionFactory(AsyncSQLAlchemyModelFactory):
     Фабрика модели Region (регион РФ).
     """
     name = factory.Iterator(RU_regions.names)
+    contour = WKTElement(
+        'MULTIPOLYGON(((0 0,4 0,4 4,0 4,0 0)),((1 1,2 1,2 2,1 2,1 1)), ((-1 -1,-1 -2,-2 -2,-2 -1,-1 -1)))'
+    )
 
     class Meta:
         model = Region

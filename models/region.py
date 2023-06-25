@@ -20,6 +20,7 @@ class Region(Base):
     contour = mapped_column(
         Geography(geometry_type='MultiPolygon', spatial_index=True),
         nullable=False,
+        deferred=True,
     )
 
     def __repr__(self):
