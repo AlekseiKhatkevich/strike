@@ -11,7 +11,7 @@ from events import register_all_sqlalchemy_events
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
 from models.exceptions import ModelEntryDoesNotExistsInDbError
-from routers import users, token
+from routers import users, token, places
 from security.invitation import InvitationTokenDeclinedException
 
 __all__ = (
@@ -37,6 +37,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(users.router, prefix='/users')
 app.include_router(users.router_without_jwt, prefix='/users')
 app.include_router(token.router, prefix='/token')
+app.include_router(places.router, prefix='/strikes/places')
 
 
 @app.exception_handler(InvitationTokenDeclinedException)
