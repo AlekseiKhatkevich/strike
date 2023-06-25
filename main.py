@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
-
+from sqlalchemy import exc as sa_exc
 from fastapi import FastAPI, status
 from fastapi.responses import ORJSONResponse
 from slowapi import _rate_limit_exceeded_handler
@@ -60,3 +60,20 @@ async def model_does_not_exists_exception_handler(_, exc: ModelEntryDoesNotExist
         status_code=status.HTTP_400_BAD_REQUEST,
         content={'detail': exc.text},
     )
+
+
+@app.exception_handler(sa_exc.IntegrityError)
+async def integrity_error_handler(_, exc: sa_exc.IntegrityError) -> ORJSONResponse:
+    """
+    Обработка IntegrityError из БД.
+    https://www.postgresql.org/docs/current/errcodes-appendix.html
+    """
+    match exc.orig.pgcode:
+        case '23505':
+            exc_description = exc.orig.args[0].split('\n')[-1]
+            return ORJSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={'detail': f'Uniqueness violation {exc_description}'}
+            )
+        case _:
+            raise exc

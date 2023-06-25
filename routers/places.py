@@ -1,9 +1,10 @@
 from fastapi import (
     APIRouter,
     Depends,
-    status,
+    status, HTTPException,
 )
 
+from crud.places import create_place
 from internal.dependencies import jwt_authorize, SessionDep
 
 __all__ = (
@@ -20,4 +21,11 @@ async def create_new_place(session: SessionDep, place_data: PlaceInSerializer):
     """
     Создание новой записи модели Place (Место проведения забастовки).
     """
-    return place_data.coordinates
+    try:
+        instance = await create_place(session, place_data)
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=err.args[0],
+        )
+    return instance

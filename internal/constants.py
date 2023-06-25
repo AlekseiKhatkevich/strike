@@ -6,3 +6,4 @@ EN_US_CE_COLLATION_NAME = 'english_ci'
 RU_RU_CE_COLLATION_NAME = 'russian_ci'
 JWT_TOKEN_REGEXP = r'(^[\w-]*\.[\w-]*\.[\w-]*$)'
 OGRN_REGEXP = r'^([0-9]{13,15})?$'
+PLACES_DUPLICATION_RADIUS = 100

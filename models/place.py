@@ -4,7 +4,7 @@ from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from internal.constants import RU_RU_CE_COLLATION_NAME
+from internal.constants import RU_RU_CE_COLLATION_NAME, PLACES_DUPLICATION_RADIUS
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
@@ -49,7 +49,7 @@ class Place(Base):
         UniqueConstraint(name, region_name,),
         #  https://stackoverflow.com/questions/76500152/postgres-create-unique-index-on-point-within-certain-distance-around-it/76500390?noredirect=1#comment134891135_76500390
         ExcludeConstraint(
-            (ST_Buffer(coordinates, 100, 'quad_segs=1'), '&&'),
+            (ST_Buffer(coordinates, PLACES_DUPLICATION_RADIUS, 'quad_segs=1'), '&&'),
             name='close_points_exc_constraint',
         ),
     )
