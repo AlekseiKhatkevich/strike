@@ -14,8 +14,8 @@ __all__ = (
     'PlaceOutSerializer',
 )
 
-lat_decimal = condecimal(ge=Decimal(-180), le=Decimal(180))
-lon_decimal = condecimal(ge=Decimal(-90), le=Decimal(90))
+lat_decimal = condecimal(ge=Decimal(-90), le=Decimal(90))
+lon_decimal = condecimal(ge=Decimal(-180), le=Decimal(180))
 in_out_coords_format = tuple[lat_decimal, lon_decimal] | None
 
 
@@ -52,7 +52,7 @@ class PlaceOutSerializer(PlaceBaseSerializer):
     """
     Для отдачи сохраненного Place на фронт.
     """
-    coordinates: in_out_coords_format
+    id: int
 
     class Config:
         arbitrary_types_allowed = True

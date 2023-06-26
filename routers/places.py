@@ -7,6 +7,7 @@ from fastapi import (
 
 from crud.places import create_place
 from internal.dependencies import jwt_authorize, SessionDep
+from models import Place
 from serializers.places import PlaceInSerializer, PlaceOutSerializer
 
 __all__ = (
@@ -23,7 +24,7 @@ async def create_new_place(session: SessionDep, place_data: PlaceInSerializer) -
     Создание новой записи модели Place (Место проведения забастовки).
     """
     try:
-        instance = await create_place(session, place_data)
+        instance = await create_place(session, Place(**place_data.dict()))
     except ValueError as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

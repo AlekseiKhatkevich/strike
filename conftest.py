@@ -169,23 +169,31 @@ def register_sqlalchemy_events():
     register_all_sqlalchemy_events()
 
 
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtestloop(session):
-    """
-    https://stackoverflow.com/questions/45773954/change-default-faker-locale-in-factory-boy
-    """
-    with factory.Faker.override_default_locale('ru_RU'):
-        outcome = yield
-
+# @pytest.hookimpl(hookwrapper=True)
+# def pytest_runtestloop(session):
+#     """
+#     https://stackoverflow.com/questions/45773954/change-default-faker-locale-in-factory-boy
+#     """
+#     with factory.Faker.override_default_locale('ru_RU'):
+#         outcome = yield
+#
 
 @pytest.fixture
-async def create_instance_from_factory(db_session) -> Callable[['AsyncSession', 'Factory', Any, ...], Awaitable['Strike']]:
+async def create_instance_from_factory(db_session: 'AsyncSession') -> Callable[['Factory', Any, ...], Awaitable['Base']]:
     """
     Создает инстанс модели из полученной фабрики и сохраняет его в БД.
     """
-    async def _inner(factory, *args, **kwargs):
-        instance = factory.build(*args, **kwargs)
+    async def _inner(_factory, *args, **kwargs):
+        instance = _factory.build(*args, **kwargs)
         db_session.add(instance)
         await db_session.commit()
         return instance
     return _inner
+
+
+@pytest.fixture(scope='session', autouse=True)
+def faker_session_locale():
+    """
+    https://faker.readthedocs.io/en/master/pytest-fixtures.html
+    """
+    return ['ru_RU']

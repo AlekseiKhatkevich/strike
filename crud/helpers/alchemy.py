@@ -45,4 +45,4 @@ async def exists_in_db(session: 'AsyncSession',
     pk = inspect(model).primary_key
     pk_name = pk[0].name
     stmt = select(getattr(model, pk_name)).where(condition).limit(1)
-    return bool(await session.scalar(stmt))
+    return await session.scalar(stmt) is not None

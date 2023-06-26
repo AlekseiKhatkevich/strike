@@ -24,4 +24,3 @@ class PlaceFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     class Params:
         coords_in_decimal = factory.Faker('latlng')
-
