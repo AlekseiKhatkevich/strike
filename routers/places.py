@@ -11,13 +11,13 @@ __all__ = (
     'router',
 )
 
-from serializers.places import PlaceInSerializer
+from serializers.places import PlaceInSerializer, PlaceOutSerializer
 
 router = APIRouter(tags=['places'], dependencies=[Depends(jwt_authorize)])
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-async def create_new_place(session: SessionDep, place_data: PlaceInSerializer):
+async def create_new_place(session: SessionDep, place_data: PlaceInSerializer) -> PlaceOutSerializer:
     """
     Создание новой записи модели Place (Место проведения забастовки).
     """

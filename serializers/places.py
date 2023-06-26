@@ -1,6 +1,8 @@
+import abc
 from decimal import Decimal
 from typing import Literal
 
+import shapely.wkt
 from geoalchemy2 import WKTElement
 from pydantic import BaseModel, constr, validator, condecimal
 
@@ -9,21 +11,35 @@ from models.initial_data import RU_regions
 
 __all__ = (
     'PlaceInSerializer',
+    'PlaceOutSerializer',
 )
 
 lat_decimal = condecimal(ge=Decimal(-180), le=Decimal(180))
 lon_decimal = condecimal(ge=Decimal(-90), le=Decimal(90))
+in_out_coords_format = tuple[lat_decimal, lon_decimal] | None
 
 
-class PlaceInSerializer(BaseModel):
+class PlaceBaseSerializer(BaseModel, abc.ABC):
     """
-    Для отдачи основных данных юзера.
+
     """
     name: constr(max_length=128)
     address: constr(max_length=256)
     # noinspection PyTypeHints
     region_name: Literal[*RU_regions.names]
-    coordinates: tuple[lat_decimal, lon_decimal] | None
+    coordinates: in_out_coords_format
+
+
+class PlaceInSerializer(PlaceBaseSerializer):
+    """
+    Для отдачи основных данных юзера.
+    """
+    @validator('coordinates')
+    def convert_input_coordinates_into_point(cls, value) -> WKTElement | None:
+        """
+        Конвертируем координаты в POINT для последующего сохранения в БД.
+        """
+        return point_from_numeric(*value) if value is not None else None
 
     class Config:
         anystr_strip_whitespace = True
@@ -31,9 +47,24 @@ class PlaceInSerializer(BaseModel):
         frozen = True
         allow_mutation = False
 
-    @validator('coordinates')
-    def convert_input_coordinates_into_point(cls, value) -> WKTElement | None:
+
+class PlaceOutSerializer(PlaceBaseSerializer):
+    """
+
+    """
+    coordinates: in_out_coords_format
+
+    class Config:
+        arbitrary_types_allowed = True
+        orm_mode = True
+
+    @validator('coordinates', pre=True)
+    def convert_input_coordinates_into_point(cls, value) -> in_out_coords_format:
         """
-        Конвертируем координаты в POINT для последующего сохранения в БД.
+
         """
-        return point_from_numeric(*value) if value is not None else None
+        if value is None:
+            return value
+        else:
+            shapely_point = shapely.wkt.loads(value.data)
+            return Decimal(shapely_point.x), Decimal(shapely_point.y)

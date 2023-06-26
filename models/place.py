@@ -2,8 +2,9 @@ from geoalchemy2 import Geography
 from geoalchemy2.functions import ST_Buffer
 from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from geoalchemy2 import functions as ga_functions
 from internal.constants import RU_RU_CE_COLLATION_NAME, PLACES_DUPLICATION_RADIUS
 from internal.database import Base
 from internal.typing_and_types import BigIntType
@@ -53,6 +54,14 @@ class Place(Base):
             name='close_points_exc_constraint',
         ),
     )
-# p.coordinates = WKTElement('POINT(5.33 45.44)')
-# a = await  session.scalar(select(functions.ST_AsText(Place.coordinates)).where(Place.id==1))
-# SELECT (ST_AsLatLonText(ST_AsText(coordinates), 'D°M''S.SSS"C')) from places
+
+    @hybrid_property
+    def coords_hr(self):
+        return self.coordinates
+
+    # noinspection PyNestedDecorators
+    @coords_hr.inplace.expression
+    @classmethod
+    def _coords_hr_expression(cls) -> str:
+        # noinspection PyUnresolvedReferences
+        return ga_functions.ST_AsLatLonText(ga_functions.ST_AsText(cls.coordinates), 'D°M''S.SSS"C')
