@@ -1,10 +1,13 @@
-from geoalchemy2 import Geography
+from decimal import Decimal
+
+from geoalchemy2 import Geography, WKTElement, WKBElement
+from geoalchemy2 import functions as ga_functions
 from geoalchemy2.functions import ST_Buffer
 from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from geoalchemy2 import functions as ga_functions
+
 from internal.constants import RU_RU_CE_COLLATION_NAME, PLACES_DUPLICATION_RADIUS
 from internal.database import Base
 from internal.typing_and_types import BigIntType
@@ -29,7 +32,7 @@ class Place(Base):
         String(256, collation=RU_RU_CE_COLLATION_NAME),
     )
     region_name: Mapped[BigIntType] = mapped_column(
-        ForeignKey('regions.name', ondelete='RESTRICT', onupdate='CASCADE',),
+        ForeignKey('regions.name', ondelete='RESTRICT', onupdate='CASCADE', ),
     )
     coordinates = mapped_column(
         # https://github.com/geoalchemy/geoalchemy2/issues/137
@@ -47,7 +50,7 @@ class Place(Base):
         return f'Place "{self.name}" in region {self.region_name}.'
 
     __table_args__ = (
-        UniqueConstraint(name, region_name,),
+        UniqueConstraint(name, region_name, ),
         #  https://stackoverflow.com/questions/76500152/postgres-create-unique-index-on-point-within-certain-distance-around-it/76500390?noredirect=1#comment134891135_76500390
         ExcludeConstraint(
             (ST_Buffer(coordinates, PLACES_DUPLICATION_RADIUS, 'quad_segs=1'), '&&'),
@@ -56,8 +59,18 @@ class Place(Base):
     )
 
     @hybrid_property
-    def coords_hr(self):
-        return self.coordinates
+    def coords_hr(self) -> tuple[Decimal, Decimal] | None:
+        """
+        Возвращает координаты в числовом формате широта, долгота.
+        """
+        if isinstance(self.coordinates, WKTElement):
+            import shapely.wkt as loader
+        elif isinstance(self.coordinates, WKBElement):
+            import shapely.wkb as loader
+        else:
+            return self.coordinates
+        sh_point = loader.loads(self.coordinates.data)
+        return Decimal(sh_point.x), Decimal(sh_point.y)
 
     # noinspection PyNestedDecorators
     @coords_hr.inplace.expression

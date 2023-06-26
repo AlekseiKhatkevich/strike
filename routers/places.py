@@ -1,17 +1,18 @@
 from fastapi import (
     APIRouter,
     Depends,
-    status, HTTPException,
+    status,
+    HTTPException,
 )
 
 from crud.places import create_place
 from internal.dependencies import jwt_authorize, SessionDep
+from serializers.places import PlaceInSerializer, PlaceOutSerializer
 
 __all__ = (
     'router',
 )
 
-from serializers.places import PlaceInSerializer, PlaceOutSerializer
 
 router = APIRouter(tags=['places'], dependencies=[Depends(jwt_authorize)])
 

@@ -21,7 +21,7 @@ in_out_coords_format = tuple[lat_decimal, lon_decimal] | None
 
 class PlaceBaseSerializer(BaseModel, abc.ABC):
     """
-
+    Базовый сериалайзер для модели Place.
     """
     name: constr(max_length=128)
     address: constr(max_length=256)
@@ -32,7 +32,7 @@ class PlaceBaseSerializer(BaseModel, abc.ABC):
 
 class PlaceInSerializer(PlaceBaseSerializer):
     """
-    Для отдачи основных данных юзера.
+    Для получения данных Place с фронта.
     """
     @validator('coordinates')
     def convert_input_coordinates_into_point(cls, value) -> WKTElement | None:
@@ -50,7 +50,7 @@ class PlaceInSerializer(PlaceBaseSerializer):
 
 class PlaceOutSerializer(PlaceBaseSerializer):
     """
-
+    Для отдачи сохраненного Place на фронт.
     """
     coordinates: in_out_coords_format
 
@@ -61,7 +61,7 @@ class PlaceOutSerializer(PlaceBaseSerializer):
     @validator('coordinates', pre=True)
     def convert_input_coordinates_into_point(cls, value) -> in_out_coords_format:
         """
-
+        Преобразуем координаты из WKT в широту и долготу.
         """
         if value is None:
             return value
