@@ -5,10 +5,10 @@ from fastapi import (
     HTTPException,
 )
 
-from crud.places import create_or_update_place
+from crud.places import create_or_update_place, delete_place
 from internal.dependencies import jwt_authorize, SessionDep
 from models import Place
-from serializers.places import PlaceInSerializer, PlaceOutSerializer
+from serializers.places import PlaceInSerializer, PlaceOutSerializer, PlaceDeleteSerializer
 
 __all__ = (
     'router',
@@ -33,3 +33,10 @@ async def create_or_update_place_ep(session: SessionDep, place_data: PlaceInSeri
             detail=err.args[0],
         )
     return instance
+
+
+@router.delete('/', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_place_ep(session: SessionDep, place_data: PlaceDeleteSerializer):
+    """
+    """
+    await delete_place(session, place_data.lookup_kwargs)

@@ -1,10 +1,10 @@
 import abc
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, Any, ClassVar
 
 import shapely.wkt
 from geoalchemy2 import WKTElement
-from pydantic import BaseModel, constr, validator, condecimal
+from pydantic import BaseModel, constr, validator, condecimal, root_validator, PrivateAttr
 
 from internal.geo import point_from_numeric
 from models.initial_data import RU_regions
@@ -12,6 +12,7 @@ from models.initial_data import RU_regions
 __all__ = (
     'PlaceInSerializer',
     'PlaceOutSerializer',
+    'PlaceDeleteSerializer',
 )
 
 lat_decimal = condecimal(ge=Decimal(-90), le=Decimal(90))
@@ -28,6 +29,33 @@ class PlaceBaseSerializer(BaseModel, abc.ABC):
     # noinspection PyTypeHints
     region_name: Literal[*RU_regions.names]
     coordinates: in_out_coords_format
+
+
+class PlaceDeleteSerializer(BaseModel):
+    """
+
+    """
+    id: int | None
+    name: constr(max_length=128) | None
+    # noinspection PyTypeHints
+    region_name: Literal[*RU_regions.names] | None
+
+    @root_validator(pre=True)
+    def validate_one_field_present(cls, values):
+        """
+        """
+        _id, name, region_name = (values.get(key) for key in ('id', 'name', 'region_name',))
+
+        if _id is None and (name is None or region_name is None):
+            raise ValueError(
+                    'You should specify either "id" or both "name" and "region_name" fields.'
+                )
+
+        return values
+
+    @property
+    def lookup_kwargs(self):
+        return {'id': self.id} if self.id is not None else {'name': self.name, 'region_name': self.region_name}
 
 
 class PlaceInSerializer(PlaceBaseSerializer):

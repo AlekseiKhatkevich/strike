@@ -2,19 +2,29 @@ from typing import TYPE_CHECKING
 
 from geoalchemy2 import functions as ga_functions
 from sqlalchemy import exc as sa_exc
-from sqlalchemy import select
-from sqlalchemy.orm.interfaces import ORMOption
-
+from sqlalchemy import select, delete
+from models import Place
 from internal.constants import PLACES_DUPLICATION_RADIUS
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from models import Place
 
 
 __all__ = (
     'create_or_update_place',
+    'delete_place',
 )
+
+
+async def delete_place(session: 'AsyncSession', lookup_kwargs: dict[str, str]) -> bool:
+    """
+
+    """
+    deleted_id = await session.scalar(
+        delete(Place).filter_by(**lookup_kwargs).returning(Place.id)
+    )
+    await session.commit()
+    return deleted_id is not None
 
 
 async def create_or_update_place(session: 'AsyncSession', place: 'Place') -> 'Place':
