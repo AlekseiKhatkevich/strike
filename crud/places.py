@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from geoalchemy2 import functions as ga_functions
 from sqlalchemy import exc as sa_exc
 from sqlalchemy import select
+from sqlalchemy.orm.interfaces import ORMOption
 
 from internal.constants import PLACES_DUPLICATION_RADIUS
 
@@ -12,18 +13,18 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    'create_place',
+    'create_or_update_place',
 )
 
 
-async def create_place(session: 'AsyncSession', place: 'Place') -> 'Place':
+async def create_or_update_place(session: 'AsyncSession', place: 'Place') -> 'Place':
     """
-    Создает инстанс модели Place и сохраняет его в БД.
+    Создает инстанс модели Place и сохраняет его в БД или обновляет уже существующую.
     """
     place_model = type(place)
     try:
         async with session.begin_nested():
-            session.add(place)
+            place_merged = await session.merge(place)
     except sa_exc.IntegrityError as err:
         if 'close_points_exc_constraint' in err.args[0]:
             # noinspection PyTypeChecker,PyUnresolvedReferences
@@ -40,4 +41,4 @@ async def create_place(session: 'AsyncSession', place: 'Place') -> 'Place':
             raise err
     else:
         await session.commit()
-        return place
+        return place_merged

@@ -42,7 +42,7 @@ async def test_create_new_place_ep_positive(db_session,
     assert await exists_in_db(db_session, Place, Place.id == response_data['id'])
 
 
-@patch('routers.places.create_place', side_effect=ValueError('test_error_message'))
+@patch('routers.places.create_or_update_place', side_effect=ValueError('test_error_message'))
 async def test_create_new_place_ep_negative(create_place_mock, positive_data, async_client_httpx):
     """
     Негативный тест вью create_new_place. При возникновении ValueError в процессе создания

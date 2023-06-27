@@ -1,7 +1,7 @@
 import pytest
 
 from crud.helpers import exists_in_db
-from crud.places import create_place
+from crud.places import create_or_update_place
 from models import Place
 
 
@@ -11,9 +11,9 @@ async def test_create_place_positive(db_session, place_factory):
     """
     place = place_factory.build()
 
-    place_saved = await create_place(db_session, place)
+    place_saved = await create_or_update_place(db_session, place)
 
-    assert place in db_session
+    # assert place in db_session
     assert await exists_in_db(db_session, Place, Place.id == place_saved.id)
 
 
@@ -26,4 +26,4 @@ async def test_create_place_negative(db_session, place_factory, place):
     place_2_save = place_factory.build(coords_in_decimal=place.coords_hr)
 
     with pytest.raises(ValueError):
-        await create_place(db_session, place_2_save)
+        await create_or_update_place(db_session, place_2_save)

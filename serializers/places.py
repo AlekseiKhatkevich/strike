@@ -34,6 +34,8 @@ class PlaceInSerializer(PlaceBaseSerializer):
     """
     Для получения данных Place с фронта.
     """
+    id: int | None  # None в случае create, int в случае update
+
     @validator('coordinates')
     def convert_input_coordinates_into_point(cls, value) -> WKTElement | None:
         """
