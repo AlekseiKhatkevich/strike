@@ -5,7 +5,7 @@ from crud.places import create_or_update_place
 from models import Place
 
 
-async def test_create_place_positive(db_session, place_factory):
+async def test_create_or_update_place_positive(db_session, place_factory):
     """
     Позитивный тест ф-ции create_place сохранения инстанса Place в БД.
     """
@@ -17,7 +17,7 @@ async def test_create_place_positive(db_session, place_factory):
     assert await exists_in_db(db_session, Place, Place.id == place_saved.id)
 
 
-async def test_create_place_negative(db_session, place_factory, place):
+async def test_create_or_update_place_negative(db_session, place_factory, place):
     """
     Негативный тест ф-ции create_place сохранения инстанса Place в БД.
     В случае если сохраняемые координаты находятся в радиусе 100м. от уже сохраненной
@@ -27,3 +27,24 @@ async def test_create_place_negative(db_session, place_factory, place):
 
     with pytest.raises(ValueError):
         await create_or_update_place(db_session, place_2_save)
+
+
+async def test_create_or_update_place_update(db_session, place):
+    """
+    Проверяем вариант работы с обновлением.
+    """
+    place_2_merge = Place(
+        id=place.id,
+        name='new_name',
+        address=place.address,
+        region_name=place.region_name,
+        coordinates=None,
+    )
+
+    await create_or_update_place(db_session, place_2_merge)
+
+    assert await exists_in_db(
+        db_session,
+        Place,
+        (Place.id == place.id) & (Place.name == place_2_merge.name) & (Place.coordinates == None)
+    )

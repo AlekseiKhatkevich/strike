@@ -20,6 +20,8 @@ __all__ = (
 async def create_or_update_place(session: 'AsyncSession', place: 'Place') -> 'Place':
     """
     Создает инстанс модели Place и сохраняет его в БД или обновляет уже существующую.
+    Если place не имеет id -то сохраняем его в БД, а если имеет – то обновляем существующий по
+    этому id инстанс и сохраняем его в БД.
     """
     place_model = type(place)
     try:
