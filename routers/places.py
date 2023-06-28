@@ -38,5 +38,6 @@ async def create_or_update_place_ep(session: SessionDep, place_data: PlaceInSeri
 @router.delete('/', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_place_ep(session: SessionDep, place_data: PlaceDeleteSerializer):
     """
+    Удаление записи Place.
     """
     await delete_place(session, place_data.lookup_kwargs)

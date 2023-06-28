@@ -1,10 +1,10 @@
 import abc
 from decimal import Decimal
-from typing import Literal, Any, ClassVar
+from typing import Literal
 
 import shapely.wkt
 from geoalchemy2 import WKTElement
-from pydantic import BaseModel, constr, validator, condecimal, root_validator, PrivateAttr
+from pydantic import BaseModel, constr, validator, condecimal, root_validator
 
 from internal.geo import point_from_numeric
 from models.initial_data import RU_regions
@@ -33,7 +33,7 @@ class PlaceBaseSerializer(BaseModel, abc.ABC):
 
 class PlaceDeleteSerializer(BaseModel):
     """
-
+    Для получения данных для удаления Place.
     """
     id: int | None
     name: constr(max_length=128) | None
@@ -41,20 +41,24 @@ class PlaceDeleteSerializer(BaseModel):
     region_name: Literal[*RU_regions.names] | None
 
     @root_validator(pre=True)
-    def validate_one_field_present(cls, values):
+    def validate_one_field_presence(cls, values):
         """
+        Должно быть передано поле id или же name и region_name.
         """
-        _id, name, region_name = (values.get(key) for key in ('id', 'name', 'region_name',))
+        _id, name, region_name = (values.get(key) for key in cls.__fields__.keys())
 
         if _id is None and (name is None or region_name is None):
             raise ValueError(
                     'You should specify either "id" or both "name" and "region_name" fields.'
                 )
-
         return values
 
     @property
-    def lookup_kwargs(self):
+    def lookup_kwargs(self) -> dict[str, int | str]:
+        """
+        Отдает маппинг имя поля: значение для последующего нахождения инстанса Place
+        по этим данным. Либо мы ищем по id либо по уникальной комбинации name & regin_name.
+        """
         return {'id': self.id} if self.id is not None else {'name': self.name, 'region_name': self.region_name}
 
 

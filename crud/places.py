@@ -16,9 +16,9 @@ __all__ = (
 )
 
 
-async def delete_place(session: 'AsyncSession', lookup_kwargs: dict[str, str]) -> bool:
+async def delete_place(session: 'AsyncSession', lookup_kwargs: dict[str, int | str]) -> bool:
     """
-
+    Удаляет запись Place по id либо по name + region_name.
     """
     deleted_id = await session.scalar(
         delete(Place).filter_by(**lookup_kwargs).returning(Place.id)
@@ -27,13 +27,12 @@ async def delete_place(session: 'AsyncSession', lookup_kwargs: dict[str, str]) -
     return deleted_id is not None
 
 
-async def create_or_update_place(session: 'AsyncSession', place: 'Place') -> 'Place':
+async def create_or_update_place(session: 'AsyncSession', place: Place) -> Place:
     """
     Создает инстанс модели Place и сохраняет его в БД или обновляет уже существующую.
     Если place не имеет id -то сохраняем его в БД, а если имеет – то обновляем существующий по
     этому id инстанс и сохраняем его в БД.
     """
-    place_model = type(place)
     try:
         async with session.begin_nested():
             place_merged = await session.merge(place)
@@ -41,8 +40,8 @@ async def create_or_update_place(session: 'AsyncSession', place: 'Place') -> 'Pl
         if 'close_points_exc_constraint' in err.args[0]:
             # noinspection PyTypeChecker,PyUnresolvedReferences
             known_places = await session.scalars(
-                select(place_model.name).where(
-                    ga_functions.ST_Distance(place_model.coordinates, place.coordinates) <= PLACES_DUPLICATION_RADIUS
+                select(Place.name).where(
+                    ga_functions.ST_Distance(Place.coordinates, place.coordinates) <= PLACES_DUPLICATION_RADIUS
                 )
             )
             raise ValueError(
