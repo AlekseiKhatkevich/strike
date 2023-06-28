@@ -1,12 +1,13 @@
 from decimal import Decimal
 
-from geoalchemy2 import Geography, WKTElement, WKBElement
+from geoalchemy2 import Geography, WKTElement, WKBElement, Geometry
 from geoalchemy2 import functions as ga_functions
 from geoalchemy2.functions import ST_Buffer
-from sqlalchemy import String, ForeignKey, UniqueConstraint
+from sqlalchemy import String, ForeignKey, UniqueConstraint, CheckConstraint, func
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql.expression import cast
 
 from internal.constants import RU_RU_CE_COLLATION_NAME, PLACES_DUPLICATION_RADIUS
 from internal.database import Base
@@ -50,6 +51,11 @@ class Place(Base):
         return f'Place "{self.name}" in region {self.region_name}.'
 
     __table_args__ = (
+        CheckConstraint(
+            (func.abs(ga_functions.ST_X(cast(coordinates, Geometry))) <= 180) &
+            (func.abs(ga_functions.ST_Y(cast(coordinates, Geometry))) <= 90),
+            name='coordinates_limit',
+        ),
         UniqueConstraint(name, region_name, ),
         #  https://stackoverflow.com/questions/76500152/postgres-create-unique-index-on-point-within-certain-distance-around-it/76500390?noredirect=1#comment134891135_76500390
         ExcludeConstraint(
@@ -70,7 +76,7 @@ class Place(Base):
         else:
             return self.coordinates
         sh_point = loader.loads(self.coordinates.data)
-        return Decimal(sh_point.x), Decimal(sh_point.y)
+        return Decimal(sh_point.y), Decimal(sh_point.x)
 
     # noinspection PyNestedDecorators
     @coords_hr.inplace.expression

@@ -8,7 +8,11 @@ from fastapi import (
 from crud.places import create_or_update_place, delete_place
 from internal.dependencies import jwt_authorize, SessionDep
 from models import Place
-from serializers.places import PlaceInSerializer, PlaceOutSerializer, PlaceDeleteSerializer
+from serializers.places import (
+    PlaceInSerializer,
+    PlaceOutSerializer,
+    PlaceDeleteSerializer,
+)
 
 __all__ = (
     'router',

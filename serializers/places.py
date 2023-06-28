@@ -101,4 +101,4 @@ class PlaceOutSerializer(PlaceBaseSerializer):
             return value
         else:
             shapely_point = shapely.wkt.loads(value.data)
-            return Decimal(shapely_point.x), Decimal(shapely_point.y)
+            return Decimal(shapely_point.y), Decimal(shapely_point.x)
