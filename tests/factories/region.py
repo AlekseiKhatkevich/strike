@@ -17,7 +17,8 @@ class RegionFactory(AsyncSQLAlchemyModelFactory):
     """
     name = factory.Iterator(RU_regions.names)
     contour = WKTElement(
-        'MULTIPOLYGON(((0 0,4 0,4 4,0 4,0 0)),((1 1,2 1,2 2,1 2,1 1)), ((-1 -1,-1 -2,-2 -2,-2 -1,-1 -1)))'
+        'MULTIPOLYGON(((0 0,4 0,4 4,0 4,0 0)),((1 1,2 1,2 2,1 2,1 1)), ((-1 -1,-1 -2,-2 -2,-2 -1,-1 -1)))',
+        srid=4326,
     )
 
     class Meta:

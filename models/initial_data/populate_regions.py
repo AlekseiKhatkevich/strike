@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from typing import Iterator
 
+from geoalchemy2 import WKTElement
 from loguru import logger
 from sqlalchemy.dialects.postgresql import insert
 
@@ -32,7 +33,9 @@ async def populate() -> None:
     Пишет все регионы РФии в табличку.
     """
     async with async_session() as session:
-        data = [{'name': name, 'contour': contour} for name, contour in _get_parsed_csv()]
+        data = [
+            {'name': name, 'contour': WKTElement(contour, srid=4326)} for name, contour in _get_parsed_csv()
+        ]
         await session.execute(
             insert(Region).on_conflict_do_nothing().inline(),
             data,

@@ -1,13 +1,14 @@
 from decimal import Decimal
 
 from geoalchemy2 import Geography, WKTElement, WKBElement, Geometry
-from geoalchemy2 import functions as ga_functions
+from geoalchemy2 import functions as ga_func
 from geoalchemy2.functions import ST_Buffer
 from sqlalchemy import String, ForeignKey, UniqueConstraint, CheckConstraint, func
-from sqlalchemy.dialects.postgresql import ExcludeConstraint
+from sqlalchemy import cast, DECIMAL
+from sqlalchemy.dialects.postgresql import ExcludeConstraint, ARRAY
+from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql.expression import cast
 
 from internal.constants import RU_RU_CE_COLLATION_NAME, PLACES_DUPLICATION_RADIUS
 from internal.database import Base
@@ -52,8 +53,8 @@ class Place(Base):
 
     __table_args__ = (
         CheckConstraint(
-            (func.abs(ga_functions.ST_X(cast(coordinates, Geometry))) <= 180) &
-            (func.abs(ga_functions.ST_Y(cast(coordinates, Geometry))) <= 90),
+            (func.abs(ga_func.ST_X(cast(coordinates, Geometry))) <= 180) &
+            (func.abs(ga_func.ST_Y(cast(coordinates, Geometry))) <= 90),
             name='coordinates_limit',
         ),
         UniqueConstraint(name, region_name, ),
@@ -82,5 +83,28 @@ class Place(Base):
     @coords_hr.inplace.expression
     @classmethod
     def _coords_hr_expression(cls) -> str:
+        """
+        Строковое представление координат.
+        """
         # noinspection PyUnresolvedReferences
-        return ga_functions.ST_AsLatLonText(ga_functions.ST_AsText(cls.coordinates), 'D°M''S.SSS"C')
+        return ga_func.ST_AsLatLonText(ga_func.ST_AsText(cls.coordinates), 'D°M''S.SSS"C')
+
+    @hybrid_property
+    def coords_in_decimal(self) -> tuple[Decimal, Decimal] | None:
+        return self.coords_hr
+
+    # noinspection PyNestedDecorators,PyTypeChecker
+    @coords_in_decimal.inplace.expression
+    @classmethod
+    def _coords_in_decimal_expression(cls) -> list[Decimal, Decimal]:
+        """
+        Координаты в Decimal (широта, долгота).
+        """
+        return cast(
+            array(
+                (
+                    ga_func.ST_Y(cast(cls.coordinates, Geometry)),
+                    ga_func.ST_X(cast(cls.coordinates, Geometry))
+                ),
+            ), ARRAY(DECIMAL)
+        )

@@ -65,3 +65,13 @@ async def test_coords_hr_expression(place, db_session):
         select(Place.coords_hr)
     )
     assert re.match(r'^\d+°\d+.\d+"[N,S] \d+°\d+.\d+"[E,W]', coords_hr) is not None
+
+
+async def test_coords_in_decimal(place, db_session):
+    """
+
+    """
+    coords_in_decimal = await db_session.scalar(
+        select(Place.coords_in_decimal)
+    )
+    assert coords_in_decimal == pytest.approx(place.coords_in_decimal)
