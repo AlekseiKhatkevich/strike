@@ -3,11 +3,13 @@ from decimal import Decimal
 from geoalchemy2 import Geography, WKTElement, WKBElement, Geometry
 from geoalchemy2 import functions as ga_func
 from geoalchemy2.functions import ST_Buffer
-from sqlalchemy import String, ForeignKey, UniqueConstraint, CheckConstraint, func
+from pyproj import Geod
+from shapely.geometry import LineString
+from sqlalchemy import String, ForeignKey, UniqueConstraint, CheckConstraint, func, select
 from sqlalchemy import cast, DECIMAL
 from sqlalchemy.dialects.postgresql import ExcludeConstraint, ARRAY
 from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.constants import RU_RU_CE_COLLATION_NAME, PLACES_DUPLICATION_RADIUS
@@ -107,4 +109,29 @@ class Place(Base):
                     ga_func.ST_X(cast(cls.coordinates, Geometry))
                 ),
             ), ARRAY(DECIMAL)
+        )
+
+    @hybrid_method
+    def distance(self, other: 'Place') -> float:
+        """
+        Расстояние м/у 2-мя точками в км.
+        https://gis.stackexchange.com/questions/403637/convert-distance-in-shapely-to-kilometres
+        """
+        geod = Geod(ellps='WGS84')
+        line_string = LineString(
+            [self.coords_in_decimal, other.coords_in_decimal]
+        )
+        return geod.geometry_length(line_string) / 1000
+
+    # noinspection PyNestedDecorators
+    @distance.inplace.expression
+    @classmethod
+    def _distance_expression(cls, other_id) -> float:
+        """
+        Дистанция в км между собой и второй точкой.
+        example select(Place.distance(86)).where(Place.id==85)
+        """
+        return ga_func.ST_Distance(
+            Place.coordinates,
+            select(Place.coordinates).where(Place.id == other_id),
         )
