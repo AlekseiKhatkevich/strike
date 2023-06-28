@@ -2,8 +2,10 @@ from decimal import Decimal
 
 import pytest
 from geoalchemy2 import WKTElement
+import random
 
-from serializers.places import PlaceInSerializer, PlaceOutSerializer
+from models.initial_data import RU_regions
+from serializers.places import PlaceInSerializer, PlaceOutSerializer, PlaceDeleteSerializer
 
 
 @pytest.mark.parametrize('coords,_type', [((22.0, 33.0), WKTElement), (None, type(None))])
@@ -45,3 +47,30 @@ def test_PlaceOutSerializer_positive(place_factory):
 
     assert all(isinstance(c, Decimal) for c in serializer.coordinates)
     assert serializer.coordinates == orig_coords
+
+
+@pytest.mark.parametrize(
+    'fields',
+    [dict(id=10), dict(name='test', region_name=random.choice(RU_regions.names))],
+)
+def test_PlaceDeleteSerializer_positive(fields):
+    """
+    Позитивный тест сериалайзера PlaceDeleteSerializer.
+    """
+    ser = PlaceDeleteSerializer(**fields)
+    assert ser.lookup_kwargs == fields
+
+
+@pytest.mark.parametrize(
+    'fields',
+    [dict(), dict(name='test'), dict(region_name=random.choice(RU_regions.names))],
+)
+def test_PlaceDeleteSerializer_negative(fields):
+    """
+    Негативный тест сериалайзера PlaceDeleteSerializer. В случае если не указаны либо поле id,
+    либо совместно поля name и region_name - возбуждается исключение.
+    """
+    expected_error_message = 'You should specify either "id" or both "name" and "region_name" fields.'
+
+    with pytest.raises(ValueError, match=expected_error_message):
+        PlaceDeleteSerializer(**fields)

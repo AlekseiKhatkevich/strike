@@ -1,7 +1,7 @@
 import pytest
 
 from crud.helpers import exists_in_db
-from crud.places import create_or_update_place
+from crud.places import create_or_update_place, delete_place
 from models import Place
 
 
@@ -48,3 +48,17 @@ async def test_create_or_update_place_update(db_session, place):
         Place,
         (Place.id == place.id) & (Place.name == place_2_merge.name) & (Place.coordinates == None)
     )
+
+
+@pytest.mark.parametrize('attrs', [('id',), ('name', 'region_name',)])
+async def test_delete_place(attrs, db_session, place):
+    """
+    Позитивный тест ф-йии delete_place. Должна удалять запись Place либо по id либо по
+    комбинации name и region_name.
+    """
+    lookup_kwargs = {attr: getattr(place, attr) for attr in attrs}
+
+    deleted = await delete_place(db_session, lookup_kwargs)
+
+    assert deleted
+    assert not await exists_in_db(db_session, Place, Place.id == place.id)
