@@ -61,6 +61,12 @@ class Place(Base):
     )
     region: Mapped['Region'] = relationship()
 
+    region_geo: Mapped['Region'] = relationship(
+        # https://docs.sqlalchemy.org/en/20/orm/join_conditions.html#custom-operators-based-on-sql-functions
+        primaryjoin='func.ST_Intersects(foreign(Place.coordinates), Region.contour).as_comparison(1, 2)',
+        viewonly=True,
+    )
+
     def __repr__(self):
         return f'Place "{self.name}" in region {self.region_name}.'
 
@@ -148,7 +154,7 @@ class Place(Base):
         )
         return geod.geometry_length(line_string) / 1000
 
-    # noinspection PyNestedDecorators
+    # noinspection PyNestedDecorators,PyTypeChecker
     @distance.inplace.expression
     @classmethod
     def _distance_expression(cls, other_id) -> ColumnElement[float | None]:
