@@ -1,11 +1,22 @@
+import contextlib
 from decimal import Decimal
+from functools import cached_property
 
 from geoalchemy2 import Geography, WKTElement, WKBElement, Geometry
 from geoalchemy2 import functions as ga_func
 from geoalchemy2.functions import ST_Buffer
 from pyproj import Geod
+from shapely import Point
 from shapely.geometry import LineString
-from sqlalchemy import String, ForeignKey, UniqueConstraint, CheckConstraint, func, select
+from sqlalchemy import (
+    String,
+    ForeignKey,
+    UniqueConstraint,
+    CheckConstraint,
+    func,
+    select,
+    ColumnElement,
+)
 from sqlalchemy import cast, DECIMAL
 from sqlalchemy.dialects.postgresql import ExcludeConstraint, ARRAY
 from sqlalchemy.dialects.postgresql import array
@@ -67,10 +78,10 @@ class Place(Base):
         ),
     )
 
-    @hybrid_property
-    def coords_hr(self) -> tuple[Decimal, Decimal] | None:
+    @cached_property
+    def shapely_point(self) -> Point | None:
         """
-        Возвращает координаты в числовом формате широта, долгота.
+        Получение POINT Shapely.
         """
         if isinstance(self.coordinates, WKTElement):
             import shapely.wkt as loader
@@ -78,13 +89,21 @@ class Place(Base):
             import shapely.wkb as loader
         else:
             return self.coordinates
-        sh_point = loader.loads(self.coordinates.data)
-        return Decimal(sh_point.y), Decimal(sh_point.x)
+        return loader.loads(self.coordinates.data)
+
+    @hybrid_property
+    def coords_hr(self) -> tuple[Decimal, Decimal] | None:
+        """
+        Возвращает координаты в числовом формате широта, долгота.
+        """
+        sh_point = self.shapely_point
+        with contextlib.suppress(AttributeError):
+            return Decimal(sh_point.y), Decimal(sh_point.x)
 
     # noinspection PyNestedDecorators
     @coords_hr.inplace.expression
     @classmethod
-    def _coords_hr_expression(cls) -> str:
+    def _coords_hr_expression(cls) -> ColumnElement[str | None]:
         """
         Строковое представление координат.
         """
@@ -98,7 +117,7 @@ class Place(Base):
     # noinspection PyNestedDecorators,PyTypeChecker
     @coords_in_decimal.inplace.expression
     @classmethod
-    def _coords_in_decimal_expression(cls) -> list[Decimal, Decimal]:
+    def _coords_in_decimal_expression(cls) -> ColumnElement[list[Decimal | None, Decimal | None]]:
         """
         Координаты в Decimal (широта, долгота).
         """
@@ -112,26 +131,29 @@ class Place(Base):
         )
 
     @hybrid_method
-    def distance(self, other: 'Place') -> float:
+    def distance(self, other: 'Place') -> float | None:
         """
         Расстояние м/у 2-мя точками в км.
         https://gis.stackexchange.com/questions/403637/convert-distance-in-shapely-to-kilometres
         """
+        if None in {self.coordinates, other.coordinates}:
+            return None
         geod = Geod(ellps='WGS84')
         line_string = LineString(
-            [self.coords_in_decimal, other.coords_in_decimal]
+            [self.shapely_point, other.shapely_point]
         )
         return geod.geometry_length(line_string) / 1000
 
     # noinspection PyNestedDecorators
     @distance.inplace.expression
     @classmethod
-    def _distance_expression(cls, other_id) -> float:
+    def _distance_expression(cls, other_id) -> ColumnElement[float | None]:
         """
         Дистанция в км между собой и второй точкой.
         example select(Place.distance(86)).where(Place.id==85)
         """
+        # noinspection PyUnresolvedReferences
         return ga_func.ST_Distance(
             Place.coordinates,
-            select(Place.coordinates).where(Place.id == other_id),
-        )
+            select(Place.coordinates).where(Place.id == other_id).scalar_subquery(),
+        ) / 1000

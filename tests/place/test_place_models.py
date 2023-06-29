@@ -69,9 +69,24 @@ async def test_coords_hr_expression(place, db_session):
 
 async def test_coords_in_decimal(place, db_session):
     """
-
+    Тест метода coords_in_decimal отдающего широту и долготу в Decimal.
     """
     coords_in_decimal = await db_session.scalar(
         select(Place.coords_in_decimal)
     )
     assert coords_in_decimal == pytest.approx(place.coords_in_decimal)
+
+
+async def test_distance(db_session, place, place_factory):
+    """
+    Тест метода distance считающего дистанцию между 2мя точками в пайтоне или в БД.
+    """
+    place2 = place_factory.build()
+    db_session.add(place2)
+    await db_session.commit()
+
+    distance_from_db = await db_session.scalar(
+        select(Place.distance(place2.id)).where(Place.id == place.id)
+    )
+    assert isinstance(distance_from_db, float)
+    assert distance_from_db == pytest.approx(place.distance(place2))
