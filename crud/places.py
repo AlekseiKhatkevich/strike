@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 from geoalchemy2 import functions as ga_functions
-from sqlalchemy import exc as sa_exc
-from sqlalchemy import select, delete
+from loguru import logger
+from sqlalchemy import delete, exc as sa_exc, select
 
 from crud.helpers import commit_if_not_in_transaction
 from internal.constants import PLACES_DUPLICATION_RADIUS
@@ -37,6 +37,10 @@ async def delete_place(session: 'AsyncSession', lookup_kwargs: dict[str, int | s
         delete(Place).filter_by(**lookup_kwargs).returning(Place.id)
     )
     await session.commit()
+    if deleted_id is None:
+        logger.error(f'No entries has been deleted. Lookup kwargs - {lookup_kwargs}')
+    else:
+        logger.info(f'Entry with id={deleted_id} was successfully deleted from DB.')
     return deleted_id is not None
 
 
@@ -46,6 +50,7 @@ async def create_or_update_place(session: 'AsyncSession', place: Place) -> Place
     Если place не имеет id -то сохраняем его в БД, а если имеет – то обновляем существующий по
     этому id инстанс и сохраняем его в БД.
     """
+    action = 'create' if place.id is None else 'update'
     try:
         async with session.begin_nested():
             place_merged = await session.merge(place)
@@ -57,12 +62,14 @@ async def create_or_update_place(session: 'AsyncSession', place: Place) -> Place
                     ga_functions.ST_Distance(Place.coordinates, place.coordinates) <= PLACES_DUPLICATION_RADIUS
                 )
             )
-            raise ValueError(
+            err = ValueError(
                 f'Place {place.name} has one or few places within {PLACES_DUPLICATION_RADIUS} meters distance'
                 f' {known_places.all()}. Can not be saved in database as it is a duplicate.'
             )
-        else:
-            raise err
+            logger.exception(err)
+
+        raise err
     else:
         await session.commit()
+        logger.info(f'Place {place_merged} was successfully {action}d.')
         return place_merged

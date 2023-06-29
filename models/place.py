@@ -2,31 +2,31 @@ import contextlib
 from decimal import Decimal
 from functools import cached_property
 
-from geoalchemy2 import Geography, WKTElement, WKBElement, Geometry
-from geoalchemy2 import functions as ga_func
-from geoalchemy2.functions import ST_Buffer
+from geoalchemy2 import Geography, Geometry, WKBElement, WKTElement, functions as ga_func
 from pyproj import Geod
-from shapely import Point
-from shapely.geometry import LineString
+from shapely import LineString, Point
 from sqlalchemy import (
-    String,
-    ForeignKey,
-    UniqueConstraint,
     CheckConstraint,
+    ColumnElement,
+    DECIMAL,
+    ForeignKey,
+    String,
+    UniqueConstraint,
+    cast,
     func,
     select,
-    ColumnElement,
 )
-from sqlalchemy import cast, DECIMAL
-from sqlalchemy.dialects.postgresql import ExcludeConstraint, ARRAY
-from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+from sqlalchemy.dialects.postgresql import ARRAY, ExcludeConstraint, array
+from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from internal.constants import RU_RU_CE_COLLATION_NAME, PLACES_DUPLICATION_RADIUS
+from internal.constants import PLACES_DUPLICATION_RADIUS, RU_RU_CE_COLLATION_NAME
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
+
+from loguru import logger
+
 
 __all__ = (
     'Place',
@@ -73,7 +73,7 @@ class Place(Base):
         UniqueConstraint(name, region_name, ),
         #  https://stackoverflow.com/questions/76500152/postgres-create-unique-index-on-point-within-certain-distance-around-it/76500390?noredirect=1#comment134891135_76500390
         ExcludeConstraint(
-            (ST_Buffer(coordinates, PLACES_DUPLICATION_RADIUS, 'quad_segs=1'), '&&'),
+            (ga_func.ST_Buffer(coordinates, PLACES_DUPLICATION_RADIUS, 'quad_segs=1'), '&&'),
             name='close_points_exc_constraint',
         ),
     )
@@ -137,6 +137,10 @@ class Place(Base):
         https://gis.stackexchange.com/questions/403637/convert-distance-in-shapely-to-kilometres
         """
         if None in {self.coordinates, other.coordinates}:
+            logger.warning(
+                f'Can not calculate distance as one of coord is None {self.coordinates, other.coordinates}. '
+                f'First Place id - {self.id}, other Place id - {other.id}.'
+            )
             return None
         geod = Geod(ellps='WGS84')
         line_string = LineString(

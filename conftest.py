@@ -169,15 +169,6 @@ def register_sqlalchemy_events():
     register_all_sqlalchemy_events()
 
 
-# @pytest.hookimpl(hookwrapper=True)
-# def pytest_runtestloop(session):
-#     """
-#     https://stackoverflow.com/questions/45773954/change-default-faker-locale-in-factory-boy
-#     """
-#     with factory.Faker.override_default_locale('ru_RU'):
-#         outcome = yield
-#
-
 @pytest.fixture
 async def create_instance_from_factory(db_session: 'AsyncSession') -> Callable[['Factory', Any, ...], Awaitable['Base']]:
     """
