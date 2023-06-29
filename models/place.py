@@ -114,7 +114,7 @@ class Place(Base):
     def coords_in_decimal(self) -> tuple[Decimal, Decimal] | None:
         return self.coords_hr
 
-    # noinspection PyNestedDecorators,PyTypeChecker
+    # noinspection PyNestedDecorators,PyTypeChecker,PyUnresolvedReferences
     @coords_in_decimal.inplace.expression
     @classmethod
     def _coords_in_decimal_expression(cls) -> ColumnElement[list[Decimal | None, Decimal | None]]:

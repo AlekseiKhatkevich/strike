@@ -1,11 +1,14 @@
+from typing import Annotated
+
 from fastapi import (
     APIRouter,
     Depends,
     status,
     HTTPException,
+    Path,
 )
 
-from crud.places import create_or_update_place, delete_place
+from crud.places import create_or_update_place, delete_place, calculate_distance
 from internal.dependencies import jwt_authorize, SessionDep
 from models import Place
 from serializers.places import (
@@ -20,6 +23,17 @@ __all__ = (
 
 
 router = APIRouter(tags=['places'], dependencies=[Depends(jwt_authorize)])
+
+
+@router.get('/distance/{id1}/{id2}/')
+async def distance_between_2_points(id1: Annotated[int, Path(title='first Place id', ge=1)],
+                                    id2: Annotated[int, Path(title='second Place id', ge=1)],
+                                    session: SessionDep,
+                                    ) -> float | None:
+    """
+    Дистанция м/у 2-мя точками по геоиду.
+    """
+    return await calculate_distance(session, id1, id2)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)

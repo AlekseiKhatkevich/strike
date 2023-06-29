@@ -3,8 +3,10 @@ from typing import TYPE_CHECKING
 from geoalchemy2 import functions as ga_functions
 from sqlalchemy import exc as sa_exc
 from sqlalchemy import select, delete
-from models import Place
+
+from crud.helpers import commit_if_not_in_transaction
 from internal.constants import PLACES_DUPLICATION_RADIUS
+from models import Place
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +15,18 @@ if TYPE_CHECKING:
 __all__ = (
     'create_or_update_place',
     'delete_place',
+    'calculate_distance',
 )
+
+
+@commit_if_not_in_transaction
+async def calculate_distance(session: 'AsyncSession', id1: int, id2: int) -> float | None:
+    """
+    Отдает дистанцию по геоиду между двумя точками.
+    """
+    return await session.scalar(
+        select(Place.distance(id2)).where(Place.id == id1)
+    )
 
 
 async def delete_place(session: 'AsyncSession', lookup_kwargs: dict[str, int | str]) -> bool:
