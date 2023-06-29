@@ -13,7 +13,6 @@ async def test_update_place_ep_positive(db_session, async_client_httpx, place):
     data_to_update = dict(
         id=place.id,
         address='new_test_address',
-        region_name=place.region_name,
         coordinates=None,
         name=place.name,
     )

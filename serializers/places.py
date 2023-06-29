@@ -4,7 +4,7 @@ from typing import Literal
 
 import shapely.wkt
 from geoalchemy2 import WKTElement
-from pydantic import BaseModel, constr, validator, condecimal, root_validator
+from pydantic import BaseModel, condecimal, constr, root_validator, validator
 
 from internal.geo import point_from_numeric
 from models.initial_data import RU_regions
@@ -36,19 +36,17 @@ class PlaceDeleteSerializer(BaseModel):
     """
     id: int | None
     name: constr(max_length=128) | None
-    # noinspection PyTypeHints
-    region_name: Literal[*RU_regions.names] | None
 
     @root_validator(pre=True)
     def validate_one_field_presence(cls, values):
         """
         Должно быть передано поле id или же name и region_name.
         """
-        _id, name, region_name = (values.get(key) for key in cls.__fields__.keys())
+        _id, name = (values.get(key) for key in cls.__fields__.keys())
 
-        if _id is None and (name is None or region_name is None):
+        if _id is None and name is None:
             raise ValueError(
-                    'You should specify either "id" or both "name" and "region_name" fields.'
+                    'You should specify either "id" or "name" field.'
                 )
         return values
 
@@ -58,7 +56,7 @@ class PlaceDeleteSerializer(BaseModel):
         Отдает маппинг имя поля: значение для последующего нахождения инстанса Place
         по этим данным. Либо мы ищем по id либо по уникальной комбинации name & regin_name.
         """
-        return {'id': self.id} if self.id is not None else {'name': self.name, 'region_name': self.region_name}
+        return {'id': self.id} if self.id is not None else {'name': self.name}
 
 
 class PlaceInSerializer(PlaceBaseSerializer):

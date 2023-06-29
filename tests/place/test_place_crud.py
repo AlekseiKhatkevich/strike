@@ -37,7 +37,6 @@ async def test_create_or_update_place_update(db_session, place):
         id=place.id,
         name='new_name',
         address=place.address,
-        region_name=place.region_name,
         coordinates=None,
     )
 
@@ -50,11 +49,11 @@ async def test_create_or_update_place_update(db_session, place):
     )
 
 
-@pytest.mark.parametrize('attrs', [('id',), ('name', 'region_name',)])
+@pytest.mark.parametrize('attrs', [('id',), ('name',)])
 async def test_delete_place(attrs, db_session, place):
     """
     Позитивный тест ф-йии delete_place. Должна удалять запись Place либо по id либо по
-    комбинации name и region_name.
+    name.
     """
     lookup_kwargs = {attr: getattr(place, attr) for attr in attrs}
 

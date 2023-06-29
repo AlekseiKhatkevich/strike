@@ -12,7 +12,7 @@ class PlaceFactory(factory.alchemy.SQLAlchemyModelFactory):
     """
     Фабрика модели Place (место проведения забастовки).
     """
-    name = 'Место демонстрации'
+    name = factory.Faker('street_name', locale='ru_RU')
     address = factory.Faker('address', locale='ru_RU')
     coordinates = factory.LazyAttribute(
         lambda o: point_from_numeric(*o.coords_in_decimal)
