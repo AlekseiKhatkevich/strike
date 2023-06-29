@@ -27,7 +27,6 @@ class PlaceBaseSerializer(BaseModel, abc.ABC):
     name: constr(max_length=128)
     address: constr(max_length=256)
     # noinspection PyTypeHints
-    region_name: Literal[*RU_regions.names]
     coordinates: in_out_coords_format
 
 
@@ -82,11 +81,22 @@ class PlaceInSerializer(PlaceBaseSerializer):
         allow_mutation = False
 
 
+class RegionOutSerializer(BaseModel):
+    """
+    Для отдачи Region на фронт.
+    """
+    name: str = Literal[*RU_regions.names]
+
+    class Config:
+        orm_mode = True
+
+
 class PlaceOutSerializer(PlaceBaseSerializer):
     """
     Для отдачи сохраненного Place на фронт.
     """
     id: int
+    region: RegionOutSerializer | None
 
     class Config:
         arbitrary_types_allowed = True

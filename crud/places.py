@@ -71,5 +71,6 @@ async def create_or_update_place(session: 'AsyncSession', place: Place) -> Place
         raise err
     else:
         await session.commit()
+        await place_merged.awaitable_attrs.region  # для сериалайзера
         logger.info(f'Place {place_merged} was successfully {action}d.')
         return place_merged
