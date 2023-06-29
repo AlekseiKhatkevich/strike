@@ -2,7 +2,13 @@ import contextlib
 from decimal import Decimal
 from functools import cached_property
 
-from geoalchemy2 import Geography, Geometry, WKBElement, WKTElement, functions as ga_func
+from geoalchemy2 import (
+    Geography,
+    Geometry,
+    WKBElement,
+    WKTElement,
+    functions as ga_func,
+)
 from pyproj import Geod
 from shapely import LineString, Point
 from sqlalchemy import (
@@ -42,12 +48,10 @@ class Place(Base):
     id: Mapped[BigIntPk]
     name: Mapped['str'] = mapped_column(
         String(128, collation=RU_RU_CE_COLLATION_NAME),
+        unique=True,
     )
     address: Mapped['str'] = mapped_column(
         String(256, collation=RU_RU_CE_COLLATION_NAME),
-    )
-    region_name: Mapped[BigIntType] = mapped_column(
-        ForeignKey('regions.name', ondelete='RESTRICT', onupdate='CASCADE', ),
     )
     coordinates = mapped_column(
         # https://github.com/geoalchemy/geoalchemy2/issues/137
@@ -59,16 +63,14 @@ class Place(Base):
         passive_deletes=True,
         back_populates='places',
     )
-    region: Mapped['Region'] = relationship()
-
-    region_geo: Mapped['Region'] = relationship(
+    region: Mapped['Region'] = relationship(
         # https://docs.sqlalchemy.org/en/20/orm/join_conditions.html#custom-operators-based-on-sql-functions
         primaryjoin='func.ST_Intersects(foreign(Place.coordinates), Region.contour).as_comparison(1, 2)',
         viewonly=True,
     )
 
     def __repr__(self):
-        return f'Place "{self.name}" in region {self.region_name}.'
+        return f'Place "{self.name}"'
 
     __table_args__ = (
         CheckConstraint(
@@ -76,7 +78,6 @@ class Place(Base):
             (func.abs(ga_func.ST_Y(cast(coordinates, Geometry))) <= 90),
             name='coordinates_limit',
         ),
-        UniqueConstraint(name, region_name, ),
         #  https://stackoverflow.com/questions/76500152/postgres-create-unique-index-on-point-within-certain-distance-around-it/76500390?noredirect=1#comment134891135_76500390
         ExcludeConstraint(
             (ga_func.ST_Buffer(coordinates, PLACES_DUPLICATION_RADIUS, 'quad_segs=1'), '&&'),
