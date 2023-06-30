@@ -13,7 +13,7 @@ from events import register_all_sqlalchemy_events
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
 from models.exceptions import ModelEntryDoesNotExistsInDbError
-from routers import users, token, places
+from routers import users, token, places, union
 from security.invitation import InvitationTokenDeclinedException
 
 __all__ = (
@@ -40,6 +40,7 @@ app.include_router(users.router, prefix='/users')
 app.include_router(users.router_without_jwt, prefix='/users')
 app.include_router(token.router, prefix='/token')
 app.include_router(places.router, prefix='/strikes/places')
+app.include_router(union.router, prefix='/strikes/unions')
 
 
 @app.exception_handler(InvitationTokenDeclinedException)

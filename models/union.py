@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.database import Base
 from models.annotations import BigIntPk
-from models.mixins import UpdatedAtMixin, CreatedAtMixin
+from models.mixins import CreatedAtMixin, UpdatedAtMixin
 
 __all__ = (
     'Union',
@@ -22,7 +22,6 @@ class Union(UpdatedAtMixin, CreatedAtMixin, Base):
     is_yellow: Mapped[bool] = mapped_column(
         default=False,
     )
-
     strikes: Mapped[list['Strike']] = relationship(
         back_populates='union',
     )

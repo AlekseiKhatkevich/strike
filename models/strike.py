@@ -3,15 +3,16 @@ import enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
-    CheckConstraint,
+    Boolean, CheckConstraint,
     Text,
     ForeignKey,
     Enum,
     Column,
-    UniqueConstraint,
+    UniqueConstraint, type_coerce,
 )
 from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint, Range
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (
     validates,
     Mapped,
@@ -58,11 +59,11 @@ class StrikeToUserAssociation(Base):
     __tablename__ = 'strike_to_user_associations'
 
     strike_id: Mapped[BigIntType] = mapped_column(
-        ForeignKey('strikes.id', ondelete='CASCADE',),
+        ForeignKey('strikes.id', ondelete='CASCADE', ),
         primary_key=True,
     )
     user_id: Mapped[BigIntType] = mapped_column(
-        ForeignKey('users.id', ondelete='CASCADE',),
+        ForeignKey('users.id', ondelete='CASCADE', ),
         primary_key=True,
     )
     role: Mapped[Enum | None] = mapped_column(
@@ -189,3 +190,19 @@ class Strike(UpdatedAtMixin, Base):
         Кол-во юзеров должно быть положительным интегром.
         """
         return positive_integer_only(field, value)
+
+    @hybrid_property
+    def is_active(self) -> bool:
+        """
+
+        """
+        # todo тесты
+        return self.duration.contains(datetime.datetime.now(tz=datetime.UTC))
+
+
+    @is_active.inplace.expression
+    @classmethod
+    def _is_active_expression(cls):
+        """
+        """
+        return type_coerce(cls.duration.op('@>')(func.now()), Boolean)
