@@ -4,6 +4,7 @@ import factory
 import pyproj
 from geoalchemy2 import WKTElement
 from shapely.geometry import Point
+from shapely.geometry.multipolygon import MultiPolygon
 from shapely.ops import transform
 
 from models import Region
@@ -48,7 +49,7 @@ class RegionFactory(factory.alchemy.SQLAlchemyModelFactory):
     name = factory.Iterator(RU_regions.names)
     contour = factory.LazyAttribute(
         lambda o: WKTElement(
-            _generate_polygon(o.point).wkt,
+            MultiPolygon([_generate_polygon(o.point)]).wkt,
             srid=4326,
         ))
 
@@ -56,4 +57,4 @@ class RegionFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = Region
 
     class Params:
-        point: Point = None
+        point = Point(11, 12)

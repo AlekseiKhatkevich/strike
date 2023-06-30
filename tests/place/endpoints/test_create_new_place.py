@@ -11,16 +11,15 @@ EP_URL = '/strikes/places/'
 
 
 @pytest.fixture
-def positive_data(place_factory, faker, region) -> dict:
+def positive_data(place_factory, faker) -> dict:
     """
     Верные данные для передачи в create_new_place для сохранения в БД с фронта.
     """
-    place = place_factory.build(region=region)
+    place = place_factory.build()
 
     data_to_save = dict(
         name=place.name,
         address=place.address,
-        region_name=place.region.name,
         coordinates=faker.latlng(),
     )
     return data_to_save

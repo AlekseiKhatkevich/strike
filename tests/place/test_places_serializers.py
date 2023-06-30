@@ -16,7 +16,6 @@ def test_PlaceInSerializer_positive(place_factory, coords, _type):
     input_data = dict(
         name=place.name,
         address=place.address,
-        region_name=place.region.name,
     )
     if coords is not None:
         input_data['coordinates'] = coords
@@ -38,7 +37,6 @@ def test_PlaceOutSerializer_positive(place_factory):
     serializer = PlaceOutSerializer(
         name=place.name,
         address=place.address,
-        region_name=place.region.name,
         coordinates=place.coordinates,
         id=1,
     )

@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-
+from shapely import Point
 import pytest
 from pytest_factoryboy import register
 
@@ -12,8 +12,11 @@ register(RegionFactory)
 
 
 @pytest.fixture
-async def region(region_factory: RegionFactory, create_instance_from_factory) -> 'Region':
+async def region(region_factory: RegionFactory, db_session) -> 'Region':
     """
     Создает запись модели Region в БД.
     """
-    return await create_instance_from_factory(region_factory)
+    instance = region_factory(point=Point(21, 31)).build()
+    db_session.add(instance)
+    await db_session.commit()
+    return instance
