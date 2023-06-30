@@ -30,6 +30,7 @@ redis = {extras = ["hiredis"], version = "^4.5.5"}
 geoalchemy2 = "0.13.*"
 shapely = "^2.0.1"
 pyproj = "3.6.*"
+fastapi-pagination = "0.12.*"
 
 
 [tool.poetry.group.dev.dependencies]

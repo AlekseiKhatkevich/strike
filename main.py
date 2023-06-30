@@ -4,6 +4,7 @@ from typing import AsyncContextManager
 
 from fastapi import FastAPI, status
 from fastapi.responses import ORJSONResponse
+from fastapi_pagination import add_pagination
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import exc as sa_exc
@@ -13,7 +14,7 @@ from events import register_all_sqlalchemy_events
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
 from models.exceptions import ModelEntryDoesNotExistsInDbError
-from routers import users, token, places, union
+from routers import places, token, union, users
 from security.invitation import InvitationTokenDeclinedException
 
 __all__ = (
@@ -35,6 +36,7 @@ app = FastAPI(
 )
 
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+add_pagination(app)
 
 app.include_router(users.router, prefix='/users')
 app.include_router(users.router_without_jwt, prefix='/users')

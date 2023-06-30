@@ -1,25 +1,23 @@
 from fastapi import APIRouter, Depends, Query
+from fastapi_pagination import LimitOffsetPage
 
 from crud.unions import get_unions
-from internal.dependencies import SessionDep, jwt_authorize
+from internal.dependencies import PaginParamsDep, SessionDep, jwt_authorize
 from serializers.unions import UnionOutSerializer
 
 __all__ = (
     'router',
 )
 
-
 router = APIRouter(tags=['union'], dependencies=[Depends(jwt_authorize)])
 
 
 @router.get('/')
 async def unions(session: SessionDep,
+                 params: PaginParamsDep,
                  id: list[int] = Query([], ge=1),
-                 ) -> list[UnionOutSerializer]:
+                 ) -> LimitOffsetPage[UnionOutSerializer]:
     """
-    Отдача записей Union.
+    Отдача записей Union с пагинацией.
     """
-    unions = await get_unions(session, id)
-    return unions.all()
-    # пагиниция
-
+    return await get_unions(session, id, params)
