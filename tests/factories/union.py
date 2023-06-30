@@ -1,23 +1,31 @@
+import datetime
+
 import factory
 
 from internal.database import async_session
 from models import Union
-from tests.factories.async_helpers import AsyncSQLAlchemyModelFactory
 
 __all__ = (
     'UnionFactory',
 )
 
 
-class UnionFactory(AsyncSQLAlchemyModelFactory):
+class UnionFactory(factory.alchemy.SQLAlchemyModelFactory):
     """
     Фабрика модели Union (профсоюз).
     """
+    id = None
     name = factory.Faker('company')
     is_yellow = False
+    created_at = None
 
     class Meta:
         model = Union
-        sqlalchemy_session = async_session()
-        sqlalchemy_session_persistence = 'commit'
-        strategy = factory.CREATE_STRATEGY
+
+    class Params:
+        with_created_at = factory.Trait(
+            created_at=datetime.datetime.now(tz=datetime.UTC),
+        )
+        with_id = factory.Trait(
+            id=factory.Faker('pyint', min_value=1),
+        )

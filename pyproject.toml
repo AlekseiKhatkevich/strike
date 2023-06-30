@@ -31,6 +31,7 @@ geoalchemy2 = "0.13.*"
 shapely = "^2.0.1"
 pyproj = "3.6.*"
 fastapi-pagination = "0.12.*"
+setuptools = "67.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
