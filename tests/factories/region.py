@@ -1,27 +1,59 @@
-import factory
-from geoalchemy2 import WKTElement
+from functools import partial
 
-from internal.database import async_session
+import factory
+import pyproj
+from geoalchemy2 import WKTElement
+from shapely.geometry import Point
+from shapely.ops import transform
+
 from models import Region
 from models.initial_data import RU_regions
-from tests.factories.async_helpers import AsyncSQLAlchemyModelFactory
 
 __all__ = (
     'RegionFactory',
 )
 
+RADIUS = 1
 
-class RegionFactory(AsyncSQLAlchemyModelFactory):
+
+def _generate_polygon(point: Point):
+    """
+    https://gis.stackexchange.com/questions/268250/generating-polygon-representing-rough-100km-circle-around-latitude-longitude-poi
+    """
+    local_azimuthal_projection = \
+        f"+proj=aeqd +R=6371000 +units=m +lat_0={point.y} +lon_0={point.x}"
+
+    wgs84_to_aeqd = partial(
+        pyproj.transform,
+        pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
+        pyproj.Proj(local_azimuthal_projection),
+    )
+    aeqd_to_wgs84 = partial(
+        pyproj.transform,
+        pyproj.Proj(local_azimuthal_projection),
+        pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
+    )
+    point_transformed = transform(wgs84_to_aeqd, point)
+
+    buffer = point_transformed.buffer(RADIUS)
+
+    buffer_wgs84 = transform(aeqd_to_wgs84, buffer)
+    return buffer_wgs84
+
+
+class RegionFactory(factory.alchemy.SQLAlchemyModelFactory):
     """
     Фабрика модели Region (регион РФ).
     """
     name = factory.Iterator(RU_regions.names)
-    contour = WKTElement(
-        'MULTIPOLYGON(((0 0,4 0,4 4,0 4,0 0)),((1 1,2 1,2 2,1 2,1 1)), ((-1 -1,-1 -2,-2 -2,-2 -1,-1 -1)))',
-        srid=4326,
-    )
+    contour = factory.LazyAttribute(
+        lambda o: WKTElement(
+            _generate_polygon(o.point).wkt,
+            srid=4326,
+        ))
 
     class Meta:
         model = Region
-        sqlalchemy_session = async_session()
-        sqlalchemy_session_persistence = 'commit'
+
+    class Params:
+        point: Point = None
