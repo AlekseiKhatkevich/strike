@@ -13,9 +13,18 @@ __all__ = (
     'exists_in_db',
     'commit_if_not_in_transaction',
     'create_or_update_with_on_conflict',
+    'create_or_update_with_session_get',
 )
 
 MODEL_T = TypeVar('MODEL_T', bound='Base')
+
+
+def get_pk_name(model: 'Base') -> str:
+    """
+    Название первичного ключа модели.
+    """
+    pk_inst = inspect(model).primary_key
+    return pk_inst[0].name
 
 
 def commit_if_not_in_transaction(func: Callable) -> Callable:
@@ -45,9 +54,7 @@ async def exists_in_db(session: 'AsyncSession',
     :param condition: Условия фильтрации кверисета.
     :return: Есть ли хотя бы одна запись в БД удовлетворяющая условиям.
     """
-    pk = inspect(model).primary_key
-    pk_name = pk[0].name
-    stmt = select(getattr(model, pk_name)).where(condition).limit(1)
+    stmt = select(getattr(model, get_pk_name(model))).where(condition).limit(1)
     return await session.scalar(stmt) is not None
 
 
@@ -84,4 +91,26 @@ async def create_or_update_with_on_conflict(session: 'AsyncSession',
     instance = await session.scalar(stmt)
     await session.commit()
 
+    return instance
+
+
+async def create_or_update_with_session_get(session: 'AsyncSession',
+                                            model: Type[MODEL_T],
+                                            data: dict[str, Any],
+                                            ) -> MODEL_T:
+    """
+    Создает или обновляет запись модели в БД.
+    """
+    try:  # обновление
+        pk = data[get_pk_name(model)]
+        instance = await session.get(model, pk, with_for_update=True)
+        if instance is not None:
+            for field, value in data.items():
+                setattr(instance, field, value)
+        else:
+            raise ValueError(f'{type(model)} with id={pk} was not found in DB.')
+    except KeyError:  # создание
+        session.add(instance := model(**data))
+
+    await session.commit()
     return instance
