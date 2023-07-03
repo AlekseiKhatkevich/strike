@@ -114,7 +114,7 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
             for field, value in data.items():
                 setattr(instance, field, value)
         else:
-            raise ValueError(f'{type(model)} with id={pk} was not found in DB.')
+            raise ValueError(f'{str(model)} with id={pk} was not found in DB.')
 
     await session.commit()
     return instance
