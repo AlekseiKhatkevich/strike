@@ -4,6 +4,7 @@ from fastapi_pagination import LimitOffsetPage
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from crud.unions import get_unions
 from internal.dependencies import PaginParamsDep, PathIdDep, SessionDep, jwt_authorize
+from models import Union
 from serializers.unions import UnionInSerializer, UnionOutSerializer
 
 __all__ = (
@@ -46,4 +47,4 @@ async def delete_union_ep(id: PathIdDep, session: SessionDep):
     """
     Эндпоинт удаления Union.
     """
-    await delete_via_sql_delete(session, 'Union', id=id)
+    await delete_via_sql_delete(session, Union, Union.id == id)

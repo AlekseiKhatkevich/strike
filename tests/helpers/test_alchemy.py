@@ -1,6 +1,6 @@
 import pytest
 
-from crud.helpers import create_or_update_with_session_get, exists_in_db
+from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete, exists_in_db
 from models import Union, User
 
 
@@ -60,3 +60,16 @@ async def test_create_or_update_with_session_get_update_negative(union, db_sessi
 
     with pytest.raises(ValueError, match=expected_error_message):
         await create_or_update_with_session_get(db_session, type(union), data)
+
+
+async def test_delete_via_sql_delete_positive(unions_batch, db_session):
+    """
+    Позитивный тест метода delete_via_sql_delete удаления чего либо из БД.
+    """
+    ids_to_delete = unions_batch[0].id, unions_batch[-1].id
+    await delete_via_sql_delete(
+        db_session,
+        Union,
+        Union.id.in_(ids_to_delete),
+    )
+    assert not await exists_in_db(db_session, Union, Union.id.in_(ids_to_delete))

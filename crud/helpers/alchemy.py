@@ -1,4 +1,4 @@
-from functools import wraps
+from functools import cache, wraps
 from typing import Any, Callable, TYPE_CHECKING, Type, TypeVar
 
 from sqlalchemy import delete, inspect, select
@@ -16,12 +16,14 @@ __all__ = (
     'create_or_update_with_on_conflict',
     'create_or_update_with_session_get',
     'delete_via_sql_delete',
+    'is_instance_in_db',
 )
 
 MODEL_T = TypeVar('MODEL_T', bound='Base')
 ID_T = TypeVar('ID_T')
 
 
+@cache
 def get_pk_name(model: 'Base') -> str:
     """
     Название первичного ключа модели.
@@ -71,6 +73,22 @@ async def exists_in_db(session: 'AsyncSession',
     """
     stmt = select(getattr(model, get_pk_name(model))).where(condition).limit(1)
     return await session.scalar(stmt) is not None
+
+
+@commit_if_not_in_transaction
+async def is_instance_in_db(session: 'AsyncSession', instance: Base) -> bool:
+    """
+    Есть ли этот инстанс в БД или нет?
+    """
+    cls = instance.__class__
+    pk_name = get_pk_name(cls)
+    cls_pk = getattr(cls, pk_name)
+    instance_pk = getattr(instance, pk_name)
+
+    # noinspection PyTypeChecker
+    return await session.scalar(
+        select(cls_pk).where(cls_pk == instance_pk).limit(1)
+    ) is not None
 
 
 async def create_or_update_with_on_conflict(session: 'AsyncSession',
@@ -135,13 +153,13 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
 @model_from_string
 async def delete_via_sql_delete(session: 'AsyncSession',
                                 model: Type[MODEL_T] | str,
-                                **conditions,
+                                condition: 'OperatorExpression',
                                 ) -> list[ID_T, ...]:
     """
     Удаление записей модели по каким то условиям. Возвращает список удаленных id.
     """
     result = await session.scalars(
-        delete(model).filter_by(**conditions).returning(getattr(model, get_pk_name(model)))
+        delete(model).where(condition).returning(getattr(model, get_pk_name(model)))
     )
     await session.commit()
     # noinspection PyTypeChecker
