@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Any, Callable, TYPE_CHECKING, Type, TypeVar
 
-from sqlalchemy import inspect, select
+from sqlalchemy import delete, inspect, select
 from sqlalchemy.dialects.postgresql import insert
 
 from internal.database import Base
@@ -15,9 +15,11 @@ __all__ = (
     'commit_if_not_in_transaction',
     'create_or_update_with_on_conflict',
     'create_or_update_with_session_get',
+    'delete_via_sql_delete',
 )
 
 MODEL_T = TypeVar('MODEL_T', bound='Base')
+ID_T = TypeVar('ID_T')
 
 
 def get_pk_name(model: 'Base') -> str:
@@ -26,6 +28,18 @@ def get_pk_name(model: 'Base') -> str:
     """
     pk_inst = inspect(model).primary_key
     return pk_inst[0].name
+
+
+def model_from_string(func: Callable) -> Callable:
+    """
+    Позволяет передавать модель как строку, т.е. ее название.
+    """
+    @wraps(func)
+    async def wrapper(session, model, *args, **kwargs):
+        if isinstance(model, str):
+            model = Base.get_model_by_name(model)
+        return await func(session, model, *args, **kwargs)
+    return wrapper
 
 
 def commit_if_not_in_transaction(func: Callable) -> Callable:
@@ -95,6 +109,7 @@ async def create_or_update_with_on_conflict(session: 'AsyncSession',
     return instance
 
 
+@model_from_string
 async def create_or_update_with_session_get(session: 'AsyncSession',
                                             model: Type[MODEL_T] | str,
                                             data: dict[str, Any],
@@ -102,9 +117,6 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
     """
     Создает или обновляет запись модели в БД.
     """
-    if isinstance(model, str):
-        model = Base.get_model_by_name(model)
-
     pk = data.get(get_pk_name(model), None)
     if pk is None:  # создание новой записи.
         session.add(instance := model(**data))
@@ -118,3 +130,19 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
 
     await session.commit()
     return instance
+
+
+@model_from_string
+async def delete_via_sql_delete(session: 'AsyncSession',
+                                model: Type[MODEL_T] | str,
+                                **conditions,
+                                ) -> list[ID_T, ...]:
+    """
+    Удаление записей модели по каким то условиям. Возвращает список удаленных id.
+    """
+    result = await session.scalars(
+        delete(model).filter_by(**conditions).returning(getattr(model, get_pk_name(model)))
+    )
+    await session.commit()
+    # noinspection PyTypeChecker
+    return result.all()

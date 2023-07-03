@@ -2,7 +2,7 @@ import contextvars
 from typing import Annotated, AsyncGenerator, TYPE_CHECKING
 
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Path, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import Params
 from loguru import logger
@@ -26,8 +26,8 @@ __all__ = (
     'get_session',
     'get_user_instance',
     'PaginParamsDep',
+    'PathIdDep',
 )
-
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 user_id_context_var: contextvars.ContextVar[int] = contextvars.ContextVar('user_id')
@@ -61,7 +61,8 @@ def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Re
         user_id_context_var.set(user_id)
         return user_id
 
-# SessionDep = Annotated[AsyncSession, Depends(get_session, use_cache=False)]
+
+SessionNonCachedDep = Annotated[AsyncSession, Depends(get_session, use_cache=False)]
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UserIdDep = Annotated[int, Depends(jwt_authorize)]
@@ -76,4 +77,15 @@ async def get_user_instance(session: SessionDep, user_id: UserIdDep) -> 'User':
     session.info['current_user'] = user
     return user
 
+
 UserModelInstDep = Annotated['User', Depends(get_user_instance)]
+
+
+def id_in_query(_id: int = Path(ge=1, alias='id')) -> int:
+    """
+    Получение id из параметров урла.
+    """
+    return _id
+
+
+PathIdDep = Annotated[int, Depends(id_in_query)]
