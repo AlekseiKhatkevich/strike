@@ -1,15 +1,11 @@
 import contextvars
 import datetime
 import uuid
+from functools import cache
+from typing import Self
 
-from sqlalchemy import (
-    BigInteger,
-    TIMESTAMP,
-    MetaData,
-    NullPool,
-)
-from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy import (BigInteger, MetaData, NullPool, TIMESTAMP)
+from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from config import settings
@@ -57,3 +53,20 @@ class Base(AsyncAttrs, DeclarativeBase):
         BigIntType: BigInteger,
         datetime.datetime: TIMESTAMP(timezone=True),
     }
+
+    @classmethod
+    @cache
+    def get_model_by_name(cls, model_name: str) -> Self:
+        """
+        Получает инстанс модели по ее имени из реестра.
+        """
+        registry_instance = getattr(cls, 'registry')
+        for mapper_ in registry_instance.mappers:
+            model = mapper_.class_
+            model_class_name = model.__name__
+            if model_class_name == model_name:
+                return model
+        else:
+            raise LookupError(
+                f'Model with name {model_name} has not found in registry.'
+            )

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status
 from fastapi_pagination import LimitOffsetPage
 
+from crud.helpers import create_or_update_with_session_get
 from crud.unions import get_unions
 from internal.dependencies import PaginParamsDep, SessionDep, jwt_authorize
 from serializers.unions import UnionInSerializer, UnionOutSerializer
@@ -31,3 +32,4 @@ async def create_or_update_union_ep(session: SessionDep,
     """
     Создание или изменение записей Union.
     """
+    return await create_or_update_with_session_get(session, 'Union', union_data.dict())

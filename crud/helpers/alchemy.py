@@ -4,9 +4,10 @@ from typing import Any, Callable, TYPE_CHECKING, Type, TypeVar
 from sqlalchemy import inspect, select
 from sqlalchemy.dialects.postgresql import insert
 
+from internal.database import Base
+
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from internal.database import Base
     from sqlalchemy.sql.elements import OperatorExpression
 
 __all__ = (
@@ -95,22 +96,25 @@ async def create_or_update_with_on_conflict(session: 'AsyncSession',
 
 
 async def create_or_update_with_session_get(session: 'AsyncSession',
-                                            model: Type[MODEL_T],
+                                            model: Type[MODEL_T] | str,
                                             data: dict[str, Any],
                                             ) -> MODEL_T:
     """
     Создает или обновляет запись модели в БД.
     """
-    try:  # обновление
-        pk = data[get_pk_name(model)]
+    if isinstance(model, str):
+        model = Base.get_model_by_name(model)
+
+    pk = data.get(get_pk_name(model), None)
+    if pk is None:  # создание новой записи.
+        session.add(instance := model(**data))
+    else:  # обновление уже существующей записи.
         instance = await session.get(model, pk, with_for_update=True)
         if instance is not None:
             for field, value in data.items():
                 setattr(instance, field, value)
         else:
             raise ValueError(f'{type(model)} with id={pk} was not found in DB.')
-    except KeyError:  # создание
-        session.add(instance := model(**data))
 
     await session.commit()
     return instance
