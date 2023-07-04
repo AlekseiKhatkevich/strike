@@ -9,15 +9,14 @@ from geoalchemy2 import (
     WKTElement,
     functions as ga_func,
 )
+from loguru import logger
 from pyproj import Geod
 from shapely import LineString, Point
 from sqlalchemy import (
     CheckConstraint,
     ColumnElement,
     DECIMAL,
-    ForeignKey,
     String,
-    UniqueConstraint,
     cast,
     func,
     select,
@@ -28,11 +27,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.constants import PLACES_DUPLICATION_RADIUS, RU_RU_CE_COLLATION_NAME
 from internal.database import Base
-from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
-
-from loguru import logger
-
 
 __all__ = (
     'Place',
@@ -163,7 +158,7 @@ class Place(Base):
         Дистанция в км между собой и второй точкой.
         example select(Place.distance(86)).where(Place.id==85)
         """
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferencesz
         return ga_func.ST_Distance(
             Place.coordinates,
             select(Place.coordinates).where(Place.id == other_id).scalar_subquery(),
