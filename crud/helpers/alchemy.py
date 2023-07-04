@@ -131,6 +131,8 @@ async def create_or_update_with_on_conflict(session: 'AsyncSession',
 async def create_or_update_with_session_get(session: 'AsyncSession',
                                             model: Type[MODEL_T] | str,
                                             data: dict[str, Any],
+                                            *,
+                                            load_expired: bool = False,
                                             ) -> MODEL_T:
     """
     Создает или обновляет запись модели в БД.
@@ -147,6 +149,8 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
             raise ValueError(f'{str(model)} with id={pk} was not found in DB.')
 
     await session.commit()
+    if load_expired:
+        await session.refresh(instance, inspect(instance).expired_attributes)
     return instance
 
 

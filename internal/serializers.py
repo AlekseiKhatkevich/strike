@@ -20,7 +20,6 @@ class BaseModel(PydanticBaseModel):
     """
     Базовый класс для сериалайзеров Pydantic.
     """
-
     class Config:
         anystr_strip_whitespace = True
         min_anystr_length = 1

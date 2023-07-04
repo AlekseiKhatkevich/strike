@@ -1,18 +1,18 @@
-from sqlalchemy import String, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
-from models.mixins import UpdatedAtMixin
+from models.mixins import CreatedUpdatedMixin
 
 __all__ = (
     'Enterprise',
 )
 
 
-class Enterprise(UpdatedAtMixin, Base):
+class Enterprise(CreatedUpdatedMixin, Base):
     """
     Модель компании.
     """
