@@ -62,10 +62,14 @@ async def model_does_not_exists_exception_handler(_, exc: ModelEntryDoesNotExist
     """
     Обработчик исключения ModelEntryDoesNotExistsInDbError.
     """
-    return ORJSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={'detail': exc.text},
-    )
+    match exc.report:
+        case True:
+            return ORJSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={'detail': exc.text},
+            )
+        case False:
+            raise exc
 
 
 @app.exception_handler(sa_exc.IntegrityError)

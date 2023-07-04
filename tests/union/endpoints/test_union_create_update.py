@@ -43,5 +43,5 @@ async def test_create_or_update_union_ep_update_negative(faker, async_client_htt
 
     response = await async_client_httpx.put(EP_URL, json=data)
 
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()['detail'] == 'Union with id=999999 is not exists.'
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()['detail'] == 'Union with id=999999 was not found in DB.'

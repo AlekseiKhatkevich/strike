@@ -5,6 +5,7 @@ from sqlalchemy import delete, inspect, select
 from sqlalchemy.dialects.postgresql import insert
 
 from internal.database import Base
+from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -133,6 +134,7 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
                                             data: dict[str, Any],
                                             *,
                                             load_expired: bool = False,
+                                            error_message: str = None,
                                             ) -> MODEL_T:
     """
     Создает или обновляет запись модели в БД.
@@ -146,7 +148,10 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
             for field, value in data.items():
                 setattr(instance, field, value)
         else:
-            raise ValueError(f'{str(model)} with id={pk} was not found in DB.')
+            raise ModelEntryDoesNotExistsInDbError(
+                error_message or f'{model.__name__} with id={pk} was not found in DB.',
+                report=True,
+            )
 
     await session.commit()
     if load_expired:

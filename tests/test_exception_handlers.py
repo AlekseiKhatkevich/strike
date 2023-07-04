@@ -29,7 +29,7 @@ async def test_model_does_not_exists_exception_handler():
     expected_error_message = 'test'
     resp = await model_does_not_exists_exception_handler(
         None,
-        ModelEntryDoesNotExistsInDbError(expected_error_message),
+        ModelEntryDoesNotExistsInDbError(expected_error_message, True),
     )
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert json.loads(resp.body)['detail'] == expected_error_message

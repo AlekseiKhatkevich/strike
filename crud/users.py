@@ -38,7 +38,8 @@ async def get_user_by_id(session: 'AsyncSession',
     user = await session.scalar(stmt)
     if user is None and raise_exc:
         raise ModelEntryDoesNotExistsInDbError(
-            f'User with user_id {user_id} does not exists.'
+            f'User with user_id {user_id} does not exists.',
+            report=True,
         )
     return user
 

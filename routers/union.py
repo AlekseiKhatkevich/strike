@@ -33,13 +33,7 @@ async def create_or_update_union_ep(session: SessionDep,
     """
     Создание или изменение записей Union.
     """
-    try:
-        return await create_or_update_with_session_get(session, 'Union', union_data.dict(exclude_none=True))
-    except ValueError as err:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Union with id={union_data.id} is not exists.'
-        ) from err
+    return await create_or_update_with_session_get(session, 'Union', union_data.dict(exclude_none=True))
 
 
 @router.delete('/{id}/', status_code=status.HTTP_204_NO_CONTENT)

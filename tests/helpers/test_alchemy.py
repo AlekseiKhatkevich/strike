@@ -2,6 +2,7 @@ import pytest
 
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete, exists_in_db
 from models import Union, User
+from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 
 async def test_exists_in_db_positive(db_session, user_in_db):
@@ -56,9 +57,9 @@ async def test_create_or_update_with_session_get_update_negative(union, db_sessi
     id которого нет в БД - возбуждаем исключение.
     """
     data = {'name': faker.company(), 'id': 99999999999}
-    expected_error_message = f'{Union} with id=99999999999 was not found in DB.'
+    expected_error_message = f'{Union.__name__} with id=99999999999 was not found in DB.'
 
-    with pytest.raises(ValueError, match=expected_error_message):
+    with pytest.raises(ModelEntryDoesNotExistsInDbError, match=expected_error_message):
         await create_or_update_with_session_get(db_session, type(union), data)
 
 
