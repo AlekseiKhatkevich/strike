@@ -5,17 +5,17 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated
 
 from pydantic import (
-    BaseModel,
-    Field,
     EmailStr,
+    Field,
     SecretStr,
-    validator,
     constr,
+    validator,
 )
 
 from crud.auth import check_password_commonness
 from internal.constants import USER_PASSWORD_REGEXP
 from internal.database import async_session
+from internal.serializers import BaseModel
 
 __all__ = (
     'UserRegistrationSerializer',

@@ -12,11 +12,11 @@ register(RegionFactory)
 
 
 @pytest.fixture
-async def region(region_factory: RegionFactory, db_session) -> 'Region':
+async def region(db_session, region_factory: RegionFactory) -> 'Region':
     """
     Создает запись модели Region в БД.
     """
-    instance = region_factory(point=Point(21, 31)).build()
+    instance = region_factory.build(point=Point(21, 31))
     db_session.add(instance)
     await db_session.commit()
     return instance

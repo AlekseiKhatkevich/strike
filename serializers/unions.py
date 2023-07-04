@@ -1,6 +1,6 @@
 import datetime
 
-from pydantic import BaseModel
+from internal.serializers import BaseModel
 
 __all__ = (
     'UnionOutSerializer',

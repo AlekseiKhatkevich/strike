@@ -4,9 +4,10 @@ from typing import Literal
 
 import shapely.wkt
 from geoalchemy2 import WKTElement
-from pydantic import BaseModel, condecimal, constr, root_validator, validator
+from pydantic import condecimal, constr, root_validator, validator
 
 from internal.geo import point_from_numeric
+from internal.serializers import BaseModel
 from models.initial_data import RU_regions
 
 __all__ = (
