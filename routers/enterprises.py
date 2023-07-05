@@ -46,5 +46,4 @@ async def get_enterprises_ep(session: SessionDep,
     """
     Отдает 1 или несколько записей Enterprise с пагинацией.
     """
-    # return await get_enterprises(session, ids, params)
     return await get_collection_paginated(session, 'Enterprise', ids, params)

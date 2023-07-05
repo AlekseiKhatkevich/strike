@@ -40,9 +40,8 @@ def model_from_string(func: Callable) -> Callable:
     """
     Позволяет передавать модель как строку, т.е. ее название.
     """
-
     @wraps(func)
-    async def wrapper(session, model, *args, **kwargs):
+    async def wrapper(session: 'AsyncSession', model: Type[MODEL_T] | str, *args, **kwargs):
         if isinstance(model, str):
             model = Base.get_model_by_name(model)
         return await func(session, model, *args, **kwargs)

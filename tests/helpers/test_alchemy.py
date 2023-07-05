@@ -1,8 +1,22 @@
 import pytest
+from fastapi_pagination import Params
 
-from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete, exists_in_db
+from crud.helpers import (
+    create_or_update_with_session_get,
+    delete_via_sql_delete,
+    exists_in_db,
+    get_collection_paginated,
+)
 from models import Union, User
 from models.exceptions import ModelEntryDoesNotExistsInDbError
+
+
+@pytest.fixture
+def params() -> Params:
+    """
+    Для пагинации.
+    """
+    return Params(page=1, size=100)
 
 
 async def test_exists_in_db_positive(db_session, user_in_db):
@@ -74,3 +88,34 @@ async def test_delete_via_sql_delete_positive(unions_batch, db_session):
         Union.id.in_(ids_to_delete),
     )
     assert not await exists_in_db(db_session, Union, Union.id.in_(ids_to_delete))
+
+
+async def test_get_collection_paginated_all_positive(db_session, unions_batch, params):
+    """
+    Позитивный тест ф-ции get_collection_paginated. Возвращает все имеющиеся записи.
+    """
+    res = await get_collection_paginated(db_session, Union, [], params)
+
+    assert len(res.items) == 10
+
+
+async def test_get_collection_paginated_by_id(db_session, unions_batch, params):
+    """
+    Позитивный тест ф-ции get_collection_paginated. Возвращает лишь записи по их id.
+    """
+    ids = {unions_batch[0].id, unions_batch[-1].id}
+    res = await get_collection_paginated(db_session, 'Union', ids, params)
+
+    assert len(res.items) == 2
+    assert {entry.id for entry in res.items} == ids
+
+
+async def test_get_collection_paginated_with_pagination(db_session, unions_batch):
+    """
+    Позитивный тест ф-ции get_collection_paginated. Пагинация при size=5 должна отдать только 5 записей
+    из 10ти.
+    """
+    res = await get_collection_paginated(db_session, Union, [], Params(page=1, size=5))
+
+    assert len(res.items) == 5
+    
