@@ -3,8 +3,10 @@ from typing import Annotated, AsyncGenerator, TYPE_CHECKING
 
 import jwt
 from fastapi import Depends, HTTPException, Path, Request, status
+from fastapi.params import Query
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import Params
+from fastapi_pagination.bases import AbstractParams
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +19,7 @@ from security.jwt import validate_jwt_token
 if TYPE_CHECKING:
     from models.users import User
 
+
 __all__ = (
     'SessionDep',
     'SettingsDep',
@@ -27,6 +30,7 @@ __all__ = (
     'get_user_instance',
     'PaginParamsDep',
     'PathIdDep',
+    'GetParamsIdsDep',
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -66,7 +70,7 @@ SessionNonCachedDep = Annotated[AsyncSession, Depends(get_session, use_cache=Fal
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UserIdDep = Annotated[int, Depends(jwt_authorize)]
-PaginParamsDep = Annotated['AbstractParams', Depends(Params)]
+PaginParamsDep = Annotated[AbstractParams, Depends(Params)]
 
 
 async def get_user_instance(session: SessionDep, user_id: UserIdDep) -> 'User':
@@ -81,11 +85,21 @@ async def get_user_instance(session: SessionDep, user_id: UserIdDep) -> 'User':
 UserModelInstDep = Annotated['User', Depends(get_user_instance)]
 
 
-def id_in_query(_id: int = Path(ge=1, alias='id')) -> int:
+def id_in_path(_id: int = Path(ge=1, alias='id')) -> int:
     """
-    Получение id из параметров урла.
+    Получение id из урла.
     """
     return _id
 
 
-PathIdDep = Annotated[int, Depends(id_in_query)]
+PathIdDep = Annotated[int, Depends(id_in_path)]
+
+
+def id_list_in_query_params(_id: list[int] = Query([], ge=1, alias='id')):
+    """
+    Получение набора id из гет-параметров урла.
+    """
+    return _id
+
+
+GetParamsIdsDep = Annotated[list[int], Depends(id_list_in_query_params)]

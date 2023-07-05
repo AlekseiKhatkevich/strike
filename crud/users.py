@@ -2,6 +2,7 @@ import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
+from sqlalchemy.orm import aliased
 
 from crud.auth import check_invitation_token_used_already
 from crud.helpers import commit_if_not_in_transaction
@@ -19,6 +20,7 @@ __all__ = (
     'get_user_by_id',
     'delete_user',
     'update_user',
+    'active_users_view',
 )
 
 
@@ -93,3 +95,8 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
     session.add(user)
     await session.commit()
     return user
+
+
+active_users_view = aliased(
+    User, select(User).where(User.is_active == True).subquery(), name='active_users',
+)

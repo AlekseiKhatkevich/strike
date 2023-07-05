@@ -92,6 +92,7 @@ async def is_instance_in_db(session: 'AsyncSession', instance: Base) -> bool:
     ) is not None
 
 
+@model_from_string
 async def create_or_update_with_on_conflict(session: 'AsyncSession',
                                             model: Type[MODEL_T],
                                             lookup_kwargs: dict[str, Any],

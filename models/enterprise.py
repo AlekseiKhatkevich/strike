@@ -42,4 +42,4 @@ class Enterprise(CreatedUpdatedMixin, Base):
     )
 
     def __repr__(self):
-        return f'Enterprise "{self.name} in region {self.region_name}"'
+        return f'Enterprise "{self.name}" in region "{self.region_name}"'
