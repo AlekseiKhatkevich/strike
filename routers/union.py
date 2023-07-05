@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from fastapi_pagination import LimitOffsetPage
 
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete

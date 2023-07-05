@@ -3,7 +3,7 @@ from fastapi_pagination import LimitOffsetPage
 from sqlalchemy import column
 
 from crud.enterprises import get_enterprises
-from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
+from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete, get_collection_paginated
 from internal.dependencies import GetParamsIdsDep, PaginParamsDep, PathIdDep, SessionDep, jwt_authorize
 from serializers.enterprises import EnterpriseInSerializer, EnterpriseOutSerializer
 
@@ -46,4 +46,5 @@ async def get_enterprises_ep(session: SessionDep,
     """
     Отдает 1 или несколько записей Enterprise с пагинацией.
     """
-    return await get_enterprises(session, ids, params)
+    # return await get_enterprises(session, ids, params)
+    return await get_collection_paginated(session, 'Enterprise', ids, params)

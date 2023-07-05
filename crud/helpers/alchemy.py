@@ -1,6 +1,7 @@
 from functools import cache, wraps
 from typing import Any, Callable, TYPE_CHECKING, Type, TypeVar
 
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import delete, inspect, select
 from sqlalchemy.dialects.postgresql import insert
 
@@ -10,6 +11,7 @@ from models.exceptions import ModelEntryDoesNotExistsInDbError
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
     from sqlalchemy.sql.elements import OperatorExpression
+    from fastapi_pagination.bases import AbstractParams
 
 __all__ = (
     'exists_in_db',
@@ -18,6 +20,7 @@ __all__ = (
     'create_or_update_with_session_get',
     'delete_via_sql_delete',
     'is_instance_in_db',
+    'get_collection_paginated',
 )
 
 MODEL_T = TypeVar('MODEL_T', bound='Base')
@@ -37,11 +40,13 @@ def model_from_string(func: Callable) -> Callable:
     """
     Позволяет передавать модель как строку, т.е. ее название.
     """
+
     @wraps(func)
     async def wrapper(session, model, *args, **kwargs):
         if isinstance(model, str):
             model = Base.get_model_by_name(model)
         return await func(session, model, *args, **kwargs)
+
     return wrapper
 
 
@@ -51,6 +56,7 @@ def commit_if_not_in_transaction(func: Callable) -> Callable:
     Если в сессии не открыта транзакция, то делаем коммит для того, чтобы за нами можно было
     дальше открыть транзакцию если нужно.
     """
+
     @wraps(func)
     async def wrapper(session: 'AsyncSession', *args, **kwargs) -> Any:
         transaction_already = session.in_transaction()
@@ -58,6 +64,7 @@ def commit_if_not_in_transaction(func: Callable) -> Callable:
         if not transaction_already:
             await session.commit()
         return res
+
     return wrapper
 
 
@@ -174,3 +181,23 @@ async def delete_via_sql_delete(session: 'AsyncSession',
     await session.commit()
     # noinspection PyTypeChecker
     return result.all()
+
+
+@model_from_string
+@commit_if_not_in_transaction
+async def get_collection_paginated(session: 'AsyncSession',
+                                   model: Type[MODEL_T] | str,
+                                   ids: list[int],
+                                   params: 'AbstractParams',
+                                   ) -> list[MODEL_T]:
+    """
+    Отдает 1 или несколько записей модели с пагинацией.
+    """
+    pk_name = get_pk_name(model)
+    pk = getattr(model, pk_name)
+    stmt = select(model).order_by(pk_name)
+
+    if ids:
+        stmt = stmt.where(pk.in_(ids))
+
+    return await paginate(session, stmt, params)
