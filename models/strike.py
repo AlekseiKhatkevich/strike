@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean, CheckConstraint,
-    Text,
+    ColumnElement, Text,
     ForeignKey,
     Enum,
     Column,
@@ -192,17 +192,17 @@ class Strike(UpdatedAtMixin, Base):
         return positive_integer_only(field, value)
 
     @hybrid_property
-    def is_active(self) -> bool:
+    def is_active(self) -> ColumnElement[bool]:
         """
-
+        Проходит ли забастовка на данный момент времени.
         """
-        # todo тесты
         return self.duration.contains(datetime.datetime.now(tz=datetime.UTC))
 
-
+    # noinspection PyNestedDecorators
     @is_active.inplace.expression
     @classmethod
-    def _is_active_expression(cls):
+    def _is_active_expression(cls) -> ColumnElement[bool]:
         """
+        Проходит ли забастовка на данный момент времени.
         """
         return type_coerce(cls.duration.op('@>')(func.now()), Boolean)
