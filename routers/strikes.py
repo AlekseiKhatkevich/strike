@@ -16,11 +16,12 @@ router = APIRouter(tags=['strike'], dependencies=[Depends(jwt_authorize)])
 async def create_strike_ep(session: SessionDep,
                            user_id: UserIdDep,
                            strike_data: StrikeInSerializer,
-                           ) :
+                           ):
     """
 
 
     """
+    strike_data._created_by_id = user_id
     return strike_data.dict()
 
 

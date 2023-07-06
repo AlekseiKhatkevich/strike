@@ -27,7 +27,7 @@ loguru = "0.7.*"
 python-multipart = "^0.0.6"
 slowapi = "0.1.*"
 redis = {extras = ["hiredis"], version = "^4.5.5"}
-geoalchemy2 = "0.13.*"
+geoalchemy2 = "^0.14"
 shapely = "^2.0.1"
 pyproj = "3.6.*"
 fastapi-pagination = "0.12.*"

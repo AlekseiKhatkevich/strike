@@ -1,7 +1,7 @@
 import datetime
-from typing import Annotated
+from typing import Annotated, ClassVar
 
-from pydantic import Field, validator
+from pydantic import Field, PrivateAttr, validator
 from pydantic.datetime_parse import StrBytesIntFloat, parse_datetime
 from sqlalchemy.dialects.postgresql.ranges import Range
 
@@ -78,12 +78,13 @@ class StrikeInSerializer(BaseModel):
     planned_on_date: datetime.date | None
     goals: str
     results: str | None
-    overall_num_of_employees_involved: Annotated[int, Field(ge=1)]
+    overall_num_of_employees_involved: IntIdType
     enterprise: IntIdType | EnterpriseInSerializer
     union_in_charge_id: IntIdType | None
     group: list[IntIdType] | None
     places: list[IntIdType | PlaceInSerializer] | None
     users_involved: list[UsersInvolvedInSerializer] | None
+    _created_by_id = PrivateAttr()
 
     @validator('planned_on_date', always=True)
     def _validate_duration_or_planned_on_date_presence(cls, planned_on_date, values, **kwargs):
@@ -94,3 +95,4 @@ class StrikeInSerializer(BaseModel):
             raise ValueError('Please specify either "planned_on_date" or "duration" field.')
         else:
             return planned_on_date
+
