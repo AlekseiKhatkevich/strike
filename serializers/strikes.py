@@ -1,11 +1,12 @@
 import datetime
 from typing import Annotated
-from sqlalchemy.dialects.postgresql.ranges import Range
+
 from pydantic import Field, validator
+from pydantic.datetime_parse import StrBytesIntFloat, parse_datetime
+from sqlalchemy.dialects.postgresql.ranges import Range
 
 from internal.serializers import BaseModel
 from models import UserRole
-
 from serializers.enterprises import EnterpriseInSerializer
 from serializers.places import PlaceInSerializer
 
@@ -13,14 +14,31 @@ __all__ = (
     'StrikeInSerializer',
 )
 
+from serializers.typing import IntIdType
+
 
 class DatetimeRangeField(Range[datetime.datetime | None]):
     """
 
     """
+    @staticmethod
+    def _parse_datetime_range(
+            raw_range: list[datetime.datetime | StrBytesIntFloat | None, ...],
+    ) -> list[datetime.datetime | None, ...]:
+        """
+
+        """
+        dt_range = []
+        for dt in raw_range:
+            if dt is None:
+                dt_range.append(dt)
+            else:
+                dt_range.append(parse_datetime(dt))
+        return dt_range
 
     @classmethod
     def __get_validators__(cls):
+        yield cls._parse_datetime_range
         yield cls.validate
 
     @classmethod
@@ -44,7 +62,7 @@ class UsersInvolvedInSerializer(BaseModel):
     """
 
     """
-    user_id: Annotated[int, Field(ge=1)]
+    id: IntIdType
     role: UserRole
 
     @validator('role', pre=True)
@@ -61,10 +79,10 @@ class StrikeInSerializer(BaseModel):
     goals: str
     results: str | None
     overall_num_of_employees_involved: Annotated[int, Field(ge=1)]
-    enterprise: Annotated[int, Field(ge=1)] | EnterpriseInSerializer
-    union_in_charge_id: Annotated[int | None, Field(ge=1)]
-    group: list[Annotated[int, Field(ge=1)]] | None
-    places: list[Annotated[int, Field(ge=1)] | PlaceInSerializer] | None
+    enterprise: IntIdType | EnterpriseInSerializer
+    union_in_charge_id: IntIdType | None
+    group: list[IntIdType] | None
+    places: list[IntIdType | PlaceInSerializer] | None
     users_involved: list[UsersInvolvedInSerializer] | None
 
     @validator('planned_on_date', always=True)
@@ -72,7 +90,7 @@ class StrikeInSerializer(BaseModel):
         """
 
         """
-        if planned_on_date is None and values['duration'] is None:
+        if planned_on_date is None and values.get('duration') is None:
             raise ValueError('Please specify either "planned_on_date" or "duration" field.')
         else:
             return planned_on_date
