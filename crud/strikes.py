@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from models import Enterprise, Strike, StrikeToItself
+from models import Enterprise, Place, Strike, StrikeToItself
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +25,14 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
     else:
         enterprise_instance = Enterprise(**strike_data.enterprise.dict(exclude={'id', }))
         strike_instance.enterprise = enterprise_instance
+
+    if strike_data.places is not None:
+        places = await strike_instance.awaitable_attrs.places
+        for new_place_data in strike_data.places:
+            if isinstance(new_place_data, int):
+                pass
+            else:
+                places.append(Place(**new_place_data.dict(exclude={'id', })))
 
     session.add(strike_instance)
     await session.flush()

@@ -95,6 +95,8 @@ class StrikeToPlaceAssociation(CreatedAtMixin, Base):
         primary_key=True,
     )
 
+    strike: Mapped['Strike'] = relationship('Strike', back_populates='places_association_recs')
+
 
 class StrikeToItself(CreatedAtMixin, Base):
     """
@@ -162,6 +164,15 @@ class Strike(UpdatedAtMixin, Base):
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
     user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id', )
     # group_ids: AssociationProxy[list[int]] = association_proxy('group', 'id', )
+
+    places_association_recs: Mapped[list['StrikeToPlaceAssociation']] = relationship(
+        'StrikeToPlaceAssociation', back_populates='strike',  cascade="all, delete-orphan"
+    )
+
+    places_ids: AssociationProxy[list[int]] = association_proxy(
+        'places_association_recs',
+        'place_id', creator= lambda uid: StrikeToPlaceAssociation(place_id=uid)
+    )
 
     __table_args__ = (
         CheckConstraint(
