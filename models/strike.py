@@ -95,7 +95,8 @@ class StrikeToPlaceAssociation(CreatedAtMixin, Base):
         primary_key=True,
     )
 
-    strike: Mapped['Strike'] = relationship('Strike', back_populates='places_association_recs')
+    # strike: Mapped['Strike'] = relationship('Strike', back_populates='places_association_recs')
+    strike222: Mapped['Strike'] = relationship('Strike', viewonly=True)
 
 
 class StrikeToItself(CreatedAtMixin, Base):
@@ -152,11 +153,6 @@ class Strike(UpdatedAtMixin, Base):
     created_by: Mapped['User'] = relationship(
         back_populates='strikes_created_by_user',
     )
-    places: Mapped[list['Place']] = relationship(
-        secondary='strike_to_place_associations',
-        passive_deletes=True,
-        back_populates='strikes',
-    )
     users_involved: Mapped[list[StrikeToUserAssociation]] = relationship(
         back_populates='strike',
         passive_deletes=True,
@@ -164,14 +160,22 @@ class Strike(UpdatedAtMixin, Base):
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
     user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id', )
     # group_ids: AssociationProxy[list[int]] = association_proxy('group', 'id', )
-
-    places_association_recs: Mapped[list['StrikeToPlaceAssociation']] = relationship(
-        'StrikeToPlaceAssociation', back_populates='strike',  cascade="all, delete-orphan"
+    places: Mapped[list['Place']] = relationship(
+        secondary='strike_to_place_associations',
+        passive_deletes=True,
+        back_populates='strikes',
     )
-
+    places_association_recs: Mapped[list['StrikeToPlaceAssociation']] = relationship(
+        'StrikeToPlaceAssociation',
+        # back_populates='strike',
+        passive_deletes=True,
+        # back_populates='places'
+        overlaps="places"
+    )
     places_ids: AssociationProxy[list[int]] = association_proxy(
         'places_association_recs',
-        'place_id', creator= lambda uid: StrikeToPlaceAssociation(place_id=uid)
+        'place_id',
+        creator=lambda uid: StrikeToPlaceAssociation(place_id=uid),
     )
 
     __table_args__ = (

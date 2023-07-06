@@ -57,6 +57,7 @@ class Place(Base):
         secondary='strike_to_place_associations',
         passive_deletes=True,
         back_populates='places',
+        overlaps="places_association_recs"
     )
     region: Mapped['Region'] = relationship(
         # https://docs.sqlalchemy.org/en/20/orm/join_conditions.html#custom-operators-based-on-sql-functions
