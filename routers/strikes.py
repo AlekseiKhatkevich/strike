@@ -1,6 +1,7 @@
 
 from fastapi import APIRouter, Depends, status
 
+from crud.strikes import create_strike
 from internal.dependencies import SessionDep, UserIdDep, jwt_authorize
 
 __all__ = (
@@ -22,6 +23,9 @@ async def create_strike_ep(session: SessionDep,
 
     """
     strike_data._created_by_id = user_id
-    return strike_data.dict()
+
+    res = await create_strike(session, strike_data)
+    # return res
+    # return strike_data.dict()
 
 
