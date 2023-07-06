@@ -160,7 +160,8 @@ class Strike(UpdatedAtMixin, Base):
         passive_deletes=True,
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
-    user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id')
+    user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id', )
+    # group_ids: AssociationProxy[list[int]] = association_proxy('group', 'id', )
 
     __table_args__ = (
         CheckConstraint(
