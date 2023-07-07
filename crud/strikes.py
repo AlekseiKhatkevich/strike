@@ -20,13 +20,16 @@ async def add_places(strike_data, strike_instance):
 
     """
     try:
+        strike_instance.places_ids_list = []
         for new_place_data in strike_data.places:
             if isinstance(new_place_data, int):
                 places_ids = await strike_instance.awaitable_attrs.places_ids
                 places_ids.append(new_place_data)
+                strike_instance.places_ids_list.append(new_place_data)
             else:
                 places = await strike_instance.awaitable_attrs.places
-                places.append(Place(**new_place_data.dict(exclude={'id', })))
+                places.append(place := Place(**new_place_data.dict(exclude={'id', })))
+                strike_instance.places_ids_list.append(place)
     except sa_exc.IntegrityError as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -38,9 +41,11 @@ async def add_users(strike_data, strike_instance):
     """
 
     """
+    strike_instance.users_involved_ids = []
     for user_data in strike_data.users_involved:
         users_involved = await strike_instance.awaitable_attrs.users_involved_create
         users_involved.append(user_data.dict())
+        strike_instance.users_involved_ids.append(user_data.user_id)
 
 
 async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerializer'):
@@ -72,9 +77,12 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
             StrikeToItself(strike_left_id=strike_instance.id, strike_right_id=group_id)
             for group_id in strike_data.group
         )
+        strike_instance.group_ids = strike_data.group
 
     await flush_and_raise(session, 'Strike id {id} does not exists.')
 
     await session.commit()
+
+    strike_instance.places_ids_list = [p.id if isinstance(p, Place) else p for p in strike_instance.places_ids_list]
 
     return strike_instance

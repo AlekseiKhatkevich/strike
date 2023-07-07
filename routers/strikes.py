@@ -1,14 +1,12 @@
-
 from fastapi import APIRouter, Depends, status
 
 from crud.strikes import create_strike
 from internal.dependencies import SessionDep, UserIdDep, jwt_authorize
+from serializers.strikes import StrikeInSerializer, StrikeOutSerializer
 
 __all__ = (
     'router',
 )
-
-from serializers.strikes import StrikeInSerializer
 
 router = APIRouter(tags=['strike'], dependencies=[Depends(jwt_authorize)])
 
@@ -17,15 +15,12 @@ router = APIRouter(tags=['strike'], dependencies=[Depends(jwt_authorize)])
 async def create_strike_ep(session: SessionDep,
                            user_id: UserIdDep,
                            strike_data: StrikeInSerializer,
-                           ):
+                           ) -> StrikeOutSerializer:
     """
 
 
     """
     strike_data._created_by_id = user_id
 
-    res = await create_strike(session, strike_data)
-    # return res
-    # return strike_data.dict()
-
-
+    strike_instance = await create_strike(session, strike_data)
+    return strike_instance

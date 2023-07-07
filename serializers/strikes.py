@@ -1,7 +1,6 @@
 import datetime
-from typing import Annotated, ClassVar
 
-from pydantic import Field, PrivateAttr, validator
+from pydantic import PrivateAttr, validator
 from pydantic.datetime_parse import StrBytesIntFloat, parse_datetime
 from sqlalchemy.dialects.postgresql.ranges import Range
 
@@ -9,25 +8,28 @@ from internal.serializers import BaseModel
 from models import UserRole
 from serializers.enterprises import EnterpriseInSerializer
 from serializers.places import PlaceInSerializer
+from serializers.typing import IntIdType
 
 __all__ = (
     'StrikeInSerializer',
+    'StrikeOutSerializer',
 )
-
-from serializers.typing import IntIdType
 
 
 class DatetimeRangeField(Range[datetime.datetime | None]):
     """
 
     """
+
     @staticmethod
     def _parse_datetime_range(
-            raw_range: list[datetime.datetime | StrBytesIntFloat | None, ...],
-    ) -> list[datetime.datetime | None, ...]:
+            raw_range: list[datetime.datetime | StrBytesIntFloat | None, ...] | Range,
+    ) -> list[datetime.datetime | None, ...] | Range:
         """
 
         """
+        if isinstance(raw_range, Range):
+            return raw_range
         dt_range = []
         for dt in raw_range:
             if dt is None:
@@ -43,6 +45,9 @@ class DatetimeRangeField(Range[datetime.datetime | None]):
 
     @classmethod
     def validate(cls, _range):
+        if isinstance(_range, Range):
+            return _range
+
         for dt in _range:
             if not isinstance(dt, (datetime.datetime, type(None))):
                 raise ValueError('Only datetime objects are accepted')
@@ -70,7 +75,7 @@ class UsersInvolvedInSerializer(BaseModel):
         return role.upper()
 
 
-class StrikeInSerializer(BaseModel):
+class StrikeBaseSerializer(BaseModel):
     """
 
     """
@@ -79,8 +84,14 @@ class StrikeInSerializer(BaseModel):
     goals: str
     results: str | None
     overall_num_of_employees_involved: IntIdType
-    enterprise: IntIdType | EnterpriseInSerializer
     union_in_charge_id: IntIdType | None
+
+
+class StrikeInSerializer(StrikeBaseSerializer):
+    """
+
+    """
+    enterprise: IntIdType | EnterpriseInSerializer
     group: list[IntIdType] | None
     places: list[IntIdType | PlaceInSerializer] | None
     users_involved: list[UsersInvolvedInSerializer] | None
@@ -95,4 +106,19 @@ class StrikeInSerializer(BaseModel):
             raise ValueError('Please specify either "planned_on_date" or "duration" field.')
         else:
             return planned_on_date
+
+
+class StrikeOutSerializer(StrikeBaseSerializer):
+    """
+
+    """
+    id: int
+    enterprise_id: int
+    group_ids: list[int] = []
+    created_by_id: int
+    users_involved_ids: list[int] = []
+    places_ids_list: list[int] = []
+
+    class Config:
+        orm_mode = True
 
