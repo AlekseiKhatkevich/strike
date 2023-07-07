@@ -1,6 +1,7 @@
 import datetime
+from typing import Annotated
 
-from pydantic import PrivateAttr, validator
+from pydantic import Field, PrivateAttr, validator
 from pydantic.datetime_parse import StrBytesIntFloat, parse_datetime
 from sqlalchemy.dialects.postgresql.ranges import Range
 
@@ -117,8 +118,9 @@ class StrikeOutSerializer(StrikeBaseSerializer):
     group_ids: list[int] = []
     created_by_id: int
     users_involved_ids: list[int] = []
-    places_ids_list: list[int] = []
+    places_ids: Annotated[list[int], Field(alias='places_ids_list')] = []
 
     class Config:
         orm_mode = True
+        allow_population_by_field_name = True
 

@@ -11,7 +11,7 @@ __all__ = (
 router = APIRouter(tags=['strike'], dependencies=[Depends(jwt_authorize)])
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model_by_alias=False)
 async def create_strike_ep(session: SessionDep,
                            user_id: UserIdDep,
                            strike_data: StrikeInSerializer,
