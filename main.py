@@ -79,12 +79,22 @@ async def integrity_error_handler(_, exc: sa_exc.IntegrityError) -> ORJSONRespon
     Обработка IntegrityError из БД.
     https://www.postgresql.org/docs/current/errcodes-appendix.html
     """
+    def _get_description(exc):
+        return exc.orig.args[0].split(os.linesep)[-1]
+
+    def _get_response(description, status_code=status.HTTP_400_BAD_REQUEST):
+        return ORJSONResponse(
+            status_code=status_code,
+            content={'detail': description}
+        )
+
+    # noinspection PyUnresolvedReferences
     match exc.orig.pgcode:
         case '23505':
-            exc_description = exc.orig.args[0].split(os.linesep)[-1]
-            return ORJSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={'detail': f'Uniqueness violation {exc_description}'}
-            )
+            return _get_response(f'Uniqueness violation {_get_description(exc)}')
+        case '23503':
+            return _get_response(f'Foreign key violation {_get_description(exc)}')
+        case '23P01':
+            return _get_response(f'Exclusion violation {_get_description(exc)}')
         case _:
             raise exc

@@ -1,6 +1,8 @@
-from typing import TYPE_CHECKING
 
+from typing import TYPE_CHECKING
+from sqlalchemy import exc as sa_exc
 from models import Enterprise, Place, Strike, StrikeToItself
+from fastapi import HTTPException, status
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,13 +32,21 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
     await session.flush()
 
     if strike_data.places is not None:
-        for new_place_data in strike_data.places:
-            if isinstance(new_place_data, int):
-                places_ids = await strike_instance.awaitable_attrs.places_ids
-                places_ids.append(new_place_data)
-            else:
-                places = await strike_instance.awaitable_attrs.places
-                places.append(Place(**new_place_data.dict(exclude={'id', })))
+        try:
+            for new_place_data in strike_data.places:
+                if isinstance(new_place_data, int):
+                    places_ids = await strike_instance.awaitable_attrs.places_ids
+                    places_ids.append(new_place_data)
+                else:
+                    places = await strike_instance.awaitable_attrs.places
+                    places.append(Place(**new_place_data.dict(exclude={'id', })))
+        except sa_exc.IntegrityError as err:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f'One of these Place ids does not exists {places_ids}',
+            ) from err
+
+    # await session.flush()
 
     if strike_data.users_involved is not None:
         for user_data in strike_data.users_involved:
@@ -48,6 +58,13 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
             StrikeToItself(strike_left_id=strike_instance.id, strike_right_id=group_id)
             for group_id in strike_data.group
         )
+    try:
+        await session.flush()
+    except sa_exc.IntegrityError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'One of these Strike ids {[_id for _id in strike_data.group]} does not exists',
+        ) from err
 
     await session.commit()
 
