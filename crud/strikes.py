@@ -26,16 +26,22 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
         enterprise_instance = Enterprise(**strike_data.enterprise.dict(exclude={'id', }))
         strike_instance.enterprise = enterprise_instance
 
-    if strike_data.places is not None:
-        places = await strike_instance.awaitable_attrs.places
-        for new_place_data in strike_data.places:
-            if isinstance(new_place_data, int):
-                pass
-            else:
-                places.append(Place(**new_place_data.dict(exclude={'id', })))
-
     session.add(strike_instance)
     await session.flush()
+
+    if strike_data.places is not None:
+        for new_place_data in strike_data.places:
+            if isinstance(new_place_data, int):
+                places_ids = await strike_instance.awaitable_attrs.places_ids
+                places_ids.append(new_place_data)
+            else:
+                places = await strike_instance.awaitable_attrs.places
+                places.append(Place(**new_place_data.dict(exclude={'id', })))
+
+    if strike_data.users_involved is not None:
+        for user_data in strike_data.users_involved:
+            users_involved = await strike_instance.awaitable_attrs.users_involved_create
+            users_involved.append(user_data.dict())
 
     if strike_data.group is not None:
         session.add_all(
@@ -43,6 +49,6 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
             for group_id in strike_data.group
         )
 
-
     await session.commit()
+
     return strike_instance

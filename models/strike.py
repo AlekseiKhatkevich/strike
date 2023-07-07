@@ -96,7 +96,7 @@ class StrikeToPlaceAssociation(CreatedAtMixin, Base):
     )
 
     # strike: Mapped['Strike'] = relationship('Strike', back_populates='places_association_recs')
-    strike222: Mapped['Strike'] = relationship('Strike', viewonly=True)
+    # strike222: Mapped['Strike'] = relationship('Strike', viewonly=True)
 
 
 class StrikeToItself(CreatedAtMixin, Base):
@@ -159,7 +159,12 @@ class Strike(UpdatedAtMixin, Base):
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
     user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id', )
-    # group_ids: AssociationProxy[list[int]] = association_proxy('group', 'id', )
+    # для создания связи м2м с указанием роли юзера в промежуточной таблице
+    users_involved_create: AssociationProxy[list[int]] = association_proxy(
+        'users_involved', 'user_id',
+        creator=lambda data: StrikeToUserAssociation(user_id=data['user_id'], role=data['role'])
+    )
+
     places: Mapped[list['Place']] = relationship(
         secondary='strike_to_place_associations',
         passive_deletes=True,
@@ -167,15 +172,14 @@ class Strike(UpdatedAtMixin, Base):
     )
     places_association_recs: Mapped[list['StrikeToPlaceAssociation']] = relationship(
         'StrikeToPlaceAssociation',
-        # back_populates='strike',
         passive_deletes=True,
-        # back_populates='places'
         overlaps="places"
     )
+    # https://gist.github.com/jdittrich/3001e520d3872b12e2cb8e7d4a2472da
     places_ids: AssociationProxy[list[int]] = association_proxy(
         'places_association_recs',
         'place_id',
-        creator=lambda uid: StrikeToPlaceAssociation(place_id=uid),
+        creator=lambda _id: StrikeToPlaceAssociation(place_id=_id),
     )
 
     __table_args__ = (

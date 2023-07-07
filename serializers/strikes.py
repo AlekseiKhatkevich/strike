@@ -62,7 +62,7 @@ class UsersInvolvedInSerializer(BaseModel):
     """
 
     """
-    id: IntIdType
+    user_id: IntIdType
     role: UserRole
 
     @validator('role', pre=True)
