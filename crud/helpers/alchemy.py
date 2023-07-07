@@ -1,8 +1,11 @@
+import os
 from functools import cache, wraps
 from typing import Any, Callable, TYPE_CHECKING, Type, TypeVar
-
+import re
+from fastapi import status
+from fastapi import HTTPException
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import delete, inspect, select
+from sqlalchemy import delete, inspect, select, exc as sa_exc
 from sqlalchemy.dialects.postgresql import insert
 
 from internal.database import Base
@@ -21,6 +24,8 @@ __all__ = (
     'delete_via_sql_delete',
     'is_instance_in_db',
     'get_collection_paginated',
+    'get_id_from_integrity_error',
+    'flush_and_raise',
 )
 
 MODEL_T = TypeVar('MODEL_T', bound='Base')
@@ -200,3 +205,26 @@ async def get_collection_paginated(session: 'AsyncSession',
         stmt = stmt.where(pk.in_(ids))
 
     return await paginate(session, stmt, params)
+
+
+def get_id_from_integrity_error(exc):
+    """
+    DETAIL:  Ключ (strike_right_id)=(277) отсутствует в таблице "strikes".
+    """
+    text = exc.orig.args[0].split(os.linesep)[-1]
+    _id = re.search(r'=\((?P<id>\d+)\)', text).group('id')
+    return _id
+
+
+async def flush_and_raise(session, error_message):
+    """
+
+    """
+    try:
+        await session.flush()
+    except sa_exc.IntegrityError as err:
+        _id = get_id_from_integrity_error(err)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_message.format(id=_id),
+        ) from err
