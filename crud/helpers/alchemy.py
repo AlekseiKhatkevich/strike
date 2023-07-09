@@ -221,7 +221,7 @@ def get_id_from_integrity_error(exc: sa_exc.IntegrityError) -> str:
     Получает id из текста сообщения из исключения IntegrityError. Пример сообщения ниже:
     DETAIL:  Ключ (strike_right_id)=(277) отсутствует в таблице "strikes".
     """
-    return re.search(r'=\((?P<id>\d+)\)', get_text_from_integrity_error(exc)).group('id')
+    return re.search(r'=\((?P<id>[\w ]+?)\)', get_text_from_integrity_error(exc)).group('id')
 
 
 async def flush_and_raise(session: 'AsyncSession', error_message: str) -> None:

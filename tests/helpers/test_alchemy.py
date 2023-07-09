@@ -1,13 +1,19 @@
 import pytest
+from fastapi import HTTPException
 from fastapi_pagination import Params
+from sqlalchemy import exc as sa_exc
+from sqlalchemy.dialects.postgresql import insert
 
 from crud.helpers import (
     create_or_update_with_session_get,
     delete_via_sql_delete,
     exists_in_db,
+    flush_and_raise,
     get_collection_paginated,
+    get_id_from_integrity_error,
+    get_text_from_integrity_error,
 )
-from models import Union, User
+from models import Region, Union, User
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 
@@ -118,4 +124,48 @@ async def test_get_collection_paginated_with_pagination(db_session, unions_batch
     res = await get_collection_paginated(db_session, Union, [], Params(page=1, size=5))
 
     assert len(res.items) == 5
-    
+
+
+async def test_get_text_from_integrity_error(region, db_session):
+    """
+    Позитивный тест ф-ции get_text_from_integrity_error которая получает текст
+    сообщения об ошибке оригинальный выработанный в БД из IntegrityError.
+    """
+    try:
+        await db_session.execute(insert(Region).values(
+            {'name': region.name, 'contour': region.contour}
+        ))
+    except sa_exc.IntegrityError as err:
+        error_text = get_text_from_integrity_error(err)
+
+        assert error_text == f'DETAIL:  Ключ "(name)=({region.name})" уже существует.'
+
+
+async def test_get_id_from_integrity_error(region, db_session):
+    """
+    Позитивный тест ф-ции get_id_from_integrity_error которая получает id
+    инстанса из IntegrityError.
+    """
+    try:
+        await db_session.execute(insert(Region).values(
+            {'name': region.name, 'contour': region.contour}
+        ))
+    except sa_exc.IntegrityError as err:
+        _id = get_id_from_integrity_error(err)
+
+        assert _id == region.name
+
+
+async def test_flush_and_reraise(region, db_session):
+    """
+    Позитивный тест ф-ции flush_and_raise которая перехватывает IntegrityError и рейзит
+    HTTPException после попытки сделать flush() в БД.
+    """
+    db_session.expunge_all()
+    db_session.add(Region(name=region.name, contour=region.contour))
+    error_message = 'test {id}'
+
+    with pytest.raises(HTTPException) as err:
+        await flush_and_raise(db_session, error_message)
+
+        assert err.detail == error_message.format(region.id)

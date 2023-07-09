@@ -253,3 +253,4 @@ cython_debug/
 /internal/data/admin_level_4.csv
 /.idea/csv-editor.xml
 /.idea/codeStyles/codeStyleConfig.xml
+/.idea/other.xml

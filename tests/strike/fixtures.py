@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Awaitable, Callable, Any
+from typing import Any, Awaitable, Callable, TYPE_CHECKING
 
 import pytest
 from pytest_factoryboy import register
@@ -23,7 +23,7 @@ async def strike(strike_factory: StrikeFactory,
     return await create_instance_from_factory(strike_factory)
 
 
-@pytest.fixture()
+@pytest.fixture
 async def strike_p(strike_factory: StrikeFactory,
                    create_instance_from_factory,
                    ) -> Callable[[Any, Any], Awaitable['Strike']]:

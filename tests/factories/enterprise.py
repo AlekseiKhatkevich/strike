@@ -17,6 +17,7 @@ class EnterpriseFactory(factory.alchemy.SQLAlchemyModelFactory):
     address = factory.Faker('street_address', locale='ru_RU')
     field_of_activity = factory.Faker('bs', locale='ru_RU')
     region = factory.SubFactory('tests.factories.region.RegionFactory')
+    region_name = factory.lazy_attribute(lambda o: o.region.name)
 
     class Meta:
         model = Enterprise
