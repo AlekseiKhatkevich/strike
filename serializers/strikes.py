@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import Field, PrivateAttr, validator
 from pydantic.datetime_parse import StrBytesIntFloat, parse_datetime
@@ -19,24 +19,26 @@ __all__ = (
 
 class DatetimeRangeField(Range[datetime.datetime | None]):
     """
-
+    Поле для парсинга datetime range.
     """
-
     @staticmethod
     def _parse_datetime_range(
             raw_range: list[datetime.datetime | StrBytesIntFloat | None, ...] | Range,
     ) -> list[datetime.datetime | None, ...] | Range:
         """
-
+        Преобразует если нужно контейнер с сериализированными datetime (представляющими собой
+        datetime range) в контейнер с datetime. Если на входе уже Range – то просто возвращаем его.
         """
         if isinstance(raw_range, Range):
             return raw_range
+
         dt_range = []
         for dt in raw_range:
             if dt is None:
                 dt_range.append(dt)
             else:
                 dt_range.append(parse_datetime(dt))
+
         return dt_range
 
     @classmethod
@@ -50,9 +52,9 @@ class DatetimeRangeField(Range[datetime.datetime | None]):
             return _range
 
         for dt in _range:
-            if not isinstance(dt, (datetime.datetime, type(None))):
+            if not isinstance(dt, datetime.datetime | type(None)):
                 raise ValueError('Only datetime objects are accepted')
-            elif dt is not None and dt.tzinfo is None:
+            if dt is not None and dt.tzinfo is None:
                 raise ValueError('Only aware datetime are accepted')
 
         dt1, dt2 = _range
@@ -66,19 +68,23 @@ class DatetimeRangeField(Range[datetime.datetime | None]):
 
 class UsersInvolvedInSerializer(BaseModel):
     """
-
+    Для получения с фронта данных о юзере для создания м2м связи м/у юзером и страйком.
+    (вспомогательный).
     """
     user_id: IntIdType
     role: UserRole
 
     @validator('role', pre=True)
-    def _role_upper(cls, role: str, values, **kwargs) -> str:
+    def _role_upper(cls, role: str) -> str:
+        """
+        Преобразуем роль юзера в апперкейс так как ENUM требует именно так.
+        """
         return role.upper()
 
 
 class StrikeBaseSerializer(BaseModel):
     """
-
+    Базовый сериалайзер Stike.
     """
     duration: DatetimeRangeField | None
     planned_on_date: datetime.date | None
@@ -90,7 +96,7 @@ class StrikeBaseSerializer(BaseModel):
 
 class StrikeInSerializer(StrikeBaseSerializer):
     """
-
+    Сериалайзер для создания Strike и некоторых связанных с ним записей (опционально).
     """
     enterprise: IntIdType | EnterpriseInSerializer
     group: list[IntIdType] | None
@@ -99,9 +105,13 @@ class StrikeInSerializer(StrikeBaseSerializer):
     _created_by_id = PrivateAttr()
 
     @validator('planned_on_date', always=True)
-    def _validate_duration_or_planned_on_date_presence(cls, planned_on_date, values, **kwargs):
+    def _validate_duration_or_planned_on_date_presence(cls,
+                                                       planned_on_date: datetime.date | None,
+                                                       values: dict[str, Any],
+                                                       **kwargs,
+                                                       ) -> datetime.date | None:
         """
-
+        Поля "planned_on_date" и "duration" не могут быть None одновременно.
         """
         if planned_on_date is None and values.get('duration') is None:
             raise ValueError('Please specify either "planned_on_date" or "duration" field.')
@@ -111,7 +121,7 @@ class StrikeInSerializer(StrikeBaseSerializer):
 
 class StrikeOutSerializer(StrikeBaseSerializer):
     """
-
+    Для отдачи Strike на фронт.
     """
     id: int
     enterprise_id: int
@@ -123,4 +133,3 @@ class StrikeOutSerializer(StrikeBaseSerializer):
     class Config:
         orm_mode = True
         allow_population_by_field_name = True
-

@@ -1,4 +1,3 @@
-import os
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
@@ -10,11 +9,12 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import exc as sa_exc
 
 from config import settings
+from crud.helpers import get_text_from_integrity_error
 from events import register_all_sqlalchemy_events
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
 from models.exceptions import ModelEntryDoesNotExistsInDbError
-from routers import places, token, union, users, enterprises, strikes
+from routers import enterprises, places, strikes, token, union, users
 from security.invitation import InvitationTokenDeclinedException
 
 __all__ = (
@@ -79,10 +79,9 @@ async def integrity_error_handler(_, exc: sa_exc.IntegrityError) -> ORJSONRespon
     Обработка IntegrityError из БД.
     https://www.postgresql.org/docs/current/errcodes-appendix.html
     """
-    def _get_description(exc):
-        return exc.orig.args[0].split(os.linesep)[-1]
-
-    def _get_response(description, status_code=status.HTTP_400_BAD_REQUEST):
+    def _get_response(description: str,
+                      status_code: int = status.HTTP_400_BAD_REQUEST,
+                      ) -> ORJSONResponse:
         return ORJSONResponse(
             status_code=status_code,
             content={'detail': description}
@@ -91,10 +90,10 @@ async def integrity_error_handler(_, exc: sa_exc.IntegrityError) -> ORJSONRespon
     # noinspection PyUnresolvedReferences
     match exc.orig.pgcode:
         case '23505':
-            return _get_response(f'Uniqueness violation {_get_description(exc)}')
+            return _get_response(f'Uniqueness violation {get_text_from_integrity_error(exc)}')
         case '23503':
-            return _get_response(f'Foreign key violation {_get_description(exc)}')
+            return _get_response(f'Foreign key violation {get_text_from_integrity_error(exc)}')
         case '23P01':
-            return _get_response(f'Exclusion violation {_get_description(exc)}')
+            return _get_response(f'Exclusion violation {get_text_from_integrity_error(exc)}')
         case _:
             raise exc

@@ -21,6 +21,7 @@ class Region(Base):
         Geography(geometry_type='MultiPolygon', spatial_index=True),
         nullable=False,
         deferred=True,
+        deferred_raiseload=True,
     )
 
     def __repr__(self):

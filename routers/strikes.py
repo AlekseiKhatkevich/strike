@@ -17,10 +17,9 @@ async def create_strike_ep(session: SessionDep,
                            strike_data: StrikeInSerializer,
                            ) -> StrikeOutSerializer:
     """
-
-
+    Эндпоинт создания записи Strike и ассоциированных с ней моделей.
     """
     strike_data._created_by_id = user_id
-
     strike_instance = await create_strike(session, strike_data)
+
     return strike_instance

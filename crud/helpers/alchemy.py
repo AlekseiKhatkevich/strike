@@ -1,11 +1,11 @@
 import os
+import re
 from functools import cache, wraps
 from typing import Any, Callable, TYPE_CHECKING, Type, TypeVar
-import re
-from fastapi import status
-from fastapi import HTTPException
+
+from fastapi import HTTPException, status
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import delete, inspect, select, exc as sa_exc
+from sqlalchemy import delete, exc as sa_exc, inspect, select
 from sqlalchemy.dialects.postgresql import insert
 
 from internal.database import Base
@@ -26,6 +26,7 @@ __all__ = (
     'get_collection_paginated',
     'get_id_from_integrity_error',
     'flush_and_raise',
+    'get_text_from_integrity_error',
 )
 
 MODEL_T = TypeVar('MODEL_T', bound='Base')
@@ -207,18 +208,26 @@ async def get_collection_paginated(session: 'AsyncSession',
     return await paginate(session, stmt, params)
 
 
-def get_id_from_integrity_error(exc):
+def get_text_from_integrity_error(exc: sa_exc.IntegrityError) -> str:
     """
+    Получает текст исключения из IntegrityError.
+    Пример:  DETAIL:  Ключ (strike_right_id)=(277) отсутствует в таблице "strikes".
+    """
+    return exc.orig.args[0].split(os.linesep)[-1]
+
+
+def get_id_from_integrity_error(exc: sa_exc.IntegrityError) -> str:
+    """
+    Получает id из текста сообщения из исключения IntegrityError. Пример сообщения ниже:
     DETAIL:  Ключ (strike_right_id)=(277) отсутствует в таблице "strikes".
     """
-    text = exc.orig.args[0].split(os.linesep)[-1]
-    _id = re.search(r'=\((?P<id>\d+)\)', text).group('id')
-    return _id
+    return re.search(r'=\((?P<id>\d+)\)', get_text_from_integrity_error(exc)).group('id')
 
 
-async def flush_and_raise(session, error_message):
+async def flush_and_raise(session: 'AsyncSession', error_message: str) -> None:
     """
-
+    Делает flush сессии и в случае возбуждения исключения на стороне БД
+    возбуждает исключение HTTPException с переданным в аргументах сообщением.
     """
     try:
         await session.flush()

@@ -15,9 +15,9 @@ __all__ = (
 )
 
 
-async def add_places(strike_data, strike_instance):
+async def add_places(strike_data: 'StrikeInSerializer', strike_instance: Strike) -> None:
     """
-
+    Добавляет м2м связь с Place и если нужно то и создает Place также.
     """
     try:
         strike_instance.places_ids_list = []
@@ -37,20 +37,20 @@ async def add_places(strike_data, strike_instance):
         ) from err
 
 
-async def add_users(strike_data, strike_instance):
+async def add_users(strike_data: 'StrikeInSerializer', strike_instance: Strike) -> None:
     """
-
+    Добавляет юзеров через м2м к текущей создаваемой записи Strike.
     """
     strike_instance.users_involved_ids = []
+    users_involved = await strike_instance.awaitable_attrs.users_involved_create
     for user_data in strike_data.users_involved:
-        users_involved = await strike_instance.awaitable_attrs.users_involved_create
         users_involved.append(user_data.dict())
         strike_instance.users_involved_ids.append(user_data.user_id)
 
 
 async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerializer'):
     """
-
+    Создание записи Strike и ассоциированных с ней записей.
     """
     # noinspection PyProtectedMember
     strike_instance = Strike(
