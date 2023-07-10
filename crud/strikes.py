@@ -83,6 +83,11 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
 
     await session.commit()
 
-    strike_instance.places_ids_list = [p.id if isinstance(p, Place) else p for p in strike_instance.places_ids_list]
+    if hasattr(strike_instance, 'places_ids_list'):
+        strike_instance.places_ids_list = [
+            p.id if isinstance(p, Place) else p for p in strike_instance.places_ids_list
+        ]
+    else:
+        strike_instance.places_ids_list = []
 
     return strike_instance

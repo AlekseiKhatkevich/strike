@@ -48,14 +48,6 @@ class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
         num_places = 2
         num_users_associated = 2
 
-    # @factory.post_generation
-    # def users_involved(obj, create, extracted, **kwargs):
-    #     users = StrikeToUserAssociationFactory.build_batch(
-    #        2,
-    #     )
-    #     obj.users_involved.extend(users)
-    #     return users
-
 
 class StrikeToUserAssociationFactory(factory.alchemy.SQLAlchemyModelFactory):
     """

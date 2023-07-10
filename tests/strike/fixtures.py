@@ -33,3 +33,23 @@ async def strike_p(strike_factory: StrikeFactory,
     async def _inner(*args, **kwargs):
         return await create_instance_from_factory(strike_factory, *args, **kwargs)
     return _inner
+
+
+@pytest.fixture
+def strike_input_data(strike_factory, union, enterprise_instance) -> dict[str, Any]:
+    """
+    Минимально достаточные позитивные данные для сериалайзера.
+    """
+    strike_instance = strike_factory.build()
+    return dict(
+        duration=strike_instance.duration,
+        planned_on_date=None,
+        goals=strike_instance.goals,
+        results=None,
+        overall_num_of_employees_involved=strike_instance.overall_num_of_employees_involved,
+        union_in_charge_id=union.id,
+        enterprise=enterprise_instance.id,
+        group=None,
+        places=None,
+        users_involved=None,
+    )

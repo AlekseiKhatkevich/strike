@@ -4,7 +4,7 @@ import uuid
 from functools import cache
 from typing import Self
 
-from sqlalchemy import (BigInteger, MetaData, NullPool, TIMESTAMP)
+from sqlalchemy import (BigInteger, MetaData, NullPool, TIMESTAMP, inspect)
 from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
@@ -70,3 +70,9 @@ class Base(AsyncAttrs, DeclarativeBase):
             raise LookupError(
                 f'Model with name {model_name} has not found in registry.'
             )
+
+    @property
+    def pk(self):
+        pk_inst = inspect(self.__class__).primary_key
+        pk_name = pk_inst[0].name
+        return getattr(self, pk_name)
