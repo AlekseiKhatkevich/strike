@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status
+from sqlalchemy import column
 
+from crud.helpers import delete_via_sql_delete
 from crud.strikes import create_strike
-from internal.dependencies import SessionDep, UserIdDep, jwt_authorize
+from internal.dependencies import PathIdDep, SessionDep, UserIdDep, jwt_authorize
 from serializers.strikes import StrikeInSerializer, StrikeOutSerializer
 
 __all__ = (
@@ -23,3 +25,11 @@ async def create_strike_ep(session: SessionDep,
     strike_instance = await create_strike(session, strike_data)
 
     return strike_instance
+
+
+@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_strike_ep(_id: PathIdDep, session: SessionDep):
+    """
+    Эндпоинт удаления Enterprise.
+    """
+    await delete_via_sql_delete(session, 'Strike', column('id') == _id)

@@ -11,11 +11,11 @@ from serializers.strikes import StrikeInSerializer
 
 
 @pytest.fixture
-def strike_serializer(strike_strike_input_data, user_in_db) -> StrikeInSerializer:
+def strike_serializer(strike_input_data, user_in_db) -> StrikeInSerializer:
     """
     Инстанс сериалайзера с минимальным набором данных.
     """
-    ser = StrikeInSerializer(**strike_strike_input_data)
+    ser = StrikeInSerializer(**strike_input_data)
     ser._created_by_id = user_in_db.id
     return ser
 
