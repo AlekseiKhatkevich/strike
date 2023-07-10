@@ -31,7 +31,7 @@ __all__ = (
 retry = Retry(ExponentialBackoff(), 1)
 
 redis_connection = redis.from_url(
-    settings.redis_dsn,
+    settings.redis_dsn.unicode_string(),
     socket_connect_timeout=settings.redis_socket_connection_timeout,
     socket_timeout=settings.redis_socket_timeout,
     retry=retry,
@@ -118,7 +118,7 @@ class UsersCache:
         async with self.redis_cm() as conn:
             await conn.hset(self.users_hash_name, user.id, pickle.dumps(user))
 
-    async def _get_user_from_redis(self, user_id: int) -> Optional['User']:
+    async def _get_user_from_redis(self, user_id: int) -> 'User':
         """
         Получаем данные юзера из редиса и десериализуем их до инстанса модели юзера.
         """

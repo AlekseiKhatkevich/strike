@@ -3,12 +3,12 @@ from functools import cache
 from pathlib import Path
 
 from pydantic import (
-    BaseSettings,
-    RedisDsn,
+    ConfigDict, FilePath,
     PostgresDsn,
+    RedisDsn,
     SecretStr,
-    FilePath,
 )
+from pydantic_settings import BaseSettings
 
 __all__ = (
     'settings',
@@ -34,8 +34,7 @@ class Settings(BaseSettings):
     redis_socket_connection_timeout: float
     redis_socket_timeout: float
 
-    class Config:
-        env_file = '.env'
+    model_config = ConfigDict(extra='ignore')
 
 
 @cache

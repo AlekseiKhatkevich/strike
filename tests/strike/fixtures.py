@@ -42,7 +42,7 @@ def strike_input_data(strike_factory, union, enterprise_instance) -> dict[str, A
     """
     strike_instance = strike_factory.build()
     return dict(
-        duration=strike_instance.duration,
+        duration=[strike_instance.duration.lower, strike_instance.duration.upper],
         planned_on_date=None,
         goals=strike_instance.goals,
         results=None,

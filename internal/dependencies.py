@@ -95,7 +95,7 @@ def id_in_path(_id: int = Path(ge=1, alias='id')) -> int:
 PathIdDep = Annotated[int, Depends(id_in_path)]
 
 
-def id_list_in_query_params(_id: list[int] = Query([], ge=1, alias='id')):
+def id_list_in_query_params(_id: list[int] = Query([], alias='id')):
     """
     Получение набора id из гет-параметров урла.
     """

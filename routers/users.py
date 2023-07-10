@@ -72,4 +72,4 @@ async def update_current_user(session: SessionDep,
     Обновляет текущего юзера. Так же можно поменять пароль если передать его в поле password.
     """
     # noinspection PyTypeChecker
-    return await update_user(session, user, user_data.dict(exclude_unset=True))
+    return await update_user(session, user, user_data.model_dump(exclude_unset=True))

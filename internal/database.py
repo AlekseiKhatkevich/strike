@@ -20,7 +20,7 @@ __all__ = (
 
 
 engine = create_async_engine(
-    settings.pg_dsn,
+    settings.pg_dsn.unicode_string(),
     poolclass=NullPool,
     echo=settings.debug,
     echo_pool=settings.debug,

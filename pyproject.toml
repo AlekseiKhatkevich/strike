@@ -10,10 +10,10 @@ python = "^3.11"
 fastapi = "> 0.95 < 1.0"
 uvicorn = "0.22.*"
 uvloop = "0.17.*"
-httptools = "0.5.*"
+httptools = "0.6.*"
 sqlalchemy = "2.0.*"
 orjson = "3.*"
-asyncpg = "0.27.*"
+asyncpg = "0.28.*"
 alembic = "^1.11"
 python-dotenv = "^1.0.0"
 email-validator = "^2.0.0"
@@ -32,6 +32,7 @@ shapely = "^2.0.1"
 pyproj = "3.6.*"
 fastapi-pagination = "0.12.*"
 setuptools = "67.0.0"  # косяк с 68+, ждать
+pydantic-settings = "^2.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -42,6 +43,7 @@ httpx = "0.24.*"
 pytest-asyncio = "*"
 factory-boy = "*"
 pytest-factoryboy = "*"
+bump-pydantic = "^0.1.0"
 
 [build-system]
 requires = ["poetry-core"]

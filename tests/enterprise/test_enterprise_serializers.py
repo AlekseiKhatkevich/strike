@@ -19,4 +19,4 @@ def test_EnterpriseOutSerializer_positive(enterprise_instance):
     """
     Позитивный тест сериалайзера EnterpriseOutSerializer.
     """
-    EnterpriseOutSerializer.from_orm(enterprise_instance)
+    EnterpriseOutSerializer.model_validate(enterprise_instance)

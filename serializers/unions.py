@@ -1,6 +1,7 @@
 import datetime
 
 from internal.serializers import BaseModel
+from pydantic import ConfigDict
 
 __all__ = (
     'UnionOutSerializer',
@@ -13,8 +14,8 @@ class UnionBaseSerializer(BaseModel):
     Базовый сериалайзер Union.
     """
     name: str
-    is_yellow: bool | None
-    id: int | None
+    is_yellow: bool | None = None
+    id: int | None = None
 
 
 class UnionInSerializer(UnionBaseSerializer):
@@ -30,5 +31,4 @@ class UnionOutSerializer(UnionBaseSerializer):
     """
     created_at: datetime.datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

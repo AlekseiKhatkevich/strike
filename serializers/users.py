@@ -5,11 +5,12 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated
 
 from pydantic import (
+    field_validator,
+    ConfigDict,
     EmailStr,
     Field,
     SecretStr,
     constr,
-    validator,
 )
 
 from crud.auth import check_password_commonness
@@ -36,11 +37,10 @@ class UserOutMeSerializer(BaseModel):
     id: int
     name: str
     registration_date: datetime.datetime
-    email: EmailStr | None
+    email: EmailStr | None = None
     is_active: bool
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserBaseSerializer(BaseModel):
@@ -49,15 +49,13 @@ class UserBaseSerializer(BaseModel):
     """
     name: constr(max_length=64)
     password: Annotated[SecretStr, Field(max_length=72)]
-    email: EmailStr | None
+    email: EmailStr | None = None
+    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1, frozen=True)
 
-    class Config:
-        anystr_strip_whitespace = True
-        min_anystr_length = 1
-        frozen = True
-        allow_mutation = False
-
-    @validator('password', allow_reuse=True)
+    @field_validator('password')
+    @classmethod
     def password_strength(cls, value: SecretStr | None) -> SecretStr | None:
         """
         Проверка пароля на минимально допустимую сложность.
@@ -70,7 +68,8 @@ class UserBaseSerializer(BaseModel):
             )
         return value
 
-    @validator('password', allow_reuse=True)
+    @field_validator('password')
+    @classmethod
     def password_commonness(cls, value: SecretStr | None) -> SecretStr | None:
         """
         Проверка пароля по базе самых распространенных паролей.
@@ -94,7 +93,7 @@ class UserInModificationSerializer(UserBaseSerializer):
     Для изменения данных юзера.
     """
     email: EmailStr | None = Field(...)
-    password: Annotated[SecretStr, Field(max_length=72)] | None
+    password: Annotated[SecretStr, Field(max_length=72)] | None = None
     is_active: bool
 
 
@@ -103,4 +102,4 @@ class UserRegistrationSerializer(UserBaseSerializer):
     Для первоначального создания юзера через апи.
     """
     invitation_token: SecretStr
-    invitation_password: SecretStr | None
+    invitation_password: SecretStr | None = None

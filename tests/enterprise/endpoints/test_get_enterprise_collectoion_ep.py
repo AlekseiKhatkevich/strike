@@ -20,3 +20,4 @@ async def test_get_enterprises_ep_positive(async_client_httpx, db_session, enter
     assert {el['id'] for el in items} == {ent.id for ent in enterprises}
     assert response.json()['total'] == 2
 
+

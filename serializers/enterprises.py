@@ -1,7 +1,7 @@
 import datetime
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from internal.serializers import BaseModel
 from models.initial_data import RU_regions
@@ -16,13 +16,13 @@ class EnterpriseBaseSerializer(BaseModel):
     """
     Базовый сериалайзер для модели Enterprise.
     """
-    id: Annotated[int | None, Field(ge=1)]
+    id: Annotated[int | None, Field(ge=1)] = None
     name: Annotated[str, Field(max_length=256)]
     # noinspection PyTypeHints
     region_name: Literal[*RU_regions.names]
     place: str
     address: Annotated[str, Field(max_length=512)]
-    field_of_activity: Annotated[str | None, Field(max_length=256)]
+    field_of_activity: Annotated[str | None, Field(max_length=256)] = None
 
 
 class EnterpriseInSerializer(EnterpriseBaseSerializer):
@@ -37,7 +37,6 @@ class EnterpriseOutSerializer(EnterpriseBaseSerializer):
     Сериалайзер для отправки данных об инстансе Enterprise на фронт.
     """
     created_at: datetime.datetime
-    updated_at: datetime.datetime | None
+    updated_at: datetime.datetime | None = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

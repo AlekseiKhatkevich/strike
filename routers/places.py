@@ -44,7 +44,10 @@ async def create_or_update_place_ep(session: SessionDep, place_data: PlaceInSeri
     Создание новой записи модели Place (Место проведения забастовки) или обновление существующей.
     """
     try:
-        instance = await create_or_update_place(session, Place(**place_data.dict()))
+        instance = await create_or_update_place(
+            session,
+            Place(**place_data.model_dump(warnings=False)),
+        )
     except ValueError as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -17,12 +17,15 @@ router = APIRouter(tags=['union'], dependencies=[Depends(jwt_authorize)])
 @router.get('/')
 async def unions(session: SessionDep,
                  params: PaginParamsDep,
-                 id: list[int] = Query([], ge=1),
+                 _id: list[int] = Query([], alias='id'),
                  ) -> LimitOffsetPage[UnionOutSerializer]:
     """
     Отдача записей Union с пагинацией.
     """
-    return await get_unions(session, id, params)
+    collection = await get_unions(session, _id, params)
+    out = LimitOffsetPage[UnionOutSerializer]
+
+    return out.create(collection.items, params, total=collection.total)
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
@@ -33,7 +36,7 @@ async def create_or_update_union_ep(session: SessionDep,
     """
     Создание или изменение записей Union.
     """
-    return await create_or_update_with_session_get(session, 'Union', union_data.dict(exclude_none=True))
+    return await create_or_update_with_session_get(session, 'Union', union_data.model_dump(exclude_none=True))
 
 
 @router.delete('/{id}/', status_code=status.HTTP_204_NO_CONTENT)

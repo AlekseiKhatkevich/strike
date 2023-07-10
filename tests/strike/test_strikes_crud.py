@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import func, select
@@ -82,7 +80,7 @@ async def test_create_strike_positive_basic(db_session, strike_serializer):
 
     assert await is_instance_in_db(db_session, strike_in_db)
     await db_session.refresh(strike_in_db)
-    assert strike_in_db.duration == strike_serializer.duration
+    assert [strike_in_db.duration.lower, strike_in_db.duration.upper] == strike_serializer.duration
     assert strike_in_db.goals == strike_serializer.goals
     assert strike_in_db.overall_num_of_employees_involved == strike_serializer.overall_num_of_employees_involved
     assert strike_in_db.union_in_charge_id == strike_serializer.union_in_charge_id

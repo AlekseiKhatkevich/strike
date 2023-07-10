@@ -28,7 +28,7 @@ async def add_places(strike_data: 'StrikeInSerializer', strike_instance: Strike)
                 strike_instance.places_ids_list.append(new_place_data)
             else:
                 places = await strike_instance.awaitable_attrs.places
-                places.append(place := Place(**new_place_data.dict(exclude={'id', })))
+                places.append(place := Place(**new_place_data.model_dump(exclude={'id', })))
                 strike_instance.places_ids_list.append(place)
     except sa_exc.IntegrityError as err:
         raise HTTPException(
@@ -44,7 +44,7 @@ async def add_users(strike_data: 'StrikeInSerializer', strike_instance: Strike) 
     strike_instance.users_involved_ids = []
     users_involved = await strike_instance.awaitable_attrs.users_involved_create
     for user_data in strike_data.users_involved:
-        users_involved.append(user_data.dict())
+        users_involved.append(user_data.model_dump())
         strike_instance.users_involved_ids.append(user_data.user_id)
 
 
@@ -54,13 +54,13 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
     """
     # noinspection PyProtectedMember
     strike_instance = Strike(
-        **strike_data.dict(exclude={'group', 'places', 'users_involved', 'enterprise'}),
+        **strike_data.model_dump(exclude={'group', 'places', 'users_involved', 'enterprise'}),
         created_by_id=strike_data._created_by_id,
     )
     if isinstance(strike_data.enterprise, int):
         strike_instance.enterprise_id = strike_data.enterprise
     else:
-        enterprise_instance = Enterprise(**strike_data.enterprise.dict(exclude={'id', }))
+        enterprise_instance = Enterprise(**strike_data.enterprise.model_dump(exclude={'id', }))
         strike_instance.enterprise = enterprise_instance
 
     session.add(strike_instance)

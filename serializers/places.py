@@ -4,7 +4,7 @@ from typing import Literal
 
 import shapely.wkt
 from geoalchemy2 import WKTElement
-from pydantic import condecimal, constr, root_validator, validator
+from pydantic import field_validator, model_validator, ConfigDict, condecimal, constr
 
 from internal.geo import point_from_numeric
 from internal.serializers import BaseModel
@@ -28,17 +28,18 @@ class PlaceBaseSerializer(BaseModel, abc.ABC):
     name: constr(max_length=128)
     address: constr(max_length=256)
     # noinspection PyTypeHints
-    coordinates: in_out_coords_format
+    coordinates: in_out_coords_format = None
 
 
 class PlaceDeleteSerializer(BaseModel):
     """
     Для получения данных для удаления Place.
     """
-    id: int | None
-    name: constr(max_length=128) | None
+    id: int | None = None
+    name: constr(max_length=128) | None = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_one_field_presence(cls, values):
         """
         Должно быть передано поле id или же name и region_name.
@@ -64,20 +65,16 @@ class PlaceInSerializer(PlaceBaseSerializer):
     """
     Для получения данных Place с фронта.
     """
-    id: int | None  # None в случае create, int в случае update
+    id: int | None = None  # None в случае create, int в случае update
 
-    @validator('coordinates')
+    # noinspection PyNestedDecorators
+    @field_validator('coordinates')
+    @classmethod
     def convert_input_coordinates_into_point(cls, value) -> WKTElement | None:
         """
         Конвертируем координаты в POINT для последующего сохранения в БД.
         """
         return point_from_numeric(*value) if value is not None else None
-
-    class Config:
-        anystr_strip_whitespace = True
-        min_anystr_length = 1
-        frozen = True
-        allow_mutation = False
 
 
 class RegionOutSerializer(BaseModel):
@@ -85,9 +82,7 @@ class RegionOutSerializer(BaseModel):
     Для отдачи Region на фронт.
     """
     name: str = Literal[*RU_regions.names]
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlaceOutSerializer(PlaceBaseSerializer):
@@ -95,13 +90,11 @@ class PlaceOutSerializer(PlaceBaseSerializer):
     Для отдачи сохраненного Place на фронт.
     """
     id: int
-    region: RegionOutSerializer | None
+    region: RegionOutSerializer | None = None
+    model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
 
-    class Config:
-        arbitrary_types_allowed = True
-        orm_mode = True
-
-    @validator('coordinates', pre=True)
+    @field_validator('coordinates', mode="before")
+    @classmethod
     def convert_input_coordinates_into_point(cls, value) -> in_out_coords_format:
         """
         Преобразуем координаты из WKT в широту и долготу.
