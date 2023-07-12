@@ -39,7 +39,7 @@ async def delete_strike_ep(_id: PathIdDep, session: SessionDep):
     await delete_via_sql_delete(session, 'Strike', column('id') == _id)
 
 
-@router.patch('/{id}',)
+@router.patch('/{id}')
 async def update_strike_ep(_id: PathIdDep,
                            session: SessionDep,
                            strike_data: StrikeUpdateInSerializer,
