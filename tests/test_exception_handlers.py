@@ -5,7 +5,12 @@ import pytest
 from fastapi import status
 from sqlalchemy.exc import IntegrityError
 
-from main import invitation_token_exception_handler, model_does_not_exists_exception_handler, integrity_error_handler
+from main import (
+    integrity_error_handler,
+    invitation_token_exception_handler,
+    model_does_not_exists_exception_handler,
+)
+from models.constraints_descriptions import constr_text_mapping
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 from security.invitation import InvitationTokenDeclinedException
 
@@ -57,6 +62,24 @@ async def test_integrity_error_handler_unique():
 
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert json.loads(resp.body)['detail'] == f'Uniqueness violation {orig_exc.orig_message}'
+
+
+async def test_integrity_error_handler_ck():
+    """
+    Тест IntegrityError с исключением чек констрейнта когда данный контрейнт имеет
+    связанный текст описания исключения отдаваемый на фронт.
+    """
+    orig_exc = OrigExc(pgcode='23514')
+    text = '<class \'asyncpg.exceptions.CheckViolationError\'>: новая строка в отношении "strikes" нарушает ' \
+           'ограничение-проверку "ck_strikes_one_of_dates_is_not_null"\nDETAIL:  Ошибочная строка содержит ' \
+           '(160, null, new goals, fail, 111, 2023-07-12 14:06:01.368793+03, null, 9, 34, 42).'
+    orig_exc.args = [text, ...]
+    exc = IntegrityError(orig_exc.expected_error_message, orig=orig_exc, params=None)
+
+    resp = await integrity_error_handler(None, exc)
+
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert json.loads(resp.body)['detail'] == constr_text_mapping['ck_strikes_one_of_dates_is_not_null']
 
 
 async def test_integrity_error_handler_rest():

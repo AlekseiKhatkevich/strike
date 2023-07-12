@@ -227,8 +227,9 @@ def get_id_from_integrity_error(exc: sa_exc.IntegrityError) -> str:
 
 def get_constr_name_from_integrity_error(exc: sa_exc.IntegrityError) -> str:
     """
+    Получает название чек констрейнта из integrityError с кодом '23514'.
     """
-    return re.search(r'"(?P<name>\w+)"\nDETAIL', exc.orig.args[0]).group('name')
+    return re.search(r' "(?P<name>\w+)"\nDETAIL: ', exc.orig.args[0]).group('name')
 
 
 async def flush_and_raise(session: 'AsyncSession', error_message: str) -> None:

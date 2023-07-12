@@ -10,7 +10,7 @@ from crud.helpers import (
     exists_in_db,
     flush_and_raise,
     get_collection_paginated,
-    get_id_from_integrity_error,
+    get_constr_name_from_integrity_error, get_id_from_integrity_error,
     get_text_from_integrity_error,
 )
 from models import Region, Union, User
@@ -154,6 +154,21 @@ async def test_get_id_from_integrity_error(region, db_session):
         _id = get_id_from_integrity_error(err)
 
         assert _id == region.name
+
+
+async def test_get_constr_name_from_integrity_error(strike_factory, create_instance_from_factory):
+    """
+    Позитивный тест ф-ции get_constr_name_from_integrity_error для получения названия
+    check constraint из текста сообщения из IntegrityError.
+    """
+    with pytest.raises(sa_exc.IntegrityError) as err:
+        # noinspection PyCallingNonCallable
+        await create_instance_from_factory(
+            strike_factory,
+            duration=None,
+        )
+
+        assert get_constr_name_from_integrity_error(err) == 'ck_strikes_one_of_dates_is_not_null'
 
 
 async def test_flush_and_reraise(region, db_session):
