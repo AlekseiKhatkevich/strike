@@ -1,5 +1,8 @@
+import datetime
+
 import pytest
 from sqlalchemy import update
+from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.exc import IntegrityError
 
 from crud.helpers import exists_in_db
@@ -75,4 +78,20 @@ async def test_strike_group(db_session, strike, strike_p):
         db_session,
         StrikeToItself,
         (StrikeToItself.strike_left_id == strike.id) & (StrikeToItself.strike_right_id == strike2.id)
+    )
+
+
+async def test_is_active_property(strike_p, db_session):
+    """
+    Тест свойства is_active (проходит ли забастовка в текущий момент времени)
+    """
+    now = datetime.datetime.now(tz=datetime.UTC)
+    duration = Range(now - datetime.timedelta(days=1), now + datetime.timedelta(days=1))
+    strike = await strike_p(duration=duration)
+
+    assert strike.is_active
+    assert await exists_in_db(
+        db_session,
+        Strike,
+        (Strike.id == strike.id) & (Strike.is_active == True)
     )
