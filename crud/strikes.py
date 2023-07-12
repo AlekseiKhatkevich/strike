@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, status
-from sqlalchemy import exc as sa_exc
-
+from sqlalchemy import delete, exc as sa_exc, select
+from sqlalchemy.dialects.postgresql import insert
 from crud.helpers import flush_and_raise, get_id_from_integrity_error
 from models import Enterprise, Place, Strike, StrikeToItself
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from serializers.strikes import StrikeInSerializer
+    from serializers.strikes import AddRemoveStrikeM2MObjectsSerializer, StrikeInSerializer
 
 __all__ = (
     'create_strike',
@@ -91,3 +91,31 @@ async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerialize
         strike_instance.places_ids_list = []
 
     return strike_instance
+
+
+async def manage_group(session: 'AsyncSession',
+                       strike_id: int,
+                       m2m_ids: 'AddRemoveStrikeM2MObjectsSerializer',
+                       ) -> list[int, ...]:
+    """
+
+    """
+    to_add = [
+        dict(strike_left_id=strike_id, strike_right_id=group_id) for group_id in m2m_ids.add
+    ]
+    if to_add:
+        add_stmt = insert(StrikeToItself).values(to_add).on_conflict_do_nothing()
+        await session.execute(add_stmt)
+
+    if m2m_ids.remove:
+        del_stmt = delete(StrikeToItself).where(
+            StrikeToItself.strike_left_id == strike_id,
+            StrikeToItself.strike_right_id.in_(m2m_ids.remove)
+        )
+        await session.execute(del_stmt)
+
+    group_ids = await session.scalars(
+        select(StrikeToItself.strike_right_id).where(StrikeToItself.strike_left_id == strike_id)
+    )
+    await session.commit()
+    return group_ids.all()

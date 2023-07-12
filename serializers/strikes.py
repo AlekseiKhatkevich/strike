@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated
+from typing import Annotated, Self
 
 from pydantic import (
     field_validator,
@@ -25,7 +25,8 @@ __all__ = (
     'StrikeInSerializer',
     'StrikeOutSerializerFull',
     'StrikeUpdateInSerializer',
-    'StrikeOutSerializerShort'
+    'StrikeOutSerializerShort',
+    'AddRemoveStrikeM2MObjectsSerializer',
 )
 
 
@@ -159,3 +160,26 @@ class StrikeOutSerializerShort(StrikeOutSerializerBase):
     Для отдачи данных о Strike.
     """
     pass
+
+
+class AddRemoveStrikeM2MObjectsSerializer(BaseModel):
+    """
+
+    """
+    add: set[IntIdType] = set()
+    remove: set[IntIdType] = set()
+
+    # noinspection PyNestedDecorators
+    @model_validator(mode='after')
+    @classmethod
+    def no_intersection(cls, serializer: Self) -> Self:
+        """
+
+        """
+        if intersection := (serializer.add.intersection(serializer.remove)):
+            raise ValueError(
+                f'Elements {intersection} are common to both "add" and "remove" fields. '
+                f'They should be either added or removed, not both!'
+            )
+        else:
+            return serializer

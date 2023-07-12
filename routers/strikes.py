@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy import column
 
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
-from crud.strikes import create_strike
+from crud.strikes import create_strike, manage_group
 from internal.dependencies import PathIdDep, SessionDep, UserIdDep, jwt_authorize
 from serializers.strikes import (
-    StrikeInSerializer,
+    AddRemoveStrikeM2MObjectsSerializer, StrikeInSerializer,
     StrikeOutSerializerFull,
     StrikeOutSerializerShort, StrikeUpdateInSerializer,
 )
@@ -55,3 +55,15 @@ async def update_strike_ep(_id: PathIdDep,
         data=strike_data_dict,
     )
     return updated_strike
+
+
+@router.post('/{id}/group')
+async def manage_group_ep(_id: PathIdDep,
+                          session: SessionDep,
+                          m2m_ids: AddRemoveStrikeM2MObjectsSerializer,
+                          ) -> list[int]:
+    """
+
+
+    """
+    return await manage_group(session, _id, m2m_ids)

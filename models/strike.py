@@ -95,9 +95,6 @@ class StrikeToPlaceAssociation(CreatedAtMixin, Base):
         primary_key=True,
     )
 
-    # strike: Mapped['Strike'] = relationship('Strike', back_populates='places_association_recs')
-    # strike222: Mapped['Strike'] = relationship('Strike', viewonly=True)
-
 
 class StrikeToItself(CreatedAtMixin, Base):
     """
