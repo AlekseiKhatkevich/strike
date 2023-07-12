@@ -27,6 +27,7 @@ __all__ = (
     'get_id_from_integrity_error',
     'flush_and_raise',
     'get_text_from_integrity_error',
+    'get_constr_name_from_integrity_error',
 )
 
 MODEL_T = TypeVar('MODEL_T', bound='Base')
@@ -222,6 +223,12 @@ def get_id_from_integrity_error(exc: sa_exc.IntegrityError) -> str:
     DETAIL:  Ключ (strike_right_id)=(277) отсутствует в таблице "strikes".
     """
     return re.search(r'=\((?P<id>[\w ]+?)\)', get_text_from_integrity_error(exc)).group('id')
+
+
+def get_constr_name_from_integrity_error(exc: sa_exc.IntegrityError) -> str:
+    """
+    """
+    return re.search(r'"(?P<name>\w+)"\nDETAIL', exc.orig.args[0]).group('name')
 
 
 async def flush_and_raise(session: 'AsyncSession', error_message: str) -> None:

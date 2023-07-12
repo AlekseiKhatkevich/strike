@@ -9,10 +9,11 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import exc as sa_exc
 
 from config import settings
-from crud.helpers import get_text_from_integrity_error
+from crud.helpers import get_constr_name_from_integrity_error, get_text_from_integrity_error
 from events import register_all_sqlalchemy_events
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
+from models.constraints_descriptions import constr_text_mapping
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 from routers import enterprises, places, strikes, token, union, users
 from security.invitation import InvitationTokenDeclinedException
@@ -95,5 +96,13 @@ async def integrity_error_handler(_, exc: sa_exc.IntegrityError) -> ORJSONRespon
             return _get_response(f'Foreign key violation {get_text_from_integrity_error(exc)}')
         case '23P01':
             return _get_response(f'Exclusion violation {get_text_from_integrity_error(exc)}')
+        case '23514':
+            constr_name = get_constr_name_from_integrity_error(exc)
+            try:
+                text_4_response = constr_text_mapping[constr_name]
+            except KeyError:
+                raise exc from None
+            else:
+                return _get_response(text_4_response)
         case _:
             raise exc
