@@ -9,63 +9,9 @@ from serializers.enterprises import EnterpriseInSerializer
 from serializers.places import PlaceInSerializer
 from serializers.strikes import (
     StrikeInSerializer,
-    StrikeOutSerializer,
+    StrikeOutSerializerFull,
     UsersInvolvedInSerializer,
 )
-
-#
-# @pytest.fixture(scope='module')
-# def test_serializer() -> 'TestSerializer':
-#     class TestSerializer(BaseModel):
-#         dt_range: DatetimeRangeField
-#
-#     return TestSerializer
-#
-#
-# @pytest.mark.parametrize(
-#     'input_lower, input_upper',
-#     [
-#         ('2023-07-09T09:40:40.928935+00:00', '2023-07-10T09:40:40.928935+00:00',),
-#         (None, '2023-07-10T09:40:40.928935+00:00',),
-#         ('2023-07-09T09:40:40.928935+00:00', None,),
-#     ]
-# )
-# def test_DatetimeRangeField_positive_input(input_lower, input_upper, test_serializer):
-#     """
-#     Позитивный тест сериалайзера DatetimeRangeField.
-#     """
-#     ser = test_serializer(dt_range=[input_lower, input_upper])
-#
-#     assert isinstance(ser.dt_range, Range)
-#
-#     if input_lower is not None:
-#         input_lower_deserialized = datetime.datetime.fromisoformat(input_lower)
-#         assert ser.dt_range.lower == input_lower_deserialized
-#     else:
-#         assert input_lower is None
-#
-#     if input_upper is not None:
-#         input_upper_deserialized = datetime.datetime.fromisoformat(input_upper)
-#         assert ser.dt_range.upper == input_upper_deserialized
-#     else:
-#         assert input_upper is None
-#
-#
-# @pytest.mark.parametrize(
-#     'input_lower, input_upper, message',
-#     [
-#         ('2023-07-09T09:40:40.928935', '2023-07-10T09:40:40.928935+00:00', 'Only aware datetime are accepted'),
-#         ('2023-07-10T09:40:40.928935+00:00', '2023-07-09T09:40:40.928935+00:00',
-#          'Second datetime in range should be greater then first one.'),
-#         (None, None, 'Please specify at leas one datetime in range.')
-#     ]
-# )
-# def test_DatetimeRangeField_negative_input(input_lower, input_upper, message, test_serializer):
-#     """
-#     Негативный тест сериалайзера DatetimeRangeField.
-#     """
-#     with pytest.raises(ValueError, match=message):
-#         test_serializer(dt_range=[input_lower, input_upper])
 
 
 @pytest.fixture
@@ -179,7 +125,7 @@ def test_StrikeOutSerializer_positive(strike):
     strike.users_involved_ids = list(range(1, 6))
     strike.places_ids_list = list(range(1, 6))
 
-    ser = StrikeOutSerializer.model_validate(strike)
+    ser = StrikeOutSerializerFull.model_validate(strike)
 
     assert ser.id == strike.id
     assert ser.enterprise_id == strike.enterprise_id

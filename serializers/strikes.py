@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import (
     field_validator,
@@ -10,6 +10,7 @@ from pydantic import (
     PlainSerializer,
     WithJsonSchema,
     AwareDatetime,
+    model_validator,
 )
 
 from sqlalchemy.dialects.postgresql.ranges import Range
@@ -22,7 +23,9 @@ from serializers.typing import IntIdType
 
 __all__ = (
     'StrikeInSerializer',
-    'StrikeOutSerializer',
+    'StrikeOutSerializerFull',
+    'StrikeUpdateInSerializer',
+    'StrikeOutSerializerShort'
 )
 
 
@@ -34,6 +37,7 @@ class UsersInvolvedInSerializer(BaseModel):
     user_id: IntIdType
     role: UserRole
 
+    # noinspection PyNestedDecorators
     @field_validator('role', mode='before')
     @classmethod
     def _role_upper(cls, role: str) -> str:
@@ -43,7 +47,10 @@ class UsersInvolvedInSerializer(BaseModel):
         return role.upper()
 
 
-def range_validator(value):
+def range_validator(value: list[AwareDatetime | None]) -> list[AwareDatetime | None]:
+    """
+    Валидация входящих данных для поля duration.
+    """
     dt1, dt2 = value
     if dt1 and dt2 and dt1 >= dt2:
         raise ValueError('Second datetime in range should be greater then first one.')
@@ -53,11 +60,11 @@ def range_validator(value):
 
 
 RangeField = Annotated[
-        list[AwareDatetime | None],
-        AfterValidator(range_validator),
-        PlainSerializer(lambda x: Range(*x), when_used='json'),
-        WithJsonSchema({'type': 'dict'}, mode='serialization'),
-    ]
+    list[AwareDatetime | None],
+    AfterValidator(range_validator),
+    PlainSerializer(lambda x: Range(*x), when_used='json'),
+    WithJsonSchema({'type': 'dict'}, mode='serialization'),
+]
 
 
 class StrikeBaseSerializer(BaseModel):
@@ -71,6 +78,36 @@ class StrikeBaseSerializer(BaseModel):
     overall_num_of_employees_involved: IntIdType
     union_in_charge_id: IntIdType | None = None
 
+    _dates_mutual_none_exc_text = 'Please specify either "planned_on_date" or "duration" field.'
+
+    # noinspection PyNestedDecorators
+    @model_validator(mode='before')
+    @classmethod
+    def dates_mutual_none_exc(cls, data):
+        """
+        Поля planned_on_date и duration не могут быть None одновременно если они передаются
+        с фронта.
+        """
+        try:
+            planned_on_date = data['planned_on_date']
+            duration = data['duration']
+        except (KeyError, TypeError):  # если нет хотя бы одного поля - то с фронта они не пришли оба.
+            pass
+        else:
+            #  оба поля пришли с фронта, а не из defaults
+            if planned_on_date is None and duration is None:
+                raise ValueError(cls._dates_mutual_none_exc_text)
+        return data
+
+
+class StrikeUpdateInSerializer(StrikeBaseSerializer):
+    """
+    Сериалайзер для обновления записи Strike.
+    """
+    goals: str = None
+    overall_num_of_employees_involved: IntIdType = None
+    enterprise_id: IntIdType = None
+
 
 class StrikeInSerializer(StrikeBaseSerializer):
     """
@@ -82,40 +119,43 @@ class StrikeInSerializer(StrikeBaseSerializer):
     users_involved: list[UsersInvolvedInSerializer] | None = None
     _created_by_id = PrivateAttr()
 
-    @field_validator('planned_on_date')
-    @classmethod
-    def _validate_duration_or_planned_on_date_presence(cls,
-                                                       planned_on_date: datetime.date | None,
-                                                       values: dict[str, Any],
-                                                       **kwargs,
-                                                       ) -> datetime.date | None:
-        """
-        Поля "planned_on_date" и "duration" не могут быть None одновременно.
-        """
-        if planned_on_date is None and values.data.get('duration') is None:
-            raise ValueError('Please specify either "planned_on_date" or "duration" field.')
-        else:
-            return planned_on_date
 
-
-class StrikeOutSerializer(StrikeBaseSerializer):
+class StrikeOutSerializerBase(StrikeBaseSerializer):
     """
-    Для отдачи Strike на фронт.
+    Базовый сериалайзер для отдачи Strike на фронт.
     """
     id: int
     enterprise_id: int
-    group_ids: list[int] = []
     created_by_id: int
-    users_involved_ids: list[int] = []
-    places_ids: Annotated[list[int], Field(alias='places_ids_list')] = []
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     # noinspection PyNestedDecorators
     @field_validator('duration', mode='before')
     @classmethod
-    def _duration_to_list(cls, duration):
+    def _duration_to_list(cls,
+                          duration: Range | list[AwareDatetime | None] | None,
+                          ) -> list[AwareDatetime | None] | None:
+        """
+        Преобразуем на входе Range в лист с datetime если нужно.
+        """
         if isinstance(duration, Range):
             return [getattr(duration, attr, None) for attr in ('lower', 'upper',)]
         else:
             return duration
+
+
+class StrikeOutSerializerFull(StrikeOutSerializerBase):
+    """
+    Для отдачи данных о Strike с доп. данными связей м2м.
+    """
+    group_ids: list[int] = []
+    users_involved_ids: list[int] = []
+    places_ids: Annotated[list[int], Field(alias='places_ids_list')] = []
+
+
+class StrikeOutSerializerShort(StrikeOutSerializerBase):
+    """
+    Для отдачи данных о Strike.
+    """
+    pass

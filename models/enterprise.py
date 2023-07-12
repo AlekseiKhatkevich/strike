@@ -1,5 +1,5 @@
 from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, query_expression, relationship
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
 from internal.database import Base
@@ -36,6 +36,7 @@ class Enterprise(CreatedUpdatedMixin, Base):
     )
     region: Mapped['Region'] = relationship(innerjoin=True)
     strikes: Mapped[list['Strike']] = relationship(back_populates='enterprise')
+    strikes_count: Mapped[int] = query_expression()
 
     __table_args__ = (
         UniqueConstraint(name, region_name, place),
