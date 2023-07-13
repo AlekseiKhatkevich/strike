@@ -168,11 +168,14 @@ async def manage_users_involved(session: 'AsyncSession',
 
     """
     strike = await session.scalar(
-        select(Strike).options(
-            selectinload(Strike.users_involved).options(
-                load_only(StrikeToUserAssociation.user_id, raiseload=True)
-            )
-        ).where(Strike.id == strike_id))
+        select(
+            Strike
+        ).options(
+            selectinload(Strike.users_involved)
+        ).where(
+            Strike.id == strike_id
+        )
+    )
 
     relation = strike.users_involved_create
     for inner in m2m.add:
@@ -182,4 +185,4 @@ async def manage_users_involved(session: 'AsyncSession',
     relation.difference_update(m2m.remove)
 
     await session.commit()
-    return relation
+    return strike.users_involved

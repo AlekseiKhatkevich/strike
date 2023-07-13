@@ -28,6 +28,7 @@ __all__ = (
     'StrikeOutSerializerShort',
     'AddRemoveStrikeM2MObjectsSerializer',
     'AddRemoveUsersInvolvedSerializer',
+    'UsersInvolvedOutSerializer',
 )
 
 
@@ -47,6 +48,14 @@ class UsersInvolvedInSerializer(BaseModel):
         Преобразуем роль юзера в апперкейс так как ENUM требует именно так.
         """
         return role.upper()
+
+
+class UsersInvolvedOutSerializer(BaseModel):
+    """
+    Для отдачи инфы о юзерах вовлеченных в забастовку на ЭП /strikes/{id:int}/users_involved.
+    """
+    user_id: int
+    role: UserRole
 
 
 def range_validator(value: list[AwareDatetime | None]) -> list[AwareDatetime | None]:

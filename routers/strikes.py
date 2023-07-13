@@ -9,7 +9,7 @@ from serializers.strikes import (
     AddRemoveUsersInvolvedSerializer, StrikeInSerializer,
     StrikeOutSerializerFull,
     StrikeOutSerializerShort,
-    StrikeUpdateInSerializer,
+    StrikeUpdateInSerializer, UsersInvolvedOutSerializer,
 )
 
 __all__ = (
@@ -87,8 +87,9 @@ async def manage_places_ep(_id: PathIdDep,
 async def manage_users_involved_ep(_id: PathIdDep,
                                    session: SessionDep,
                                    m2m: AddRemoveUsersInvolvedSerializer,
-                                   ) -> set[int]:
+                                   ) -> list[UsersInvolvedOutSerializer]:
     """
 
     """
+    # noinspection PyTypeChecker
     return await manage_users_involved(session, _id, m2m)
