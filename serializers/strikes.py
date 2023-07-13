@@ -27,6 +27,7 @@ __all__ = (
     'StrikeUpdateInSerializer',
     'StrikeOutSerializerShort',
     'AddRemoveStrikeM2MObjectsSerializer',
+    'AddRemoveUsersInvolvedSerializer',
 )
 
 
@@ -162,7 +163,7 @@ class StrikeOutSerializerShort(StrikeOutSerializerBase):
     pass
 
 
-class AddRemoveStrikeM2MObjectsSerializer(BaseModel):
+class AddRemoveStrikeM2MObjectsBaseSerializer(BaseModel):
     """
 
     """
@@ -176,10 +177,40 @@ class AddRemoveStrikeM2MObjectsSerializer(BaseModel):
         """
 
         """
-        if intersection := (serializer.add.intersection(serializer.remove)):
+        if intersection := cls.get_intersection(serializer):
             raise ValueError(
-                f'Elements {intersection} are common to both "add" and "remove" fields. '
-                f'They should be either added or removed, not both!'
+                f'These ids {intersection} are common to both "add" and "remove" fields. '
+                f'They should be either added or removed, not both simultaneously!'
             )
         else:
             return serializer
+
+    @staticmethod
+    def get_intersection(serializer):
+        """
+
+        """
+        return serializer.add.intersection(serializer.remove)
+
+
+class AddRemoveStrikeM2MObjectsSerializer(AddRemoveStrikeM2MObjectsBaseSerializer):
+    """
+
+    """
+    pass
+
+
+class AddRemoveUsersInvolvedSerializer(AddRemoveStrikeM2MObjectsBaseSerializer):
+    """
+
+    """
+    add: list[UsersInvolvedInSerializer] = []
+
+    @staticmethod
+    def get_intersection(serializer):
+        """
+
+        """
+        return serializer.remove.intersection(
+            inner_s.user_id for inner_s in serializer.add
+        )

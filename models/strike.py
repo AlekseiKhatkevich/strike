@@ -150,14 +150,15 @@ class Strike(UpdatedAtMixin, Base):
     created_by: Mapped['User'] = relationship(
         back_populates='strikes_created_by_user',
     )
-    users_involved: Mapped[list[StrikeToUserAssociation]] = relationship(
+    users_involved: Mapped[set[StrikeToUserAssociation]] = relationship(
         back_populates='strike',
         passive_deletes=True,
+        cascade='save-update, merge, delete, delete-orphan',
     )
     enterprise: Mapped['Enterprise'] = relationship(back_populates='strikes')
     user_ids: AssociationProxy[list[int]] = association_proxy('users_involved', 'user_id', )
     # для создания связи м2м с указанием роли юзера в промежуточной таблице
-    users_involved_create: AssociationProxy[list[int]] = association_proxy(
+    users_involved_create: AssociationProxy[set[int]] = association_proxy(
         'users_involved', 'user_id',
         creator=lambda data: StrikeToUserAssociation(user_id=data['user_id'], role=data['role'])
     )
@@ -167,14 +168,14 @@ class Strike(UpdatedAtMixin, Base):
         passive_deletes=True,
         back_populates='strikes',
     )
-    places_association_recs: Mapped[list['StrikeToPlaceAssociation']] = relationship(
+    places_association_recs: Mapped[set['StrikeToPlaceAssociation']] = relationship(
         'StrikeToPlaceAssociation',
         passive_deletes=True,
         overlaps='places',
-        cascade='save-update, merge, delete-orphan',
+        cascade='save-update, merge, delete, delete-orphan',
     )
     # https://gist.github.com/jdittrich/3001e520d3872b12e2cb8e7d4a2472da
-    places_ids: AssociationProxy[list[int]] = association_proxy(
+    places_ids: AssociationProxy[set[int]] = association_proxy(
         'places_association_recs',
         'place_id',
         creator=lambda _id: StrikeToPlaceAssociation(place_id=_id),

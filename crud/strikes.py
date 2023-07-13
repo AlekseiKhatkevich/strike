@@ -1,23 +1,27 @@
-import contextlib
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, status
 from sqlalchemy import delete, exc as sa_exc, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import load_only, selectinload, subqueryload
+from sqlalchemy.orm import load_only, selectinload
 
 from crud.helpers import flush_and_raise, get_id_from_integrity_error
-from models import Enterprise, Place, Strike, StrikeToItself, StrikeToPlaceAssociation
+from models import Enterprise, Place, Strike, StrikeToItself, StrikeToPlaceAssociation, StrikeToUserAssociation
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from serializers.strikes import AddRemoveStrikeM2MObjectsSerializer, StrikeInSerializer
+    from serializers.strikes import (
+        AddRemoveStrikeM2MObjectsSerializer,
+        StrikeInSerializer,
+        AddRemoveUsersInvolvedSerializer,
+    )
 
 __all__ = (
     'create_strike',
     'manage_group',
     'manage_places',
+    'manage_users_involved',
 )
 
 
@@ -125,13 +129,14 @@ async def manage_group(session: 'AsyncSession',
         select(StrikeToItself.strike_right_id).where(StrikeToItself.strike_left_id == strike_id)
     )
     await session.commit()
+    # noinspection PyTypeChecker
     return group_ids.all()
 
 
 async def manage_places(session: 'AsyncSession',
                         strike_id: int,
                         m2m_ids: 'AddRemoveStrikeM2MObjectsSerializer',
-                        ) -> list[int, ...]:
+                        ) -> set[int, ...]:
     """
 
     """
@@ -147,13 +152,34 @@ async def manage_places(session: 'AsyncSession',
             f'Strike with id {strike_id} does not exists',
             report=True,
         )
-
     places_ids = strike.places_ids
-    places_ids.extend(m2m_ids.add)
-    for place_id in m2m_ids.remove:
-        # на случае если такого place_id нет
-        with contextlib.suppress(ValueError):
-            places_ids.remove(place_id)
+    places_ids.update(m2m_ids.add)
+    places_ids.difference_update(m2m_ids.remove)
 
     await session.commit()
     return places_ids
+
+
+async def manage_users_involved(session: 'AsyncSession',
+                                strike_id: int,
+                                m2m: 'AddRemoveUsersInvolvedSerializer',
+                                ) -> set[int, ...]:
+    """
+
+    """
+    strike = await session.scalar(
+        select(Strike).options(
+            selectinload(Strike.users_involved).options(
+                load_only(StrikeToUserAssociation.user_id, raiseload=True)
+            )
+        ).where(Strike.id == strike_id))
+
+    relation = strike.users_involved_create
+    for inner in m2m.add:
+        if inner.user_id not in relation:
+            relation.add(inner.model_dump())
+
+    relation.difference_update(m2m.remove)
+
+    await session.commit()
+    return relation
