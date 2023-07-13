@@ -22,7 +22,7 @@ async def test_strike_positive_basic(db_session, strike: Strike):
     assert strike.places
     assert strike.users_involved
     assert strike.enterprise
-    assert await strike.awaitable_attrs.user_ids == [ui.user_id for ui in strike.users_involved]
+    assert await strike.awaitable_attrs.user_ids == {ui.user_id for ui in strike.users_involved}
 
 
 async def test_strike_negative_model_level_validation(db_session, strike: Strike):

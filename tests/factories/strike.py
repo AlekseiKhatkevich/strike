@@ -34,9 +34,9 @@ class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
         lambda o: PlaceFactory.build_batch(size=o.num_places)
     )
     users_involved = factory.lazy_attribute(
-        lambda o: StrikeToUserAssociationFactory.build_batch(
+        lambda o: set(StrikeToUserAssociationFactory.build_batch(
            size=o.num_users_associated,
-        )
+        ))
     )
 
     class Meta:

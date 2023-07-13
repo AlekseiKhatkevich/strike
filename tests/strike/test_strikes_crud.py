@@ -137,7 +137,9 @@ async def test_create_strike_positive_with_users_involved(db_session, strike_ser
     assert await is_instance_in_db(db_session, strike_in_db)
 
     users_involved = await strike_in_db.awaitable_attrs.users_involved
-    assert users_involved[0].user_id == strike_serializer_with_users_involved.users_involved[0].user_id
+
+    (entry,) = users_involved
+    assert entry.user_id == strike_serializer_with_users_involved.users_involved[0].user_id
     assert strike_in_db.users_involved_ids[0] == strike_serializer_with_users_involved.users_involved[0].user_id
 
 

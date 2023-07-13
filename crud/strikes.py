@@ -40,7 +40,7 @@ async def add_places(strike_data: 'StrikeInSerializer', strike_instance: Strike)
         for new_place_data in strike_data.places:
             if isinstance(new_place_data, int):
                 places_ids = await strike_instance.awaitable_attrs.places_ids
-                places_ids.append(new_place_data)
+                places_ids.add(new_place_data)
                 strike_instance.places_ids_list.append(new_place_data)
             else:
                 places = await strike_instance.awaitable_attrs.places
@@ -60,7 +60,7 @@ async def add_users(strike_data: 'StrikeInSerializer', strike_instance: Strike) 
     strike_instance.users_involved_ids = []
     users_involved = await strike_instance.awaitable_attrs.users_involved_create
     for user_data in strike_data.users_involved:
-        users_involved.append(user_data.model_dump())
+        users_involved.add(user_data.model_dump())
         strike_instance.users_involved_ids.append(user_data.user_id)
 
 

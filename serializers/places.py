@@ -38,6 +38,7 @@ class PlaceDeleteSerializer(BaseModel):
     id: int | None = None
     name: constr(max_length=128) | None = None
 
+    # noinspection PyNestedDecorators
     @model_validator(mode="before")
     @classmethod
     def validate_one_field_presence(cls, values):
