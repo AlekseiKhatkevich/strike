@@ -8,7 +8,8 @@ from sqlalchemy import (
     ForeignKey,
     Enum,
     Column,
-    UniqueConstraint, type_coerce,
+    UniqueConstraint,
+    type_coerce,
 )
 from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint, Range
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy

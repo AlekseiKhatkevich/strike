@@ -2,14 +2,26 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy import column
 
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
-from crud.strikes import create_strike, manage_group, manage_places, manage_users_involved
-from internal.dependencies import PathIdDep, SessionDep, UserIdDep, jwt_authorize
+from crud.strikes import (
+    create_strike,
+    manage_group,
+    manage_places,
+    manage_users_involved,
+)
+from internal.dependencies import (
+    PathIdDep,
+    SessionDep,
+    UserIdDep,
+    jwt_authorize,
+)
 from serializers.strikes import (
     AddRemoveStrikeM2MObjectsSerializer,
-    AddRemoveUsersInvolvedSerializer, StrikeInSerializer,
+    AddRemoveUsersInvolvedSerializer,
+    StrikeInSerializer,
     StrikeOutSerializerFull,
     StrikeOutSerializerShort,
-    StrikeUpdateInSerializer, UsersInvolvedOutSerializer,
+    StrikeUpdateInSerializer,
+    UsersInvolvedOutSerializer,
 )
 
 __all__ = (
@@ -65,8 +77,7 @@ async def manage_group_ep(_id: PathIdDep,
                           m2m_ids: AddRemoveStrikeM2MObjectsSerializer,
                           ) -> list[int]:
     """
-
-
+    ЭП создания / удаления м2м связи Stike в группы.
     """
     return await manage_group(session, _id, m2m_ids)
 
@@ -77,8 +88,7 @@ async def manage_places_ep(_id: PathIdDep,
                            m2m_ids: AddRemoveStrikeM2MObjectsSerializer,
                            ) -> set[int]:
     """
-
-
+    ЭП создания / удаления м2м связи Stike с Place.
     """
     return await manage_places(session, _id, m2m_ids)
 
@@ -89,7 +99,7 @@ async def manage_users_involved_ep(_id: PathIdDep,
                                    m2m: AddRemoveUsersInvolvedSerializer,
                                    ) -> list[UsersInvolvedOutSerializer]:
     """
-
+    ЭП создания / удаления м2м связи Stike с User.
     """
     # noinspection PyTypeChecker
     return await manage_users_involved(session, _id, m2m)

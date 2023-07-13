@@ -174,7 +174,8 @@ class StrikeOutSerializerShort(StrikeOutSerializerBase):
 
 class AddRemoveStrikeM2MObjectsBaseSerializer(BaseModel):
     """
-
+    Базовый сериалайзер для создания / удаления м2м связей Strike с другими моделями и
+    самим с собой.
     """
     add: set[IntIdType] = set()
     remove: set[IntIdType] = set()
@@ -184,7 +185,7 @@ class AddRemoveStrikeM2MObjectsBaseSerializer(BaseModel):
     @classmethod
     def no_intersection(cls, serializer: Self) -> Self:
         """
-
+        Проверяет, чтобы id переданные на создание и на удаление не пересекались.
         """
         if intersection := cls.get_intersection(serializer):
             raise ValueError(
@@ -194,32 +195,27 @@ class AddRemoveStrikeM2MObjectsBaseSerializer(BaseModel):
         else:
             return serializer
 
-    @staticmethod
-    def get_intersection(serializer):
+    def get_intersection(self) -> set[id, ...]:
         """
-
+        Пересечение add и remove.
         """
-        return serializer.add.intersection(serializer.remove)
+        return self.add.intersection(self.remove)
 
 
 class AddRemoveStrikeM2MObjectsSerializer(AddRemoveStrikeM2MObjectsBaseSerializer):
     """
-
+    Для добавления/ удаления м2м связей в Strike.
     """
     pass
 
 
 class AddRemoveUsersInvolvedSerializer(AddRemoveStrikeM2MObjectsBaseSerializer):
     """
-
+    Для м2м связей users_involved Strike <-> User.
     """
     add: list[UsersInvolvedInSerializer] = []
 
-    @staticmethod
-    def get_intersection(serializer):
-        """
-
-        """
-        return serializer.remove.intersection(
-            inner_s.user_id for inner_s in serializer.add
+    def get_intersection(self):
+        return self.remove.intersection(
+            inner_s.user_id for inner_s in self.add
         )

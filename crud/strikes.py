@@ -6,7 +6,13 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import load_only, selectinload
 
 from crud.helpers import flush_and_raise, get_id_from_integrity_error
-from models import Enterprise, Place, Strike, StrikeToItself, StrikeToPlaceAssociation, StrikeToUserAssociation
+from models import (
+    Enterprise,
+    Place,
+    Strike,
+    StrikeToItself,
+    StrikeToPlaceAssociation,
+)
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 if TYPE_CHECKING:
@@ -58,7 +64,7 @@ async def add_users(strike_data: 'StrikeInSerializer', strike_instance: Strike) 
         strike_instance.users_involved_ids.append(user_data.user_id)
 
 
-async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerializer'):
+async def create_strike(session: 'AsyncSession', strike_data: 'StrikeInSerializer') -> Strike:
     """
     Создание записи Strike и ассоциированных с ней записей.
     """
@@ -108,7 +114,7 @@ async def manage_group(session: 'AsyncSession',
                        m2m_ids: 'AddRemoveStrikeM2MObjectsSerializer',
                        ) -> list[int, ...]:
     """
-
+    Добавление / удаление забастовки в группу.
     """
     to_add = [
         dict(strike_left_id=strike_id, strike_right_id=group_id) for group_id in m2m_ids.add
@@ -138,7 +144,7 @@ async def manage_places(session: 'AsyncSession',
                         m2m_ids: 'AddRemoveStrikeM2MObjectsSerializer',
                         ) -> set[int, ...]:
     """
-
+    Добавление / удаление м2м связи забастовка <-> место.
     """
     strike = await session.scalar(
         select(Strike).options(
@@ -165,7 +171,7 @@ async def manage_users_involved(session: 'AsyncSession',
                                 m2m: 'AddRemoveUsersInvolvedSerializer',
                                 ) -> set[int, ...]:
     """
-
+    Добавление / удаление м2м связи забастовка <-> юзер.
     """
     strike = await session.scalar(
         select(
@@ -176,11 +182,10 @@ async def manage_users_involved(session: 'AsyncSession',
             Strike.id == strike_id
         )
     )
-
     relation = strike.users_involved_create
-    for inner in m2m.add:
-        if inner.user_id not in relation:
-            relation.add(inner.model_dump())
+    for inner_s in m2m.add:
+        if inner_s.user_id not in relation:
+            inner_s.add(inner_s.model_dump())
 
     relation.difference_update(m2m.remove)
 
