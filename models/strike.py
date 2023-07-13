@@ -170,7 +170,8 @@ class Strike(UpdatedAtMixin, Base):
     places_association_recs: Mapped[list['StrikeToPlaceAssociation']] = relationship(
         'StrikeToPlaceAssociation',
         passive_deletes=True,
-        overlaps="places"
+        overlaps='places',
+        cascade='save-update, merge, delete-orphan',
     )
     # https://gist.github.com/jdittrich/3001e520d3872b12e2cb8e7d4a2472da
     places_ids: AssociationProxy[list[int]] = association_proxy(

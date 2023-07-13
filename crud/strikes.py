@@ -1,10 +1,14 @@
+import contextlib
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, status
 from sqlalchemy import delete, exc as sa_exc, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import load_only, selectinload, subqueryload
+
 from crud.helpers import flush_and_raise, get_id_from_integrity_error
-from models import Enterprise, Place, Strike, StrikeToItself
+from models import Enterprise, Place, Strike, StrikeToItself, StrikeToPlaceAssociation
+from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +16,8 @@ if TYPE_CHECKING:
 
 __all__ = (
     'create_strike',
+    'manage_group',
+    'manage_places',
 )
 
 
@@ -102,6 +108,7 @@ async def manage_group(session: 'AsyncSession',
     """
     to_add = [
         dict(strike_left_id=strike_id, strike_right_id=group_id) for group_id in m2m_ids.add
+        if group_id != strike_id
     ]
     if to_add:
         add_stmt = insert(StrikeToItself).values(to_add).on_conflict_do_nothing()
@@ -119,3 +126,34 @@ async def manage_group(session: 'AsyncSession',
     )
     await session.commit()
     return group_ids.all()
+
+
+async def manage_places(session: 'AsyncSession',
+                        strike_id: int,
+                        m2m_ids: 'AddRemoveStrikeM2MObjectsSerializer',
+                        ) -> list[int, ...]:
+    """
+
+    """
+    strike = await session.scalar(
+        select(Strike).options(
+            selectinload(Strike.places_association_recs).options(
+                load_only(StrikeToPlaceAssociation.place_id, raiseload=True)
+            )
+        ).where(Strike.id == strike_id))
+
+    if strike is None:
+        raise ModelEntryDoesNotExistsInDbError(
+            f'Strike with id {strike_id} does not exists',
+            report=True,
+        )
+
+    places_ids = strike.places_ids
+    places_ids.extend(m2m_ids.add)
+    for place_id in m2m_ids.remove:
+        # на случае если такого place_id нет
+        with contextlib.suppress(ValueError):
+            places_ids.remove(place_id)
+
+    await session.commit()
+    return places_ids
