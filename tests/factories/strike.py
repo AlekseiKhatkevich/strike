@@ -53,6 +53,8 @@ class StrikeToUserAssociationFactory(factory.alchemy.SQLAlchemyModelFactory):
     """
     Фабрика модели StrikeToUserAssociation (м2м связь юзера с забастовкой)
     """
+    strike_id = None
+    user_id = None
     user = factory.SubFactory('tests.factories.users.UserInDbFactory')
     role = factory.Faker('random_element', elements=list(UserRole))
 

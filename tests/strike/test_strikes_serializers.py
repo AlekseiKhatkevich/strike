@@ -1,16 +1,15 @@
-import datetime
-
 import pytest
-from sqlalchemy.dialects.postgresql import Range
 
-from internal.serializers import BaseModel
 from models import UserRole
 from serializers.enterprises import EnterpriseInSerializer
 from serializers.places import PlaceInSerializer
 from serializers.strikes import (
+    AddRemoveStrikeM2MObjectsSerializer,
+    AddRemoveUsersInvolvedSerializer,
     StrikeInSerializer,
     StrikeOutSerializerFull,
     UsersInvolvedInSerializer,
+    UsersInvolvedOutSerializer,
 )
 
 
@@ -133,3 +132,56 @@ def test_StrikeOutSerializer_positive(strike):
     assert ser.created_by_id == strike.created_by_id
     assert ser.users_involved_ids == strike.users_involved_ids
     assert ser.places_ids == strike.places_ids_list
+
+
+def test_UsersInvolvedOutSerializer(strike_to_user_association_factory):
+    """
+    Позитивный тест сериалайзера UsersInvolvedOutSerializer.
+    """
+    intermediate_model = strike_to_user_association_factory.build(user_id=1)
+    UsersInvolvedOutSerializer.model_validate(intermediate_model)
+
+
+@pytest.mark.parametrize(
+    'add, remove',
+    [({1, 2, 3}, {4, 5}), ({1, 2}, set()), (set(), {1, 2}), (set(), set())]
+)
+def test_AddRemoveStrikeM2MObjectsSerializer_positive(add, remove):
+    """
+    Позитивный тест сериалайзера AddRemoveStrikeM2MObjectsSerializer.
+    """
+    AddRemoveStrikeM2MObjectsSerializer(add=add, remove=remove)
+
+
+def test_AddRemoveStrikeM2MObjectsSerializer_negative():
+    """
+    Негативный тест сериалайзера AddRemoveStrikeM2MObjectsSerializer. Id из add и remove
+    не должны пересекаться.
+    """
+    with pytest.raises(ValueError):
+        AddRemoveStrikeM2MObjectsSerializer(add={1, }, remove={1, })
+
+
+def test_AddRemoveUsersInvolvedSerializer_positive(faker):
+    """
+    Позитивный тест сериалайзера AddRemoveUsersInvolvedSerializer.
+    """
+    add = [
+        dict(user_id=user_id, role=faker.random_element(elements=list(UserRole)).value)
+        for user_id in range(1, 4)
+    ]
+    remove = {10, 11, 12}
+
+    AddRemoveUsersInvolvedSerializer(add=add, remove=remove)
+
+
+def test_AddRemoveUsersInvolvedSerializer_negative(faker):
+    """
+    Негативный тест сериалайзера AddRemoveUsersInvolvedSerializer. user_id из add и remove
+    не должны пересекаться.
+    """
+    with pytest.raises(ValueError):
+        AddRemoveUsersInvolvedSerializer(
+            add=[dict(user_id=1, role=faker.random_element(elements=list(UserRole)).value)],
+            remove={1, }
+        )

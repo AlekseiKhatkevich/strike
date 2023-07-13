@@ -57,6 +57,8 @@ class UsersInvolvedOutSerializer(BaseModel):
     user_id: int
     role: UserRole
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 def range_validator(value: list[AwareDatetime | None]) -> list[AwareDatetime | None]:
     """
