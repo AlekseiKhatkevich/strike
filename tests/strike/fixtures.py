@@ -3,11 +3,12 @@ from typing import Any, Awaitable, Callable, TYPE_CHECKING
 import pytest
 from pytest_factoryboy import register
 
+from models import UserRole
 from tests.factories.strike import StrikeFactory, StrikeToUserAssociationFactory
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from models import Strike
+    from models import Strike, UserRole
 
 register(StrikeFactory)
 register(StrikeToUserAssociationFactory)
@@ -53,3 +54,11 @@ def strike_input_data(strike_factory, union, enterprise_instance) -> dict[str, A
         places=None,
         users_involved=None,
     )
+
+
+@pytest.fixture
+def user_role(faker) -> UserRole:
+    """
+    Рандомная роль юзера в м2м отношении со страйком.
+    """
+    return faker.random_element(elements=list(UserRole))

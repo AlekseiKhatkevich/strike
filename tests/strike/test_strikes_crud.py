@@ -3,9 +3,25 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 
 from crud.helpers import exists_in_db, is_instance_in_db
-from crud.strikes import create_strike
-from models import Enterprise, Place, UserRole
-from serializers.strikes import StrikeInSerializer
+from crud.strikes import (
+    create_strike,
+    manage_group,
+    manage_places,
+    manage_users_involved,
+)
+from models import (
+    Enterprise,
+    Place,
+    StrikeToUserAssociation,
+    UserRole,
+)
+from models.exceptions import ModelEntryDoesNotExistsInDbError
+from serializers.strikes import (
+    AddRemoveStrikeM2MObjectsSerializer,
+    AddRemoveUsersInvolvedSerializer,
+    StrikeInSerializer,
+    UsersInvolvedInSerializer,
+)
 
 
 @pytest.fixture
@@ -167,3 +183,85 @@ async def test_create_strike_negative(key,
     with pytest.raises(HTTPException) as err:
         await create_strike(db_session, ser)
         assert err.detail == error_message
+
+
+async def test_manage_places_positive(strike, places_batch, db_session):
+    """
+    Позитивный тест ф-ции manage_places
+    (Добавление / удаление м2м связи забастовка <-> место)
+    """
+    to_add = {place.id for place in places_batch}
+    to_remove = set(await strike.awaitable_attrs.places_ids)
+    m2m = AddRemoveStrikeM2MObjectsSerializer(add=to_add, remove=to_remove)
+
+    place_ids = await manage_places(db_session, strike.id, m2m)
+    await db_session.refresh(strike, ('places', 'places_association_recs'))
+
+    assert place_ids == to_add
+    assert await strike.awaitable_attrs.places_ids == to_add
+    assert strike.places_ids.isdisjoint(to_remove)
+
+
+async def test_manage_places_negative_rem_place_does_not_exists(db_session, strike_p):
+    """
+    Негативный тест ф-ции manage_places. Случай, если запись Place по переданному id
+    не существует.
+    """
+    strike = await strike_p(num_places=0)
+    m2m = AddRemoveStrikeM2MObjectsSerializer(add=set(), remove={1, 2, 3})
+
+    await manage_places(db_session, strike.id, m2m)
+
+
+async def test_manage_group_positive(strike_p, db_session, strike):
+    """
+    Позитивный тест ф-ции manage_group.
+    """
+    strike_with_group = await strike_p(num_group=2)
+    strike_to_add = strike
+    m2m = AddRemoveStrikeM2MObjectsSerializer(
+        add={strike_to_add.id, },
+        remove={g_strike.id for g_strike in strike_with_group.group}
+    )
+
+    group_ids = await manage_group(db_session, strike_with_group.id, m2m)
+
+    assert group_ids == [strike_to_add.id]
+
+
+async def test_manage_users_involved_positive(db_session, strike, user_in_db, user_role):
+    """
+    Позитивный тест ф-ции manage_users_involved.
+    """
+    to_add = [UsersInvolvedInSerializer(user_id=user_in_db.id, role=user_role.value), ]
+    to_remove = set(strike.user_ids)
+    m2m = AddRemoveUsersInvolvedSerializer(add=to_add, remove=to_remove)
+
+    users_m2m = await manage_users_involved(db_session, strike.id, m2m)
+
+    assert len(users_m2m) == 1
+    (new_entry,) = users_m2m
+    assert new_entry.user_id == user_in_db.id
+
+    assert not await exists_in_db(
+        db_session,
+        StrikeToUserAssociation,
+        (StrikeToUserAssociation.strike_id == strike.id) &
+        (StrikeToUserAssociation.user_id.in_(to_remove)),
+    )
+    assert await exists_in_db(
+        db_session,
+        StrikeToUserAssociation,
+        (StrikeToUserAssociation.strike_id == strike.id) &
+        (StrikeToUserAssociation.user_id == user_in_db.id)
+    )
+
+
+@pytest.mark.parametrize('crud_f', [manage_users_involved, manage_places])
+async def test_manage_users_involved_negative_no_strike(crud_f, db_session):
+    """
+    Негативный тест ф-ций manage_users_involved и manage_places.
+    Случай когда strike_id переданный с фронта отсутствует.
+    """
+    with pytest.raises(ModelEntryDoesNotExistsInDbError, match=f'Strike with id 1 does not exists'):
+        await crud_f(db_session, 1, object)

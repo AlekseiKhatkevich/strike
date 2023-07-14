@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import NoReturn, TYPE_CHECKING
 
 from fastapi import HTTPException, status
 from sqlalchemy import delete, exc as sa_exc, select
@@ -29,6 +29,16 @@ __all__ = (
     'manage_places',
     'manage_users_involved',
 )
+
+
+def _raise_strike_does_not_exists(strike_id) -> NoReturn:
+    """
+    Рейзит исключение если страйк не найден.
+    """
+    raise ModelEntryDoesNotExistsInDbError(
+        f'Strike with id {strike_id} does not exists',
+        report=True,
+    )
 
 
 async def add_places(strike_data: 'StrikeInSerializer', strike_instance: Strike) -> None:
@@ -154,10 +164,8 @@ async def manage_places(session: 'AsyncSession',
         ).where(Strike.id == strike_id))
 
     if strike is None:
-        raise ModelEntryDoesNotExistsInDbError(
-            f'Strike with id {strike_id} does not exists',
-            report=True,
-        )
+        _raise_strike_does_not_exists(strike_id)
+
     places_ids = strike.places_ids
     places_ids.update(m2m_ids.add)
     places_ids.difference_update(m2m_ids.remove)
@@ -182,10 +190,13 @@ async def manage_users_involved(session: 'AsyncSession',
             Strike.id == strike_id
         )
     )
+    if strike is None:
+        _raise_strike_does_not_exists(strike_id)
+
     relation = strike.users_involved_create
     for inner_s in m2m.add:
         if inner_s.user_id not in relation:
-            inner_s.add(inner_s.model_dump())
+            relation.add(inner_s.model_dump())
 
     relation.difference_update(m2m.remove)
 

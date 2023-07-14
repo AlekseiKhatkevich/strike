@@ -18,3 +18,14 @@ async def place(db_session, place_factory, region_factory):
 
     await db_session.commit()
     return place_instance
+
+
+@pytest.fixture
+async def places_batch(db_session, place_factory):
+    """
+    5 записей Place в БД.
+    """
+    place_instances = place_factory.build_batch(size=5)
+    db_session.add_all(place_instances)
+    await db_session.commit()
+    return place_instances

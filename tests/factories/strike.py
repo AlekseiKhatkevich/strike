@@ -38,6 +38,9 @@ class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
            size=o.num_users_associated,
         ))
     )
+    group = factory.lazy_attribute(
+        lambda o: StrikeFactory.build_batch(size=o.num_group)
+    )
 
     class Meta:
         model = Strike
@@ -45,8 +48,9 @@ class StrikeFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Params:
         strike_start_dt = factory.Faker('date_time_this_month', after_now=True, tzinfo=datetime.UTC)
         strike_duration = factory.Faker('pyint', min_value=1, max_value=30)
-        num_places = 2
-        num_users_associated = 2
+        num_places = 1
+        num_users_associated = 1
+        num_group = 0
 
 
 class StrikeToUserAssociationFactory(factory.alchemy.SQLAlchemyModelFactory):
