@@ -43,7 +43,7 @@ async def test_manage_places_ep(strike, place, async_client_httpx):
 
 async def test_manage_users_involved_ep(strike, async_client_httpx, user_in_db, user_role):
     """
-    Позитивный тест ЭП POST /strikes/{strike_id}/users_involved.
+    Позитивный тест ЭП POST /strikes/{strike_id:int}/users_involved.
     """
     add = [{'user_id': user_in_db.id, 'role': user_role.value}, ]
     remove = [user.user_id for user in strike.users_involved]

@@ -111,6 +111,15 @@ class StrikeToItself(CreatedAtMixin, Base):
         ForeignKey('strikes.id', ondelete='CASCADE', ),
         primary_key=True,
     )
+    __table_args__ = (
+        CheckConstraint(
+            strike_left_id != strike_right_id,
+            name='left_ne_right',
+        ),
+    )
+
+    def __repr__(self):
+        return f'Strike m2m {self.strike_left_id} <-> {self.strike_right_id}'
 
 
 class Strike(UpdatedAtMixin, Base):

@@ -28,11 +28,11 @@ class Settings(BaseSettings):
     debug: bool = False
     root_path: Path = Path(__file__).resolve().parent
     logging_config_file_path: FilePath = 'internal/logging/configuration.yaml'
-    access_token_expire_minutes: int
+    # access_token_expire_minutes: int
     obtain_jwt_token_ratelimit: str = '10/minute'
     user_cache_persistence: datetime.timedelta = datetime.timedelta(minutes=60)
-    redis_socket_connection_timeout: float
-    redis_socket_timeout: float
+    # redis_socket_connection_timeout: float
+    # redis_socket_timeout: float
 
     model_config = ConfigDict(extra='ignore')
 

@@ -13,7 +13,8 @@ from models import *
 # from models import *   # не удалять иначе alembic не видит модели
 
 config = context.config
-config.set_main_option('sqlalchemy.url', settings.pg_dsn)  # добавляет ключ sqlalchemy.url в alembic.ini
+# добавляет ключ sqlalchemy.url в alembic.ini
+config.set_main_option('sqlalchemy.url', settings.pg_dsn.unicode_string())
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
