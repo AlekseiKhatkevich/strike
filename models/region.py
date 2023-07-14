@@ -26,10 +26,3 @@ class Region(Base):
 
     def __repr__(self):
         return f'Region {self.name}'
-
-
-
-# q = select(Region).select_from(Region)
-# q = q.select_from(join(Place, Region, func.ST_Intersects(Region.contour, Place.coordinates)))
-# res = await session.scalar(q.where(Place.id == 17))
-

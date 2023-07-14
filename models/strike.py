@@ -190,6 +190,10 @@ class Strike(UpdatedAtMixin, Base):
         'place_id',
         creator=lambda _id: StrikeToPlaceAssociation(place_id=_id),
     )
+    group_ids: AssociationProxy[set[int]] = association_proxy(
+        'group',
+        'id',
+    )
 
     __table_args__ = (
         CheckConstraint(

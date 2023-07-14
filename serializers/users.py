@@ -50,10 +50,10 @@ class UserBaseSerializer(BaseModel):
     name: constr(max_length=64)
     password: Annotated[SecretStr, Field(max_length=72)]
     email: EmailStr | None = None
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1, frozen=True)
 
+    # noinspection PyNestedDecorators
     @field_validator('password')
     @classmethod
     def password_strength(cls, value: SecretStr | None) -> SecretStr | None:
@@ -68,6 +68,7 @@ class UserBaseSerializer(BaseModel):
             )
         return value
 
+    # noinspection PyNestedDecorators
     @field_validator('password')
     @classmethod
     def password_commonness(cls, value: SecretStr | None) -> SecretStr | None:

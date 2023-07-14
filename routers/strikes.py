@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, status
+from fastapi_pagination import LimitOffsetPage
 from sqlalchemy import column
 
-from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
+from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete, get_collection_paginated
 from crud.strikes import (
     create_strike,
-    manage_group,
+    get_strikes, manage_group,
     manage_places,
     manage_users_involved,
 )
 from internal.dependencies import (
-    PathIdDep,
+    GetParamsIdsDep, PaginParamsDep, PathIdDep,
     SessionDep,
     UserIdDep,
     jwt_authorize,
@@ -21,7 +22,7 @@ from serializers.strikes import (
     StrikeOutSerializerFull,
     StrikeOutSerializerShort,
     StrikeUpdateInSerializer,
-    UsersInvolvedOutSerializer,
+    StrikeWithAllRelatedSerializer, UsersInvolvedOutSerializer,
 )
 
 __all__ = (
@@ -103,3 +104,21 @@ async def manage_users_involved_ep(_id: PathIdDep,
     """
     # noinspection PyTypeChecker
     return await manage_users_involved(session, _id, m2m)
+
+
+@router.get('/', response_model_by_alias=False)
+async def get_strikes_ep(session: SessionDep,
+                         params: PaginParamsDep,
+                         ids: GetParamsIdsDep,
+                         # ):
+                        ) -> LimitOffsetPage[StrikeWithAllRelatedSerializer]:
+    """
+
+    """
+    # col = await get_collection_paginated(session, 'Enterprise', ids, params)
+    # out = LimitOffsetPage[StrikeOutSerializerFull]
+    #
+    # return out.create(col.items, params, total=col.total)
+    col = await get_strikes(session, ids, params)
+    out = LimitOffsetPage[StrikeWithAllRelatedSerializer]
+    return out.create(col.items, params, total=col.total)

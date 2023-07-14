@@ -17,7 +17,7 @@ from sqlalchemy.dialects.postgresql.ranges import Range
 
 from internal.serializers import BaseModel
 from models import UserRole
-from serializers.enterprises import EnterpriseInSerializer
+from serializers.enterprises import EnterpriseInSerializer, EnterpriseOutSerializer
 from serializers.places import PlaceInSerializer
 from serializers.typing import IntIdType
 
@@ -29,7 +29,11 @@ __all__ = (
     'AddRemoveStrikeM2MObjectsSerializer',
     'AddRemoveUsersInvolvedSerializer',
     'UsersInvolvedOutSerializer',
+    'StrikeWithAllRelatedSerializer',
 )
+
+from serializers.unions import UnionOutSerializer
+from serializers.users import UserOutMeSerializer
 
 
 class UsersInvolvedInSerializer(BaseModel):
@@ -221,3 +225,12 @@ class AddRemoveUsersInvolvedSerializer(AddRemoveStrikeM2MObjectsBaseSerializer):
         return self.remove.intersection(
             inner_s.user_id for inner_s in self.add
         )
+
+
+class StrikeWithAllRelatedSerializer(StrikeOutSerializerBase):
+    """
+
+    """
+    union_in_charge: Annotated[UnionOutSerializer | None, Field(alias='union')] = None
+    # created_by: UserOutMeSerializer
+    enterprise: EnterpriseOutSerializer

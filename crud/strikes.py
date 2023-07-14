@@ -1,9 +1,10 @@
 from typing import NoReturn, TYPE_CHECKING
 
 from fastapi import HTTPException, status
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import delete, exc as sa_exc, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import load_only, selectinload
+from sqlalchemy.orm import joinedload, load_only, selectinload
 
 from crud.helpers import flush_and_raise, get_id_from_integrity_error
 from models import (
@@ -22,12 +23,14 @@ if TYPE_CHECKING:
         StrikeInSerializer,
         AddRemoveUsersInvolvedSerializer,
     )
+    from fastapi_pagination.bases import AbstractParams
 
 __all__ = (
     'create_strike',
     'manage_group',
     'manage_places',
     'manage_users_involved',
+    'get_strikes',
 )
 
 
@@ -202,3 +205,22 @@ async def manage_users_involved(session: 'AsyncSession',
 
     await session.commit()
     return strike.users_involved
+
+
+async def get_strikes(session: 'AsyncSession', ids: list[int], params: 'AbstractParams'):
+    """
+
+    """
+    stmt = select(
+        Strike
+    ).order_by(
+        Strike.id
+    ).options(
+        joinedload(Strike.union, innerjoin='unnested'),
+        joinedload(Strike.enterprise, innerjoin='unnested'),
+    )
+
+    if ids:
+        stmt = stmt.where(Strike.id.in_(ids))
+
+    return await paginate(session, stmt, params)
