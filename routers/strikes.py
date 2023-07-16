@@ -115,10 +115,8 @@ async def get_strikes_ep(session: SessionDep,
     """
 
     """
-    # col = await get_collection_paginated(session, 'Enterprise', ids, params)
-    # out = LimitOffsetPage[StrikeOutSerializerFull]
-    #
-    # return out.create(col.items, params, total=col.total)
+    # флаг для показа только активных страйков
+    # https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html#adding-criteria-to-loader-options
     col = await get_strikes(session, ids, params)
     out = LimitOffsetPage[StrikeWithAllRelatedSerializer]
     return out.create(col.items, params, total=col.total)

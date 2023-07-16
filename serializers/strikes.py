@@ -234,3 +234,4 @@ class StrikeWithAllRelatedSerializer(StrikeOutSerializerBase):
     union_in_charge: Annotated[UnionOutSerializer | None, Field(alias='union')] = None
     # created_by: UserOutMeSerializer
     enterprise: EnterpriseOutSerializer
+    group_ids: Annotated[set[int] | None, Field(alias='group_ids_from_exp')] = None

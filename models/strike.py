@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint, Range
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (
-    validates,
+    query_expression, validates,
     Mapped,
     mapped_column,
     relationship,
@@ -194,6 +194,7 @@ class Strike(UpdatedAtMixin, Base):
         'group',
         'id',
     )
+    group_ids_from_exp: Mapped[set[int]] = query_expression()
 
     __table_args__ = (
         CheckConstraint(
