@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean, CheckConstraint,
-    ColumnElement, Text,
+    ColumnElement, Integer, Text,
     ForeignKey,
     Enum,
     Column,
     UniqueConstraint,
     type_coerce,
 )
-from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint, Range
+from sqlalchemy.dialects.postgresql import ARRAY, TSTZRANGE, ExcludeConstraint, Range
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (

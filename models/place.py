@@ -5,8 +5,6 @@ from functools import cached_property
 from geoalchemy2 import (
     Geography,
     Geometry,
-    WKBElement,
-    WKTElement,
     functions as ga_func,
 )
 from loguru import logger
@@ -27,6 +25,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.constants import PLACES_DUPLICATION_RADIUS, RU_RU_CE_COLLATION_NAME
 from internal.database import Base
+from internal.geo import point_from_wkt_or_wkb
 from models.annotations import BigIntPk
 
 __all__ = (
@@ -86,13 +85,7 @@ class Place(Base):
         """
         Получение POINT Shapely.
         """
-        if isinstance(self.coordinates, WKTElement):
-            import shapely.wkt as loader
-        elif isinstance(self.coordinates, WKBElement):
-            import shapely.wkb as loader
-        else:
-            return self.coordinates
-        return loader.loads(self.coordinates.data)
+        return point_from_wkt_or_wkb(self.coordinates)
 
     @hybrid_property
     def coords_hr(self) -> tuple[Decimal, Decimal] | None:

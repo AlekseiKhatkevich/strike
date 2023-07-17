@@ -18,7 +18,7 @@ from sqlalchemy.dialects.postgresql.ranges import Range
 from internal.serializers import BaseModel
 from models import UserRole
 from serializers.enterprises import EnterpriseInSerializer, EnterpriseOutSerializer
-from serializers.places import PlaceInSerializer
+from serializers.places import PlaceInSerializer, PlaceOutSerializer
 from serializers.typing import IntIdType
 
 __all__ = (
@@ -234,4 +234,14 @@ class StrikeWithAllRelatedSerializer(StrikeOutSerializerBase):
     union_in_charge: Annotated[UnionOutSerializer | None, Field(alias='union')] = None
     # created_by: UserOutMeSerializer
     enterprise: EnterpriseOutSerializer
-    group_ids: Annotated[set[int] | None, Field(alias='group_ids_from_exp')] = None
+    group_ids: Annotated[set[int], Field(alias='group_ids_from_exp')]
+    users_involved: list[UsersInvolvedOutSerializer]
+    places: list[PlaceOutSerializer | None] = []
+
+    # noinspection PyNestedDecorators
+    @field_validator('group_ids', mode='before')
+    @classmethod
+    def _group_ids_none_to_empty_set(cls, group_ids: set[int, ...] | None) -> set[int, ...]:
+        """
+        """
+        return group_ids or set()

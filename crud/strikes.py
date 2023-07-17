@@ -211,29 +211,29 @@ async def get_strikes(session: 'AsyncSession', ids: list[int], params: 'Abstract
     """
 
     """
-    # select(func.array_agg(StrikeToItself.strike_right_id, type_=ARRAY(Integer)).label('cats'), Strike).
-    # outerjoin(StrikeToItself, Strike.id==StrikeToItself.strike_left_id).group_by(Strike.id)
-    # contains_eager
-    # a = select(StrikeToItself.strike_left_id, func.array_agg(StrikeToItself.strike_right_id, type_=ARRAY(Integer))).group_by(StrikeToItself.strike_left_id).subquery()
-    # select(Strike, column('g_ids')).outerjoin(a).where(Strike.id == 160)
     group_ids_subquery = select(
         StrikeToItself.strike_left_id,
         func.array_agg(StrikeToItself.strike_right_id, type_=ARRAY(Integer)).label('g_ids')
     ).group_by(
         StrikeToItself.strike_left_id,
-    ).subquery()
+    )
+    if ids:
+        group_ids_subquery = group_ids_subquery.where(StrikeToItself.strike_left_id.in_(ids))
+    group_ids_subquery = group_ids_subquery.subquery()
 
     stmt = select(
         Strike
     ).outerjoin(
         group_ids_subquery,
     ).order_by(
-        Strike.duration, Strike.planned_on_date,
+        Strike.duration,
+        Strike.planned_on_date,
     ).options(
         joinedload(Strike.union),
         joinedload(Strike.enterprise, innerjoin='unnested'),
-        # selectinload(Strike.group).options(load_only(Strike.id, raiseload=True)),
-        with_expression(Strike.group_ids_from_exp, column('g_ids')),
+        with_expression(Strike.group_ids_from_exp, group_ids_subquery.c.g_ids),
+        selectinload(Strike.users_involved),
+        selectinload(Strike.places).options(joinedload(Place.region)),
     )
 
     if ids:

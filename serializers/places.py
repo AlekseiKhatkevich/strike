@@ -6,7 +6,7 @@ import shapely.wkt
 from geoalchemy2 import WKTElement
 from pydantic import field_validator, model_validator, ConfigDict, condecimal, constr
 
-from internal.geo import point_from_numeric
+from internal.geo import point_from_numeric, point_from_wkt_or_wkb
 from internal.serializers import BaseModel
 from models.initial_data import RU_regions
 
@@ -92,9 +92,11 @@ class PlaceOutSerializer(PlaceBaseSerializer):
     """
     id: int
     region: RegionOutSerializer | None = None
+
     model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
 
-    @field_validator('coordinates', mode="before")
+    # noinspection PyNestedDecorators
+    @field_validator('coordinates', mode='before')
     @classmethod
     def convert_input_coordinates_into_point(cls, value) -> in_out_coords_format:
         """
@@ -103,5 +105,5 @@ class PlaceOutSerializer(PlaceBaseSerializer):
         if value is None:
             return value
         else:
-            shapely_point = shapely.wkt.loads(value.data)
+            shapely_point = point_from_wkt_or_wkb(value)
             return Decimal(shapely_point.y), Decimal(shapely_point.x)
