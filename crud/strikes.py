@@ -207,9 +207,17 @@ async def manage_users_involved(session: 'AsyncSession',
     return strike.users_involved
 
 
-async def get_strikes(session: 'AsyncSession', ids: list[int], params: 'AbstractParams'):
+async def get_strikes(session: 'AsyncSession',
+                      ids: list[int, ...],
+                      params: 'AbstractParams',
+                      *,
+                      only_active: bool,
+                      ) -> list[Strike, ...]:
     """
-
+    Для отдачи данных о страйке на фронт.
+    ids - список id которые нужно отдать. Если не указанно - то все.
+    only_active - только те страйки которые сейчас активны на данный момент. Так же это
+    относиться и к страйкам в группе.
     """
     group_ids_subquery = select(
         StrikeToItself.strike_left_id,
@@ -219,6 +227,11 @@ async def get_strikes(session: 'AsyncSession', ids: list[int], params: 'Abstract
     )
     if ids:
         group_ids_subquery = group_ids_subquery.where(StrikeToItself.strike_left_id.in_(ids))
+    if only_active:
+        group_ids_subquery = group_ids_subquery.join(
+            Strike, StrikeToItself.strike_right_id == Strike.id,
+        ).where(Strike.is_active == True)
+
     group_ids_subquery = group_ids_subquery.subquery()
 
     stmt = select(
@@ -238,6 +251,8 @@ async def get_strikes(session: 'AsyncSession', ids: list[int], params: 'Abstract
 
     if ids:
         stmt = stmt.where(Strike.id.in_(ids))
+    if only_active:
+        stmt = stmt.where(Strike.is_active == True)
 
     res = await paginate(session, stmt, params, unique=True)
     return res
