@@ -119,8 +119,6 @@ async def get_strikes_ep(session: SessionDep,
     """
     ЭП для показа данных о конкретном страйке.
     """
-    # флаг для показа только активных страйков
-    # https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html#adding-criteria-to-loader-options
-    col = await get_strikes(session, ids, params, only_active=True)
+    col = await get_strikes(session, ids, params, only_active=only_active)
     out = LimitOffsetPage[StrikeWithAllRelatedSerializer]
     return out.create(col.items, params, total=col.total)

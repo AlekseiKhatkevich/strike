@@ -151,7 +151,6 @@ class Strike(UpdatedAtMixin, Base):
         passive_deletes=True,
         primaryjoin='Strike.id==StrikeToItself.strike_left_id',
         secondaryjoin='Strike.id==StrikeToItself.strike_right_id',
-        backref='left_nodes',
     )
 
     union: Mapped['Union'] = relationship(

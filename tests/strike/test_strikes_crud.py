@@ -1,11 +1,12 @@
 import pytest
 from fastapi import HTTPException
+from fastapi_pagination import Params
 from sqlalchemy import func, select
 
 from crud.helpers import exists_in_db, is_instance_in_db
 from crud.strikes import (
     create_strike,
-    manage_group,
+    get_strikes, manage_group,
     manage_places,
     manage_users_involved,
 )
@@ -23,6 +24,7 @@ from serializers.strikes import (
     UsersInvolvedInSerializer,
 )
 
+params = Params(page=1, size=100)
 
 @pytest.fixture
 def strike_serializer(strike_input_data, user_in_db) -> StrikeInSerializer:
@@ -265,3 +267,24 @@ async def test_manage_users_involved_negative_no_strike(crud_f, db_session):
     """
     with pytest.raises(ModelEntryDoesNotExistsInDbError, match=f'Strike with id 1 does not exists'):
         await crud_f(db_session, 1, object)
+
+
+async def test_get_strikes(strike_factory, db_session):
+    """
+
+
+    """
+    strikes = strike_factory.build_batch(size=2, num_group=2)
+    db_session.add_all(strikes)
+    await db_session.commit()
+
+    res = await get_strikes(db_session, [], params, only_active=False)
+
+    strikes_from_db = res.items
+
+    for strike in strikes_from_db:
+        assert strike.union is not None
+        assert strike.enterprise is not None
+        # assert strike.group_ids_from_exp == await strike.awaitable_attrs.group_ids_ap
+
+

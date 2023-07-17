@@ -12,7 +12,7 @@ from models import (
     Place,
     Strike,
     StrikeToItself,
-    StrikeToPlaceAssociation,
+    StrikeToPlaceAssociation, User,
 )
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 
@@ -247,6 +247,8 @@ async def get_strikes(session: 'AsyncSession',
         with_expression(Strike.group_ids_from_exp, group_ids_subquery.c.g_ids),
         selectinload(Strike.users_involved),
         selectinload(Strike.places).options(joinedload(Place.region)),
+    ).execution_options(
+        populate_existing=True,
     )
 
     if ids:
