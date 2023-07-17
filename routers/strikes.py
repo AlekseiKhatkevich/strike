@@ -2,15 +2,18 @@ from fastapi import APIRouter, Depends, status
 from fastapi_pagination import LimitOffsetPage
 from sqlalchemy import column
 
-from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete, get_collection_paginated
+from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from crud.strikes import (
     create_strike,
-    get_strikes, manage_group,
+    get_strikes,
+    manage_group,
     manage_places,
     manage_users_involved,
 )
 from internal.dependencies import (
-    GetParamsIdsDep, PaginParamsDep, PathIdDep,
+    GetParamsIdsDep,
+    PaginParamsDep,
+    PathIdDep,
     SessionDep,
     UserIdDep,
     jwt_authorize,
@@ -22,7 +25,8 @@ from serializers.strikes import (
     StrikeOutSerializerFull,
     StrikeOutSerializerShort,
     StrikeUpdateInSerializer,
-    StrikeWithAllRelatedSerializer, UsersInvolvedOutSerializer,
+    StrikeWithAllRelatedSerializer,
+    UsersInvolvedOutSerializer,
 )
 
 __all__ = (
@@ -110,10 +114,9 @@ async def manage_users_involved_ep(_id: PathIdDep,
 async def get_strikes_ep(session: SessionDep,
                          params: PaginParamsDep,
                          ids: GetParamsIdsDep,
-                         # ):
-                        ) -> LimitOffsetPage[StrikeWithAllRelatedSerializer]:
+                         ) -> LimitOffsetPage[StrikeWithAllRelatedSerializer]:
     """
-
+    ЭП для показа данных о конкретном страйке.
     """
     # флаг для показа только активных страйков
     # https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html#adding-criteria-to-loader-options

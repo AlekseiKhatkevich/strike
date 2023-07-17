@@ -8,9 +8,10 @@ from serializers.strikes import (
     AddRemoveUsersInvolvedSerializer,
     StrikeInSerializer,
     StrikeOutSerializerFull,
-    UsersInvolvedInSerializer,
+    StrikeWithAllRelatedSerializer, UsersInvolvedInSerializer,
     UsersInvolvedOutSerializer,
 )
+from serializers.unions import UnionOutSerializer
 
 
 @pytest.fixture
@@ -185,3 +186,18 @@ def test_AddRemoveUsersInvolvedSerializer_negative(faker):
             add=[dict(user_id=1, role=faker.random_element(elements=list(UserRole)).value)],
             remove={1, }
         )
+
+
+async def test_StrikeWithAllRelatedSerializer_positive(strike_p, region):
+    """
+    Позитивный тест сериалайзера StrikeWithAllRelatedSerializer.
+    """
+    strike = await strike_p(num_group=1)
+    for place in strike.places:
+        place.region = region
+    strike.group_ids_from_exp = {g.id for g in strike.group}
+
+    ser = StrikeWithAllRelatedSerializer.model_validate(strike)
+
+    assert isinstance(ser.union_in_charge, UnionOutSerializer)
+    assert ser.group_ids == strike.group_ids_from_exp

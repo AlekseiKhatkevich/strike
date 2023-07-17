@@ -229,10 +229,9 @@ class AddRemoveUsersInvolvedSerializer(AddRemoveStrikeM2MObjectsBaseSerializer):
 
 class StrikeWithAllRelatedSerializer(StrikeOutSerializerBase):
     """
-
+    Для отдачи данных о страйке и связанных с ним данных для ЭП GET /strikes/.
     """
     union_in_charge: Annotated[UnionOutSerializer | None, Field(alias='union')] = None
-    # created_by: UserOutMeSerializer
     enterprise: EnterpriseOutSerializer
     group_ids: Annotated[set[int], Field(alias='group_ids_from_exp')]
     users_involved: list[UsersInvolvedOutSerializer]
@@ -243,5 +242,6 @@ class StrikeWithAllRelatedSerializer(StrikeOutSerializerBase):
     @classmethod
     def _group_ids_none_to_empty_set(cls, group_ids: set[int, ...] | None) -> set[int, ...]:
         """
+        Преобразуем None на входе в пустой сет.
         """
         return group_ids or set()
