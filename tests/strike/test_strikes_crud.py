@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 from fastapi import HTTPException
 from fastapi_pagination import Params
@@ -6,7 +8,8 @@ from sqlalchemy import func, select
 from crud.helpers import exists_in_db, is_instance_in_db
 from crud.strikes import (
     create_strike,
-    get_strikes, manage_group,
+    get_strikes,
+    manage_group,
     manage_places,
     manage_users_involved,
 )
@@ -269,15 +272,21 @@ async def test_manage_users_involved_negative_no_strike(crud_f, db_session):
         await crud_f(db_session, 1, object)
 
 
-async def test_get_strikes(strike_factory, db_session):
+@pytest.fixture
+async def few_strikes_with_group(strike_factory, db_session):
     """
-
-
+    2 страйка с группами в БД.
     """
     strikes = strike_factory.build_batch(size=2, num_group=2)
     db_session.add_all(strikes)
     await db_session.commit()
+    return strikes
 
+
+async def test_get_strikes(few_strikes_with_group, db_session):
+    """
+    Позитивный тест ф-ции get_strikes (общий случай).
+    """
     res = await get_strikes(db_session, [], params, only_active=False)
 
     strikes_from_db = res.items
@@ -285,6 +294,44 @@ async def test_get_strikes(strike_factory, db_session):
     for strike in strikes_from_db:
         assert strike.union is not None
         assert strike.enterprise is not None
-        # assert strike.group_ids_from_exp == await strike.awaitable_attrs.group_ids_ap
+        assert strike.users_involved is not None
+        assert strike.places is not None
 
+        for place in strike.places:
+            assert place.region == await place.awaitable_attrs.region
+
+
+async def test_get_strikes_ids_limited(few_strikes_with_group, db_session):
+    """
+    Позитивный тест ф-ции get_strikes (с фильтрацией по id).
+    """
+    id_to_limit = few_strikes_with_group[0].id
+    res = await get_strikes(db_session, [few_strikes_with_group[0].id], params, only_active=False)
+
+    strikes_from_db = res.items
+
+    for strike in strikes_from_db:
+        assert strike.id == id_to_limit
+
+
+async def test_get_strikes_only_active(few_strikes_with_group, db_session):
+    """
+    Позитивный тест ф-ции get_strikes (с фильтрацией по тому проходит ли страйк сейчас.
+    """
+    current_strike, old_strike = few_strikes_with_group
+    current_strike.duration = [
+        datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1),
+        datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=1)
+    ]
+    old_strike.duration = [
+        datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=2),
+        datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1)
+    ]
+    await db_session.commit()
+
+    res = await get_strikes(db_session, [], params, only_active=True)
+
+    strikes_from_db = res.items
+    for strike in strikes_from_db:
+        assert strike.is_active
 

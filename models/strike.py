@@ -4,18 +4,20 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean, CheckConstraint,
-    ColumnElement, Integer, Text,
+    ColumnElement,
+    Text,
     ForeignKey,
     Enum,
     Column,
     UniqueConstraint,
     type_coerce,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, TSTZRANGE, ExcludeConstraint, Range
+from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint, Range
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (
-    query_expression, validates,
+    query_expression,
+    validates,
     Mapped,
     mapped_column,
     relationship,
@@ -147,7 +149,7 @@ class Strike(UpdatedAtMixin, Base):
     )
     group: Mapped[list['Strike']] = relationship(
         'Strike',
-        secondary='strike_to_itself_associations',
+        secondary=StrikeToItself.__table__,
         passive_deletes=True,
         primaryjoin='Strike.id==StrikeToItself.strike_left_id',
         secondaryjoin='Strike.id==StrikeToItself.strike_right_id',
