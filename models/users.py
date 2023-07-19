@@ -65,6 +65,9 @@ class User(UpdatedAtMixin, Base):
     strikes_created_by_user: Mapped[list['Strike']] = relationship(
         back_populates='created_by',
     )
+    crud_logs: Mapped[list['CRUDLog']] = relationship(
+        back_populates='user',
+    )
 
     __table_args__ = (
         Index(

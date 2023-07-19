@@ -3,7 +3,7 @@ import enum
 
 from sqlalchemy import ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import generic_relationship
 
 from internal.database import Base
@@ -49,6 +49,9 @@ class CRUDLog(Base):
     )
 
     object = generic_relationship(object_type, 'object_id')
+    user: Mapped['User'] = relationship(
+        back_populates='crud_logs',
+    )
 
     __table_args__ = (
         Index(

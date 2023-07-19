@@ -6,7 +6,7 @@ from fastapi_pagination import LimitOffsetPage
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from crud.unions import get_unions
 from internal.dependencies import PaginParamsDep, PathIdDep, SessionDep, jwt_authorize
-from models import Union
+from models import CRUDLog, CRUDTypes, Union
 from serializers.unions import UnionInSerializer, UnionOutSerializer
 
 __all__ = (
@@ -37,8 +37,8 @@ def log_creator(func):
     async def wrapper(session, *args, **kwargs):
         res = await func(session, *args, **kwargs)
         user_id = session.info['current_user_id']
-        model_name = res.__class__.__name__
-        pk = res.pk
+        session.add(CRUDLog(action=CRUDTypes.create, object=res, user_id=user_id))
+        await session.commit()
         return res
 
     return wrapper
