@@ -52,6 +52,11 @@ class CRUDLog(Base):
             'object_type', 'object_id',
             postgresql_include=['action'],
         ),
+        Index(
+            'operation_ts_brin_idx',
+            'operation_ts',
+            postgresql_using='brin',
+        )
     )
 
     def __repr__(self):
