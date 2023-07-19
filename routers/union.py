@@ -1,3 +1,5 @@
+from functools import wraps
+
 from fastapi import APIRouter, Depends, Query, status
 from fastapi_pagination import LimitOffsetPage
 
@@ -27,9 +29,24 @@ async def unions(session: SessionDep,
 
     return out.create(collection.items, params, total=collection.total)
 
+def log_creator(func):
+    """
+    https://stackoverflow.com/questions/64497615/how-to-add-a-custom-decorator-to-a-fastapi-route
+    """
+    @wraps(func)
+    async def wrapper(session, *args, **kwargs):
+        res = await func(session, *args, **kwargs)
+        user_id = session.info['current_user_id']
+        model_name = res.__class__.__name__
+        pk = res.pk
+        return res
+
+    return wrapper
+
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 @router.put('/')
+@log_creator
 async def create_or_update_union_ep(session: SessionDep,
                                     union_data: UnionInSerializer,
                                     ) -> UnionOutSerializer:

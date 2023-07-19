@@ -3,7 +3,8 @@ import enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
-    Boolean, CheckConstraint,
+    Boolean,
+    CheckConstraint,
     ColumnElement,
     Text,
     ForeignKey,

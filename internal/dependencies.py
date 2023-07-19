@@ -19,7 +19,6 @@ from security.jwt import validate_jwt_token
 if TYPE_CHECKING:
     from models.users import User
 
-
 __all__ = (
     'SessionDep',
     'SettingsDep',
@@ -31,6 +30,7 @@ __all__ = (
     'PaginParamsDep',
     'PathIdDep',
     'GetParamsIdsDep',
+    'user_id_context_var',
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -47,7 +47,13 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield _session
 
 
-def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Request) -> int:
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+
+def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)],
+                  request: Request,
+                  session: SessionDep,
+                  ) -> int:
     """
     Достает JWT токен из хедера запроса, валидирует его возвращая user_id в случае успеха.
     """
@@ -63,11 +69,11 @@ def jwt_authorize(jwt_token: Annotated[str, Depends(oauth2_scheme)], request: Re
     else:
         request.state.user_id = user_id
         user_id_context_var.set(user_id)
+        session.info['current_user_id'] = user_id
         return user_id
 
 
 SessionNonCachedDep = Annotated[AsyncSession, Depends(get_session, use_cache=False)]
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UserIdDep = Annotated[int, Depends(jwt_authorize)]
 PaginParamsDep = Annotated[AbstractParams, Depends(Params)]

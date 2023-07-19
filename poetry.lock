@@ -399,6 +399,17 @@ test = ["pretend", "pytest (>=6.2.0)", "pytest-benchmark", "pytest-cov", "pytest
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "decorator"
+version = "5.1.1"
+description = "Decorators for Humans"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
+    {file = "decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
+]
+
+[[package]]
 name = "deprecated"
 version = "1.2.14"
 description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
@@ -437,6 +448,21 @@ doq = ["aioquic (>=0.9.20)"]
 idna = ["idna (>=2.1,<4.0)"]
 trio = ["trio (>=0.14,<0.23)"]
 wmi = ["wmi (>=1.5.1,<2.0.0)"]
+
+[[package]]
+name = "dogpile-cache"
+version = "1.2.2"
+description = "A caching front-end based on the Dogpile lock."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "dogpile.cache-1.2.2-py3-none-any.whl", hash = "sha256:f6c2c6ff3a3dc7dc0d662b3f30983f684502fd7a91a45be680879d7d8cc177d7"},
+    {file = "dogpile.cache-1.2.2.tar.gz", hash = "sha256:fd9022c0d9cbadadf20942391a95adaf296be80b42daa8e202f8de1c21f198b2"},
+]
+
+[package.dependencies]
+decorator = ">=4.0.0"
+stevedore = ">=3.0.0"
 
 [[package]]
 name = "email-validator"
@@ -1278,6 +1304,17 @@ files = [
 ]
 
 [[package]]
+name = "pbr"
+version = "5.11.1"
+description = "Python Build Reasonableness"
+optional = false
+python-versions = ">=2.6"
+files = [
+    {file = "pbr-5.11.1-py2.py3-none-any.whl", hash = "sha256:567f09558bae2b3ab53cb3c1e2e33e726ff3338e7bae3db5dc954b3a44eef12b"},
+    {file = "pbr-5.11.1.tar.gz", hash = "sha256:aefc51675b0b533d56bb5fd1c8c6c0522fe31896679882e1c4c63d5e4a0fccb3"},
+]
+
+[[package]]
 name = "pluggy"
 version = "1.2.0"
 description = "plugin and hook calling mechanisms for python"
@@ -1923,6 +1960,34 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
+name = "sqlalchemy-utils"
+version = "0.41.1"
+description = "Various utility functions for SQLAlchemy."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "SQLAlchemy-Utils-0.41.1.tar.gz", hash = "sha256:a2181bff01eeb84479e38571d2c0718eb52042f9afd8c194d0d02877e84b7d74"},
+    {file = "SQLAlchemy_Utils-0.41.1-py3-none-any.whl", hash = "sha256:6c96b0768ea3f15c0dc56b363d386138c562752b84f647fb8d31a2223aaab801"},
+]
+
+[package.dependencies]
+SQLAlchemy = ">=1.3"
+
+[package.extras]
+arrow = ["arrow (>=0.3.4)"]
+babel = ["Babel (>=1.3)"]
+color = ["colour (>=0.0.4)"]
+encrypted = ["cryptography (>=0.6)"]
+intervals = ["intervals (>=0.7.1)"]
+password = ["passlib (>=1.6,<2.0)"]
+pendulum = ["pendulum (>=2.0.5)"]
+phone = ["phonenumbers (>=5.9.2)"]
+test = ["Jinja2 (>=2.3)", "Pygments (>=1.2)", "backports.zoneinfo", "docutils (>=0.10)", "flake8 (>=2.4.0)", "flexmock (>=0.9.7)", "isort (>=4.2.2)", "pg8000 (>=1.12.4)", "psycopg (>=3.1.8)", "psycopg2 (>=2.5.1)", "psycopg2cffi (>=2.8.1)", "pymysql", "pyodbc", "pytest (>=2.7.1)", "python-dateutil (>=2.6)", "pytz (>=2014.2)"]
+test-all = ["Babel (>=1.3)", "Jinja2 (>=2.3)", "Pygments (>=1.2)", "arrow (>=0.3.4)", "backports.zoneinfo", "colour (>=0.0.4)", "cryptography (>=0.6)", "docutils (>=0.10)", "flake8 (>=2.4.0)", "flexmock (>=0.9.7)", "furl (>=0.4.1)", "intervals (>=0.7.1)", "isort (>=4.2.2)", "passlib (>=1.6,<2.0)", "pendulum (>=2.0.5)", "pg8000 (>=1.12.4)", "phonenumbers (>=5.9.2)", "psycopg (>=3.1.8)", "psycopg2 (>=2.5.1)", "psycopg2cffi (>=2.8.1)", "pymysql", "pyodbc", "pytest (>=2.7.1)", "python-dateutil", "python-dateutil (>=2.6)", "pytz (>=2014.2)"]
+timezone = ["python-dateutil"]
+url = ["furl (>=0.4.1)"]
+
+[[package]]
 name = "starlette"
 version = "0.27.0"
 description = "The little ASGI library that shines."
@@ -1938,6 +2003,20 @@ anyio = ">=3.4.0,<5"
 
 [package.extras]
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
+
+[[package]]
+name = "stevedore"
+version = "5.1.0"
+description = "Manage dynamic plugins for Python applications"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "stevedore-5.1.0-py3-none-any.whl", hash = "sha256:8cc040628f3cea5d7128f2e76cf486b2251a4e543c7b938f58d9a377f6694a2d"},
+    {file = "stevedore-5.1.0.tar.gz", hash = "sha256:a54534acf9b89bc7ed264807013b505bf07f74dbe4bcfa37d32bd063870b087c"},
+]
+
+[package.dependencies]
+pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 
 [[package]]
 name = "typer"
@@ -2236,4 +2315,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "76d1aff6e21c4656ad846e6b9fcf50b3fec9b7ead593c024ab85155451fae055"
+content-hash = "e0590a4bc54c59ed823f01743e0539b0ede42bce72794d5d3a409e846261064e"

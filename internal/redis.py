@@ -1,7 +1,7 @@
 import datetime
 import pickle
 from functools import partial
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import redis.asyncio as redis
 from loguru import logger
