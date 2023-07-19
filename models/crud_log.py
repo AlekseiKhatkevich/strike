@@ -1,7 +1,7 @@
 import datetime
 import enum
 
-from sqlalchemy import Index, String, func
+from sqlalchemy import ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy_utils import generic_relationship
@@ -12,6 +12,7 @@ from models.annotations import BigIntPk
 
 __all__ = (
     'CRUDLog',
+    'CRUDTypes',
 )
 
 
@@ -43,6 +44,9 @@ class CRUDLog(Base):
     operation_ts: Mapped[datetime.datetime] = mapped_column(
         server_default=func.now(),
     )
+    user_id: Mapped[BigIntType | None] = mapped_column(
+        ForeignKey('users.id', ondelete='SET NULL'),
+    )
 
     object = generic_relationship(object_type, 'object_id')
 
@@ -60,4 +64,4 @@ class CRUDLog(Base):
     )
 
     def __repr__(self):
-        return f'{self.action.value} {self.object_type} with id = {self.object_id}'
+        return f'{self.action} {self.object_type} with id = {self.object_id}'
