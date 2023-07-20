@@ -1,5 +1,5 @@
 import asyncio
-from functools import wraps
+from functools import singledispatch, wraps
 
 from loguru import logger
 from sqlalchemy import event
@@ -12,27 +12,27 @@ __all__ = (
 )
 
 
-async def _write_log_to_db(user_id, instance, action):
-    #  нужна новая сессия так как основная ф-ция уже может закрыть свою сессию к этому моменту.
+async def _write_log_to_db(result, user_id, action, model=None):
     session = async_session()
     try:
-        session.add(CRUDLog(action=action, object=instance, user_id=user_id))
+        _branch_log_creation(result, session, user_id, action, model)
         await session.commit()
     except Exception as err:
         logger.exception(err)
 
 
-async def _write_log_to_db_without_instance(user_id, ids, action, model):
-    session = async_session()
-    try:
-        log_entries = [
-            CRUDLog(action=action, object_id=_id, user_id=user_id, object_type=model.__name__)
-            for _id in ids
-        ]
-        session.add_all(log_entries)
-        await session.commit()
-    except Exception as err:
-        logger.exception(err)
+@singledispatch
+def _branch_log_creation(result, session, user_id, action, model, *args, **kwargs):
+    log_entries = [
+        CRUDLog(action=action, object_id=_id, user_id=user_id, object_type=model.__name__)
+        for _id in result
+    ]
+    session.add_all(log_entries)
+
+
+@_branch_log_creation.register
+def _(result: Base, session, user_id, action, *args, **kwargs):
+    session.add(CRUDLog(action=action, object=result, user_id=user_id))
 
 
 def create_log(func):
@@ -65,16 +65,12 @@ def create_log(func):
                 action = CRUDTypes.update
                 known_model = orm_execute_state.bind_mapper.entity
 
-        res = await func(session, *args, **kwargs)
+        result = await func(session, *args, **kwargs)
 
         user_id = session.info['current_user_id']
-        if isinstance(res, Base):
-            coro = _write_log_to_db(user_id, res, action)
-        else:
-            coro = _write_log_to_db_without_instance(user_id, res, action, known_model)
-
+        coro = _write_log_to_db(result, user_id, action, known_model)
         asyncio.run_coroutine_threadsafe(coro, loop=asyncio.get_running_loop())
 
-        return res
+        return result
 
     return wrapper
