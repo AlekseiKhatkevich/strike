@@ -10,6 +10,7 @@ from sqlalchemy import exc as so_exc
 from config import settings
 from crud.users import create_new_user, delete_user, update_user
 from internal.dependencies import SessionDep, jwt_authorize, UserModelInstDep
+from internal.model_logging import create_log
 from internal.ratelimit import limiter
 from serializers.users import (
     UserRegistrationSerializer,
@@ -55,15 +56,17 @@ async def get_current_user(user: UserModelInstDep) -> UserOutMeSerializer:
 
 
 @router.delete('/me/', status_code=status.HTTP_204_NO_CONTENT)
+@create_log
 async def delete_current_user(session: SessionDep, user: UserModelInstDep):
     """
     Удаляет текущего пользователя.
     """
-    await delete_user(session, user)
+    return await delete_user(session, user)
 
 
 @router.patch('/me/')
 @router.put('/me/')
+@create_log
 async def update_current_user(session: SessionDep,
                               user: UserModelInstDep,
                               user_data: UserInModificationSerializer,

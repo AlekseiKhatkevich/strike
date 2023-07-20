@@ -36,7 +36,7 @@ async def _write_log_to_db_without_instance(session, ids, action, model):
 
 def create_log(func):
     """
-    https://stackoverflow.com/questions/64497615/how-to-add-a-custom-decorator-to-a-fastapi-route
+
     """
     @wraps(func)
     async def wrapper(session, *args, **kwargs):
@@ -44,9 +44,15 @@ def create_log(func):
         known_model = None
 
         @event.listens_for(session.sync_session, 'pending_to_persistent')
-        def _save(sess, instance):
+        def _create(sess, instance):
             nonlocal action
             action = CRUDTypes.create
+
+        @event.listens_for(session.sync_session, 'persistent_to_deleted')
+        @event.listens_for(session.sync_session, 'deleted_to_detached')
+        def _delete(sess, instance):
+            nonlocal action
+            action = CRUDTypes.delete
 
         @event.listens_for(session.sync_session, 'do_orm_execute')
         def receive_do_orm_execute(orm_execute_state):
