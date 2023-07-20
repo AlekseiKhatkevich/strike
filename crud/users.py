@@ -46,7 +46,7 @@ async def get_user_by_id(session: 'AsyncSession',
     return user
 
 
-async def delete_user(session: 'AsyncSession', user: 'User') -> None:
+async def delete_user(session: 'AsyncSession', user: 'User') -> 'User':
     """
     Удаление юзера.
     """
