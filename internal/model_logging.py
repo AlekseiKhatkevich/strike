@@ -1,5 +1,6 @@
 import asyncio
 from functools import singledispatch, wraps
+from typing import Type
 
 from loguru import logger
 from sqlalchemy import event
@@ -12,13 +13,28 @@ __all__ = (
 )
 
 
-async def _write_log_to_db(result, user_id, action, model=None):
+async def _write_log_to_db(result: Base | list[int, ...],
+                           user_id: int,
+                           action: CRUDTypes,
+                           model: Type[Base] | None = None,
+                           ) -> None:
+    """
+    Создает запись лога в БД.
+
+    :param result: Результат работы CRUD ф-ции. Либо инстанс модели, обычно в случае создания или
+    удаления записи либо список id объектов (обычно в случае удаления).
+    :param user_id: Первичный ключ юзера совершившего действие.
+    :param action: Тип действия.
+    :param model: Модель (класс) над инстансом которой было проведено действие.
+    :return: None
+    """
     session = async_session()
-    try:
-        _branch_log_creation(result, session, user_id, action, model)
-        await session.commit()
-    except Exception as err:
-        logger.exception(err)
+    with session.begin():
+        try:
+            _branch_log_creation(result, session, user_id, action, model)
+            await session.commit()
+        except Exception as err:
+            logger.exception(err)
 
 
 @singledispatch
@@ -58,12 +74,11 @@ def create_log(func):
         @event.listens_for(session.sync_session, 'do_orm_execute')
         def receive_do_orm_execute(orm_execute_state):
             nonlocal action, known_model
+            known_model = orm_execute_state.bind_mapper.entity
             if orm_execute_state.is_delete:
                 action = CRUDTypes.delete
-                known_model = orm_execute_state.bind_mapper.entity
             elif orm_execute_state.is_update:
                 action = CRUDTypes.update
-                known_model = orm_execute_state.bind_mapper.entity
 
         result = await func(session, *args, **kwargs)
 
