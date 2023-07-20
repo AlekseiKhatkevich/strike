@@ -4,7 +4,7 @@ from functools import wraps
 from loguru import logger
 from sqlalchemy import event
 
-from internal.database import Base
+from internal.database import Base, async_session
 from models import CRUDLog, CRUDTypes
 
 __all__ = (
@@ -12,18 +12,19 @@ __all__ = (
 )
 
 
-async def _write_log_to_db(session, instance, action):
+async def _write_log_to_db(user_id, instance, action):
+    #  нужна новая сессия так как основная ф-ция уже может закрыть свою сессию к этому моменту.
+    session = async_session()
     try:
-        user_id = session.info['current_user_id']
         session.add(CRUDLog(action=action, object=instance, user_id=user_id))
         await session.commit()
     except Exception as err:
         logger.exception(err)
 
 
-async def _write_log_to_db_without_instance(session, ids, action, model):
+async def _write_log_to_db_without_instance(user_id, ids, action, model):
+    session = async_session()
     try:
-        user_id = session.info['current_user_id']
         log_entries = [
             CRUDLog(action=action, object_id=_id, user_id=user_id, object_type=model.__name__)
             for _id in ids
@@ -66,10 +67,11 @@ def create_log(func):
 
         res = await func(session, *args, **kwargs)
 
+        user_id = session.info['current_user_id']
         if isinstance(res, Base):
-            coro = _write_log_to_db(session, res, action)
+            coro = _write_log_to_db(user_id, res, action)
         else:
-            coro = _write_log_to_db_without_instance(session, res, action, known_model)
+            coro = _write_log_to_db_without_instance(user_id, res, action, known_model)
 
         asyncio.run_coroutine_threadsafe(coro, loop=asyncio.get_running_loop())
 
