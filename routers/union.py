@@ -1,12 +1,12 @@
-from functools import wraps
-
+from fastapi import APIRouter, Depends, Query, status
 from fastapi import APIRouter, Depends, Query, status
 from fastapi_pagination import LimitOffsetPage
 
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from crud.unions import get_unions
 from internal.dependencies import PaginParamsDep, PathIdDep, SessionDep, jwt_authorize
-from models import CRUDLog, CRUDTypes, Union
+from internal.model_logging import create_log
+from models import Union
 from serializers.unions import UnionInSerializer, UnionOutSerializer
 
 __all__ = (
@@ -29,24 +29,10 @@ async def unions(session: SessionDep,
 
     return out.create(collection.items, params, total=collection.total)
 
-def log_creator(func):
-    """
-    https://stackoverflow.com/questions/64497615/how-to-add-a-custom-decorator-to-a-fastapi-route
-    """
-    @wraps(func)
-    async def wrapper(session, *args, **kwargs):
-        res = await func(session, *args, **kwargs)
-        user_id = session.info['current_user_id']
-        session.add(CRUDLog(action=CRUDTypes.create, object=res, user_id=user_id))
-        await session.commit()
-        return res
-
-    return wrapper
-
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 @router.put('/')
-@log_creator
+@create_log
 async def create_or_update_union_ep(session: SessionDep,
                                     union_data: UnionInSerializer,
                                     ) -> UnionOutSerializer:
