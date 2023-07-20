@@ -43,8 +43,9 @@ async def create_or_update_union_ep(session: SessionDep,
 
 
 @router.delete('/{id}/', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_union_ep(id: PathIdDep, session: SessionDep):
+@create_log
+async def delete_union_ep(session: SessionDep, id: PathIdDep):
     """
     Эндпоинт удаления Union.
     """
-    await delete_via_sql_delete(session, Union, Union.id == id)
+    return await delete_via_sql_delete(session, Union, Union.id == id)
