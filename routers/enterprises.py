@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, status
-from fastapi.routing import APIRoute
 from fastapi_pagination import LimitOffsetPage
 from sqlalchemy import column
 
@@ -14,6 +13,7 @@ from internal.dependencies import (
     PathIdDep,
     SessionDep,
     jwt_authorize,
+    LogDep, log
 )
 from serializers.enterprises import EnterpriseInSerializer, EnterpriseOutSerializer
 
@@ -22,13 +22,14 @@ __all__ = (
 )
 
 
-router = APIRouter(tags=['enterprises'], dependencies=[Depends(jwt_authorize)])
+router = APIRouter(tags=['enterprises'], dependencies=[Depends(jwt_authorize), Depends(log)])
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 @router.put('/')
 async def create_or_update_enterprise_ep(session: SessionDep,
                                          enterprise_data: EnterpriseInSerializer,
+                                         # log: LogDep,
                                          ) -> EnterpriseOutSerializer:
     """
     Создание / обновление записи модели Enterprise в БД.

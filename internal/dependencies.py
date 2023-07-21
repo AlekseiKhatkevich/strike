@@ -1,5 +1,6 @@
+import asyncio
 import contextvars
-from typing import Annotated, AsyncGenerator, TYPE_CHECKING
+from typing import Annotated, Any, AsyncGenerator, TYPE_CHECKING
 
 import jwt
 from fastapi import Depends, HTTPException, Path, Request, status
@@ -8,11 +9,14 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import Params
 from fastapi_pagination.bases import AbstractParams
 from loguru import logger
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import Settings, get_settings
 from internal.database import async_session, db_session_context_var
+from internal.model_logging import _write_log_to_db
 from internal.redis import user_cache
+from models import CRUDTypes
 from security import sensitive
 from security.jwt import validate_jwt_token
 
@@ -31,6 +35,8 @@ __all__ = (
     'PathIdDep',
     'GetParamsIdsDep',
     'user_id_context_var',
+    'LogDep',
+    'log',
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -77,6 +83,64 @@ SessionNonCachedDep = Annotated[AsyncSession, Depends(get_session, use_cache=Fal
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 UserIdDep = Annotated[int, Depends(jwt_authorize)]
 PaginParamsDep = Annotated[AbstractParams, Depends(Params)]
+
+
+async def log(user_id: UserIdDep, session: SessionDep) -> None:
+    """
+    Запись лога объекта в БД.
+    """
+    action = None
+    known_instance = None
+    known_model = None
+    known_persistent_classes = set()
+
+    def _after_update(mapper, connection, target):
+        nonlocal action, known_instance
+        action = CRUDTypes.update
+        known_instance = target
+
+    @event.listens_for(session.sync_session, 'pending_to_persistent')
+    def _create(sess, instance):
+        """Эвент создания записи модели через сессию."""
+        nonlocal action, known_instance
+        action = CRUDTypes.create
+        known_instance = instance
+
+    @event.listens_for(session.sync_session, 'loaded_as_persistent')
+    def receive_loaded_as_persistent(session, instance):
+        "listen for the 'loaded_as_persistent' event"
+        cls = instance.__class__
+        if cls not in known_persistent_classes:
+            known_persistent_classes.add(cls)
+            event.listen(cls, 'after_update', _after_update)
+
+    @event.listens_for(session.sync_session, 'persistent_to_deleted')
+    @event.listens_for(session.sync_session, 'deleted_to_detached')
+    def _delete(sess, instance):
+        """Эвенты удаления записи модели через сессию. 2 разных так как может быть rollback."""
+        nonlocal action, known_instance
+        known_instance = instance
+        action = CRUDTypes.delete
+
+    @event.listens_for(session.sync_session, 'do_orm_execute')
+    def receive_do_orm_execute(orm_execute_state):
+        """Эвент обновления или удаления записей ч/з SQL update / delete."""
+        nonlocal action, known_model
+        if orm_execute_state.is_delete:
+            known_model = orm_execute_state.bind_mapper.entity
+            action = CRUDTypes.delete
+        elif orm_execute_state.is_update:
+            known_model = orm_execute_state.bind_mapper.entity
+            action = CRUDTypes.update
+
+    yield None
+
+    if user_id is not None and action is not None:
+        coro = _write_log_to_db(known_instance, user_id, action, known_model)
+        asyncio.run_coroutine_threadsafe(coro, loop=asyncio.get_running_loop())
+
+
+LogDep = Annotated[Any, Depends(log)]
 
 
 async def get_user_instance(session: SessionDep, user_id: UserIdDep) -> 'User':
