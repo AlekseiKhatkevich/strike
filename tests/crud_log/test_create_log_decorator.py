@@ -61,7 +61,7 @@ async def test_create_log_update(session_with_user_info, union, log_writer, fake
         instance,
         session_with_user_info.info['current_user_id'],
         CRUDTypes.update,
-        Union,
+        None,
     )
 
 

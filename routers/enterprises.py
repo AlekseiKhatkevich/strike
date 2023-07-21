@@ -1,10 +1,20 @@
 from fastapi import APIRouter, Depends, status
+from fastapi.routing import APIRoute
 from fastapi_pagination import LimitOffsetPage
-from sqlalchemy import column, select
+from sqlalchemy import column
 
-from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete, get_collection_paginated
-from internal.dependencies import GetParamsIdsDep, PaginParamsDep, PathIdDep, SessionDep, jwt_authorize
-from models import Enterprise
+from crud.helpers import (
+    create_or_update_with_session_get,
+    delete_via_sql_delete,
+    get_collection_paginated,
+)
+from internal.dependencies import (
+    GetParamsIdsDep,
+    PaginParamsDep,
+    PathIdDep,
+    SessionDep,
+    jwt_authorize,
+)
 from serializers.enterprises import EnterpriseInSerializer, EnterpriseOutSerializer
 
 __all__ = (
