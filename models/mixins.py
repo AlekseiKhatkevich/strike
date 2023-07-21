@@ -1,5 +1,6 @@
 import datetime
 
+from sqlalchemy import FetchedValue
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -12,7 +13,6 @@ __all__ = (
 
 class UpdatedAtMixin:
     updated_at: Mapped[datetime.datetime | None] = mapped_column(
-        # onupdate=func.now(),
         onupdate=datetime.datetime.now(tz=datetime.UTC)
     )
 

@@ -20,6 +20,8 @@ async def _write_log_to_db(result: Base | list[int, ...],
                            user_id: int,
                            action: CRUDTypes,
                            model: Type[Base] | None = None,
+                           *,
+                           session: 'AsyncSession' = None,
                            ) -> None:
     """
     Создает запись лога в БД.
@@ -31,12 +33,14 @@ async def _write_log_to_db(result: Base | list[int, ...],
     :param model: Модель (класс) над инстансом которой было проведено действие.
     :return: None
     """
-    with async_session() as session:
-        try:
-            _branch_log_creation(result, session, user_id, action, model)
-            await session.commit()
-        except Exception as err:
-            logger.exception(err)
+    session = session or async_session()  # сессия нужна нам новая по-хорошему...
+    try:
+        _branch_log_creation(result, session, user_id, action, model)
+        await session.commit()
+    except Exception as err:
+        logger.exception(err)
+    finally:
+        await session.close()
 
 
 @singledispatch
@@ -92,10 +96,11 @@ def create_log(func: Callable) -> Callable:
         def receive_do_orm_execute(orm_execute_state):
             """Эвент обновления или удаления записей ч/з SQL update / delete."""
             nonlocal action, known_model
-            known_model = orm_execute_state.bind_mapper.entity
             if orm_execute_state.is_delete:
+                known_model = orm_execute_state.bind_mapper.entity
                 action = CRUDTypes.delete
             elif orm_execute_state.is_update:
+                known_model = orm_execute_state.bind_mapper.entity
                 action = CRUDTypes.update
 
         result: Base | list[int, ...] = await func(session, *args, **kwargs)
