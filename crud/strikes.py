@@ -12,7 +12,7 @@ from models import (
     Place,
     Strike,
     StrikeToItself,
-    StrikeToPlaceAssociation, User,
+    StrikeToPlaceAssociation,
 )
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 
@@ -220,31 +220,22 @@ async def get_strikes(session: 'AsyncSession',
     относиться и к страйкам в группе.
     """
     group_ids_subquery = select(
-        StrikeToItself.strike_left_id,
-        func.array_agg(StrikeToItself.strike_right_id, type_=ARRAY(Integer)).label('g_ids')
+        func.array_agg(StrikeToItself.strike_right_id, type_=ARRAY(Integer))
+    ).where(
+        Strike.id == StrikeToItself.strike_left_id
     ).group_by(
         StrikeToItself.strike_left_id,
-    )
-    if ids:
-        group_ids_subquery = group_ids_subquery.where(StrikeToItself.strike_left_id.in_(ids))
-    if only_active:
-        group_ids_subquery = group_ids_subquery.join(
-            Strike, StrikeToItself.strike_right_id == Strike.id,
-        ).where(Strike.is_active == True)
-
-    group_ids_subquery = group_ids_subquery.subquery()
+    ).scalar_subquery()
 
     stmt = select(
         Strike
-    ).outerjoin(
-        group_ids_subquery,
     ).order_by(
         Strike.duration,
         Strike.planned_on_date,
     ).options(
         joinedload(Strike.union),
         joinedload(Strike.enterprise, innerjoin='unnested'),
-        with_expression(Strike.group_ids_from_exp, group_ids_subquery.c.g_ids),
+        with_expression(Strike.group_ids_from_exp, group_ids_subquery),
         selectinload(Strike.users_involved),
         selectinload(Strike.places).options(joinedload(Place.region)),
     ).execution_options(
