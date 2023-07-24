@@ -1,3 +1,4 @@
+import contextlib
 import os
 import re
 from functools import cache, wraps
@@ -162,8 +163,12 @@ async def create_or_update_with_session_get(session: 'AsyncSession',
             for field, value in data.items():
                 setattr(instance, field, value)
         else:
+            runtime_error_message = f'{model.__name__} with id={pk} was not found in DB.'
+            with contextlib.suppress(KeyError):
+                session.info['qs_restricted_by_user_id']
+                runtime_error_message += ' Or you do not have access to edit/delete this instance'
             raise ModelEntryDoesNotExistsInDbError(
-                error_message or f'{model.__name__} with id={pk} was not found in DB.',
+                error_message or runtime_error_message,
                 report=True,
             )
 

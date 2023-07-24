@@ -11,12 +11,13 @@ from fastapi_pagination.bases import AbstractParams
 from loguru import logger
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import ORMExecuteState, with_loader_criteria
 
 from config import Settings, get_settings
 from internal.database import async_session, db_session_context_var
 from internal.model_logging import _write_log_to_db
 from internal.redis import user_cache
-from models import CRUDTypes
+from models import CRUDTypes, Strike
 from security import sensitive
 from security.jwt import validate_jwt_token
 
@@ -37,6 +38,8 @@ __all__ = (
     'user_id_context_var',
     'LogDep',
     'log',
+    'RestrictByUserIdDep',
+    'restrict_by_user_id',
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -108,7 +111,10 @@ async def log(user_id: UserIdDep, session: SessionDep) -> None:
 
     @event.listens_for(session.sync_session, 'loaded_as_persistent')
     def receive_loaded_as_persistent(session, instance):
-        "listen for the 'loaded_as_persistent' event"
+        """
+        Регистрируем эвент для каждого загружаемого класса из БД на случай возможного
+        апдейта одного из его инстансов.
+        """
         cls = instance.__class__
         if cls not in known_persistent_classes:
             known_persistent_classes.add(cls)
@@ -173,3 +179,32 @@ def id_list_in_query_params(_id: list[int] = Query([], alias='id')):
 
 
 GetParamsIdsDep = Annotated[list[int], Depends(id_list_in_query_params)]
+
+
+def restrict_by_user_id(user_id: UserIdDep, session: SessionDep) -> None:
+    """
+    Ограничивает кверисет только теми страйками который создал реквест юзер.
+    """
+    @event.listens_for(session.sync_session, 'do_orm_execute')
+    def _add_filtering_criteria(execute_state: ORMExecuteState) -> None:
+        if (
+                execute_state.is_select
+                or execute_state.is_delete
+                or execute_state.is_update
+                and not execute_state.is_column_load
+                and not execute_state.is_relationship_load
+        ):
+            execute_state.statement = execute_state.statement.options(
+                with_loader_criteria(
+                    Strike,
+                    Strike.created_by_id == user_id,
+                    include_aliases=True,
+                )
+            )
+            session.info['qs_restricted_by_user_id'] = user_id
+
+    yield None
+    del session.info['qs_restricted_by_user_id']
+
+
+RestrictByUserIdDep = Annotated[Any, Depends(restrict_by_user_id)]

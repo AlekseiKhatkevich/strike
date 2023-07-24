@@ -14,9 +14,9 @@ from internal.dependencies import (
     GetParamsIdsDep,
     PaginParamsDep,
     PathIdDep,
-    SessionDep,
+    RestrictByUserIdDep, SessionDep,
     UserIdDep,
-    jwt_authorize,
+    jwt_authorize, restrict_by_user_id,
 )
 from serializers.strikes import (
     AddRemoveStrikeM2MObjectsSerializer,
@@ -50,7 +50,7 @@ async def create_strike_ep(session: SessionDep,
     return strike_instance
 
 
-@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(restrict_by_user_id), ])
 async def delete_strike_ep(_id: PathIdDep, session: SessionDep):
     """
     Эндпоинт удаления Enterprise.
@@ -58,7 +58,7 @@ async def delete_strike_ep(_id: PathIdDep, session: SessionDep):
     await delete_via_sql_delete(session, 'Strike', column('id') == _id)
 
 
-@router.patch('/{id}')
+@router.patch('/{id}', dependencies=[Depends(restrict_by_user_id), ])
 async def update_strike_ep(_id: PathIdDep,
                            session: SessionDep,
                            strike_data: StrikeUpdateInSerializer,
@@ -87,7 +87,7 @@ async def manage_group_ep(_id: PathIdDep,
     return await manage_group(session, _id, m2m_ids)
 
 
-@router.post('/{id}/places')
+@router.post('/{id}/places', dependencies=[Depends(restrict_by_user_id), ])
 async def manage_places_ep(_id: PathIdDep,
                            session: SessionDep,
                            m2m_ids: AddRemoveStrikeM2MObjectsSerializer,
@@ -98,7 +98,7 @@ async def manage_places_ep(_id: PathIdDep,
     return await manage_places(session, _id, m2m_ids)
 
 
-@router.post('/{id}/users_involved')
+@router.post('/{id}/users_involved', dependencies=[Depends(restrict_by_user_id), ])
 async def manage_users_involved_ep(_id: PathIdDep,
                                    session: SessionDep,
                                    m2m: AddRemoveUsersInvolvedSerializer,
