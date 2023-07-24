@@ -1,6 +1,6 @@
 import asyncio
 import contextvars
-from typing import Annotated, Any, AsyncGenerator, TYPE_CHECKING
+from typing import Annotated, Any, AsyncGenerator, Iterator, TYPE_CHECKING
 
 import jwt
 from fastapi import Depends, HTTPException, Path, Request, status
@@ -181,7 +181,7 @@ def id_list_in_query_params(_id: list[int] = Query([], alias='id')):
 GetParamsIdsDep = Annotated[list[int], Depends(id_list_in_query_params)]
 
 
-def restrict_by_user_id(user_id: UserIdDep, session: SessionDep) -> None:
+def restrict_by_user_id(user_id: UserIdDep, session: SessionDep) -> Iterator[None]:
     """
     Ограничивает кверисет только теми страйками который создал реквест юзер.
     """

@@ -17,11 +17,12 @@ register(StrikeToUserAssociationFactory)
 @pytest.fixture
 async def strike(strike_factory: StrikeFactory,
                  create_instance_from_factory: Callable[['AsyncSession', 'Factory', Any, ...], Awaitable['Strike']],
+                 user_in_db,
                  ) -> Awaitable['Strike']:
     """
     Инстанс модели Strike сохраненный в БД.
     """
-    return await create_instance_from_factory(strike_factory)
+    return await create_instance_from_factory(strike_factory, created_by=user_in_db)
 
 
 @pytest.fixture

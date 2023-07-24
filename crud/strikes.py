@@ -2,7 +2,7 @@ from typing import NoReturn, TYPE_CHECKING
 
 from fastapi import HTTPException, status
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import Integer, column, delete, exc as sa_exc, select, func
+from sqlalchemy import Integer, delete, exc as sa_exc, func, select
 from sqlalchemy.dialects.postgresql import ARRAY, insert
 from sqlalchemy.orm import joinedload, load_only, selectinload, with_expression
 

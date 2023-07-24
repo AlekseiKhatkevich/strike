@@ -24,7 +24,7 @@ async def test_manage_group_ep(strike, strike_p, async_client_httpx):
     assert response.json() == add
 
 
-async def test_manage_places_ep(strike, place, async_client_httpx):
+async def test_manage_places_ep(strike, place, async_client_httpx, user_in_db):
     """
     Позитивный тест ЭП POST /strikes/{strike_id:int}/places.
     """
