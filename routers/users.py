@@ -8,8 +8,8 @@ from fastapi import (
 from sqlalchemy import exc as so_exc
 
 from config import settings
-from crud.users import create_new_user, delete_user, update_user
-from internal.dependencies import SessionDep, jwt_authorize, UserModelInstDep
+from crud.users import create_new_user, delete_user, update_user, user_statistics
+from internal.dependencies import SessionDep, UserIdDep, jwt_authorize, UserModelInstDep
 from internal.model_logging import create_log
 from internal.ratelimit import limiter
 from serializers.users import (
@@ -76,3 +76,12 @@ async def update_current_user(session: SessionDep,
     """
     # noinspection PyTypeChecker
     return await update_user(session, user, user_data.model_dump(exclude_unset=True))
+
+
+@router.get('/me/statistics/')
+async def current_user_statistics(session: SessionDep, user_id: UserIdDep):
+    """
+
+    """
+    return await user_statistics(session, user_id)
+

@@ -1,12 +1,12 @@
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import aliased
 
 from crud.auth import check_invitation_token_used_already
 from crud.helpers import commit_if_not_in_transaction
-from models import User, UsedToken
+from models import CRUDLog, User, UsedToken
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 from security.hashers import make_hash
 from security.invitation import verify_invitation_token
@@ -21,6 +21,7 @@ __all__ = (
     'delete_user',
     'update_user',
     'active_users_view',
+    'user_statistics',
 )
 
 
@@ -101,3 +102,29 @@ async def create_new_user(session: 'AsyncSession', user_data: 'UserRegistrationS
 active_users_view = aliased(
     User, select(User).where(User.is_active == True).subquery(), name='active_users',
 )
+
+
+async def user_statistics(session: 'AsyncSession', user_id):
+    """
+
+    """
+    rank_by_action_sq = select(
+        CRUDLog.user_id,
+        CRUDLog.action,
+        func.count('*').label('cnt'),
+        func.rank().over(partition_by=CRUDLog.action, order_by=func.count('*').desc()).label('rnk'),
+    ).where(
+        CRUDLog.user_id.is_not(None)
+    ).group_by(
+        CRUDLog.user_id,
+        CRUDLog.action,
+    ).subquery()
+
+    action_cnt_rnk = select(
+        rank_by_action_sq.c.action,
+        rank_by_action_sq.c.cnt,
+        rank_by_action_sq.c.rnk,
+    ).where(
+        rank_by_action_sq.c.user_id == user_id
+    )
+
