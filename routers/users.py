@@ -15,7 +15,7 @@ from internal.ratelimit import limiter
 from serializers.users import (
     UserRegistrationSerializer,
     UserOutMeSerializer,
-    UserInModificationSerializer,
+    UserInModificationSerializer, UserStatisticsSerializer,
 )
 
 __all__ = (
@@ -79,7 +79,7 @@ async def update_current_user(session: SessionDep,
 
 
 @router.get('/me/statistics/')
-async def current_user_statistics(session: SessionDep, user_id: UserIdDep):
+async def current_user_statistics(session: SessionDep, user_id: UserIdDep) -> UserStatisticsSerializer:
     """
 
     """

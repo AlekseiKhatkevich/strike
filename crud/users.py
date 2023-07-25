@@ -1,12 +1,14 @@
 import datetime
-from typing import TYPE_CHECKING
 from types import SimpleNamespace
-from sqlalchemy import select, func
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Integer, func, select
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import aliased
 
 from crud.auth import check_invitation_token_used_already
 from crud.helpers import commit_if_not_in_transaction
-from models import CRUDLog, User, UsedToken
+from models import CRUDLog, Strike, StrikeToUserAssociation, UsedToken, User
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 from security.hashers import make_hash
 from security.invitation import verify_invitation_token
@@ -108,7 +110,7 @@ async def user_statistics(session: 'AsyncSession', user_id):
     """
 
     """
-    user_stats = SimpleNamespace()
+    user_stats = SimpleNamespace(user_id=user_id)
 
     rank_by_action_sq = select(
         CRUDLog.user_id,
@@ -132,5 +134,26 @@ async def user_statistics(session: 'AsyncSession', user_id):
     )
 
     for action, count, rank in (await session.execute(action_cnt_rnk)).all():
-        setattr(user_stats, action.name, SimpleNamespace(count=count, rank=rank))
+        setattr(user_stats, action.name, dict(count=count, rank=rank))
+
+    strike_ids = select(
+       func.array_agg(StrikeToUserAssociation.strike_id, type_=ARRAY(Integer)),
+    ).where(
+        StrikeToUserAssociation.user_id == user_id
+    ).scalar_subquery()
+
+    strikes_stats = select(
+        func.nullif(func.count('*'), 0),
+        strike_ids,
+    ).select_from(
+        Strike
+    ).where(
+        Strike.created_by_id == user_id
+    )
+
+    user_stats.num_strikes_created, user_stats.strikes_involved_ids = (
+        await session.execute(strikes_stats)
+    ).one()
+
+    return user_stats
 

@@ -112,8 +112,8 @@ class LogActionSerializer(BaseModel):
     """
 
     """
-    count: int = 0
-    rank: int | None = None
+    count: IntIdType | None = None
+    rank: IntIdType | None = None
 
 
 class UserStatisticsSerializer(BaseModel):
@@ -126,6 +126,8 @@ class UserStatisticsSerializer(BaseModel):
     delete: LogActionSerializer = LogActionSerializer()
     add: LogActionSerializer = LogActionSerializer()
     remove: LogActionSerializer = LogActionSerializer()
+    num_strikes_created: int | None
+    strikes_involved_ids: list[int] | None
 
     model_config = ConfigDict(from_attributes=True)
 
