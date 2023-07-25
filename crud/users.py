@@ -137,29 +137,33 @@ async def user_statistics(session: 'AsyncSession', user_id):
         setattr(user_stats, action.name, dict(count=count, rank=rank))
 
     strike_ids = select(
-        func.array_agg(StrikeToUserAssociation.strike_id, type_=ARRAY(Integer)).label('one'),
-        func.array_agg(StrikeToUserAssociation.strike_id, type_=ARRAY(Integer)).filter(Strike.is_active == True).label('two'),
+        func.array_agg(
+            StrikeToUserAssociation.strike_id, type_=ARRAY(Integer)
+        ).label('strikes_involved_ids'),
+        func.array_agg(
+            StrikeToUserAssociation.strike_id, type_=ARRAY(Integer)
+        ).filter(
+            Strike.is_active == True
+        ).label('strikes_involved_ids_active'),
     ).where(
         StrikeToUserAssociation.user_id == user_id
     ).join(Strike).subquery()
 
     strikes_stats = select(
-        func.nullif(func.count('*'), 0),
-        strike_ids.c.one,
-        strike_ids.c.two,
+        func.nullif(func.count('*'), 0).label('num_strikes_created'),
+        strike_ids.c.strikes_involved_ids,
+        strike_ids.c.strikes_involved_ids_active,
     ).select_from(
         Strike
     ).where(
         Strike.created_by_id == user_id
     ).group_by(
-        strike_ids.c.one,
-        strike_ids.c.two,
+        strike_ids.c.strikes_involved_ids,
+        strike_ids.c.strikes_involved_ids_active,
     )
 
     strike_stats = (await session.execute(strikes_stats)).one()
-    user_stats.num_strikes_created = strike_stats[0]
-    user_stats.strikes_involved_ids = strike_stats[1]
-    user_stats.strikes_involved_ids_active = strike_stats[-1]
+    user_stats.__dict__.update(strike_stats._mapping)
 
     return user_stats
 
