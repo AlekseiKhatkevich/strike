@@ -22,8 +22,10 @@ __all__ = (
     'UserRegistrationSerializer',
     'UserOutMeSerializer',
     'UserInModificationSerializer',
+    'UserStatisticsSerializer',
 )
 
+from serializers.typing import IntIdType
 
 password_regexp = re.compile(USER_PASSWORD_REGEXP)
 password_strength_error_message = 'Password is not strong enough.'
@@ -104,3 +106,26 @@ class UserRegistrationSerializer(UserBaseSerializer):
     """
     invitation_token: SecretStr
     invitation_password: SecretStr | None = None
+
+
+class LogActionSerializer(BaseModel):
+    """
+
+    """
+    count: int = 0
+    rank: int | None = None
+
+
+class UserStatisticsSerializer(BaseModel):
+    """
+
+    """
+    user_id: IntIdType
+    create: LogActionSerializer = LogActionSerializer()
+    update: LogActionSerializer = LogActionSerializer()
+    delete: LogActionSerializer = LogActionSerializer()
+    add: LogActionSerializer = LogActionSerializer()
+    remove: LogActionSerializer = LogActionSerializer()
+
+    model_config = ConfigDict(from_attributes=True)
+

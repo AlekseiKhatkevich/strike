@@ -1,6 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING
-
+from types import SimpleNamespace
 from sqlalchemy import select, func
 from sqlalchemy.orm import aliased
 
@@ -108,6 +108,8 @@ async def user_statistics(session: 'AsyncSession', user_id):
     """
 
     """
+    user_stats = SimpleNamespace()
+
     rank_by_action_sq = select(
         CRUDLog.user_id,
         CRUDLog.action,
@@ -120,6 +122,7 @@ async def user_statistics(session: 'AsyncSession', user_id):
         CRUDLog.action,
     ).subquery()
 
+    # noinspection PyTypeChecker
     action_cnt_rnk = select(
         rank_by_action_sq.c.action,
         rank_by_action_sq.c.cnt,
@@ -127,4 +130,7 @@ async def user_statistics(session: 'AsyncSession', user_id):
     ).where(
         rank_by_action_sq.c.user_id == user_id
     )
+
+    for action, count, rank in (await session.execute(action_cnt_rnk)).all():
+        setattr(user_stats, action.name, SimpleNamespace(count=count, rank=rank))
 
