@@ -218,6 +218,8 @@ def dt_range_query_param(
         dt_to: datetime.datetime | None = None,
 ) -> Range[datetime.datetime]:
     """
+    Получаем диапазон datetime (от, до) по которому далее фильтруем кверисет или делаем
+    с ним еще что-нибудь.
     """
     if dt_from is None and dt_to is None:
         dt_from = datetime.datetime.min.replace(tzinfo=datetime.UTC)

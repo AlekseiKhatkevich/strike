@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Integer, func, select, true
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, Range
 from sqlalchemy.orm import aliased
 
 from crud.auth import check_invitation_token_used_already
@@ -106,16 +106,18 @@ active_users_view = aliased(
 )
 
 
-async def user_statistics(session: 'AsyncSession', user_id, period):
+async def user_statistics(session: 'AsyncSession',
+                          user_id: int,
+                          period: Range[datetime.datetime],
+                          ) -> SimpleNamespace:
     """
-
+    Статистка юзера.
     """
     user_stats = SimpleNamespace(user_id=user_id)
 
     rank_by_action_sq = select(
         CRUDLog.user_id,
         CRUDLog.action,
-        # CRUDLog.operation_ts,
         func.count('*').label('cnt'),
         func.rank().over(partition_by=CRUDLog.action, order_by=func.count('*').desc()).label('rnk'),
     ).where(

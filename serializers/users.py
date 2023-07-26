@@ -110,7 +110,7 @@ class UserRegistrationSerializer(UserBaseSerializer):
 
 class LogActionSerializer(BaseModel):
     """
-
+    Для статистики по CRUDLog (сколько разных действий сделал).
     """
     count: IntIdType | None = None
     rank: IntIdType | None = None
@@ -118,7 +118,7 @@ class LogActionSerializer(BaseModel):
 
 class UserStatisticsSerializer(BaseModel):
     """
-
+    Для отдачи на фронт статистики о юзере за какой-то период.
     """
     user_id: IntIdType
     create: LogActionSerializer = LogActionSerializer()
@@ -128,7 +128,5 @@ class UserStatisticsSerializer(BaseModel):
     remove: LogActionSerializer = LogActionSerializer()
     num_strikes_created: int | None = None
     strikes_involved_ids: list[int] | None = None
-    # strikes_involved_ids_active: list[int] | None
 
     model_config = ConfigDict(from_attributes=True)
-

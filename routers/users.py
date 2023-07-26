@@ -84,7 +84,7 @@ async def current_user_statistics(session: SessionDep,
                                   dt_range: DtRangeDep,
                                   ) -> UserStatisticsSerializer:
     """
-
+    Статистка юзера.
     """
     return await user_statistics(session, user_id, period=dt_range)
 
