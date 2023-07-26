@@ -9,7 +9,7 @@ from sqlalchemy import exc as so_exc
 
 from config import settings
 from crud.users import create_new_user, delete_user, update_user, user_statistics
-from internal.dependencies import SessionDep, UserIdDep, jwt_authorize, UserModelInstDep
+from internal.dependencies import DtRangeDep, SessionDep, UserIdDep, jwt_authorize, UserModelInstDep
 from internal.model_logging import create_log
 from internal.ratelimit import limiter
 from serializers.users import (
@@ -79,9 +79,12 @@ async def update_current_user(session: SessionDep,
 
 
 @router.get('/me/statistics/')
-async def current_user_statistics(session: SessionDep, user_id: UserIdDep) -> UserStatisticsSerializer:
+async def current_user_statistics(session: SessionDep,
+                                  user_id: UserIdDep,
+                                  dt_range: DtRangeDep,
+                                  ) -> UserStatisticsSerializer:
     """
 
     """
-    return await user_statistics(session, user_id)
+    return await user_statistics(session, user_id, period=dt_range)
 

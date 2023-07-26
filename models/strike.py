@@ -28,7 +28,7 @@ from sqlalchemy.sql import func
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from models.annotations import BigIntPk
-from models.mixins import UpdatedAtMixin, CreatedAtMixin
+from models.mixins import CreatedUpdatedMixin, CreatedAtMixin
 from models.validators import positive_integer_only
 
 if TYPE_CHECKING:
@@ -125,7 +125,7 @@ class StrikeToItself(CreatedAtMixin, Base):
         return f'Strike m2m {self.strike_left_id} <-> {self.strike_right_id}'
 
 
-class Strike(UpdatedAtMixin, Base):
+class Strike(CreatedUpdatedMixin, Base):
     """
     Забастовка.
     """

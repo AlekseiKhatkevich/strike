@@ -2,7 +2,7 @@ import datetime
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, func, select
+from sqlalchemy import Integer, func, select, true
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import aliased
 
@@ -106,7 +106,7 @@ active_users_view = aliased(
 )
 
 
-async def user_statistics(session: 'AsyncSession', user_id):
+async def user_statistics(session: 'AsyncSession', user_id, period):
     """
 
     """
@@ -115,10 +115,12 @@ async def user_statistics(session: 'AsyncSession', user_id):
     rank_by_action_sq = select(
         CRUDLog.user_id,
         CRUDLog.action,
+        # CRUDLog.operation_ts,
         func.count('*').label('cnt'),
         func.rank().over(partition_by=CRUDLog.action, order_by=func.count('*').desc()).label('rnk'),
     ).where(
-        CRUDLog.user_id.is_not(None)
+        CRUDLog.user_id.is_not(None),
+        CRUDLog.operation_ts.op('<@')(period)
     ).group_by(
         CRUDLog.user_id,
         CRUDLog.action,
@@ -130,7 +132,7 @@ async def user_statistics(session: 'AsyncSession', user_id):
         rank_by_action_sq.c.cnt,
         rank_by_action_sq.c.rnk,
     ).where(
-        rank_by_action_sq.c.user_id == user_id
+        rank_by_action_sq.c.user_id == user_id,
     )
 
     for action, count, rank in (await session.execute(action_cnt_rnk)).all():
@@ -140,30 +142,26 @@ async def user_statistics(session: 'AsyncSession', user_id):
         func.array_agg(
             StrikeToUserAssociation.strike_id, type_=ARRAY(Integer)
         ).label('strikes_involved_ids'),
-        func.array_agg(
-            StrikeToUserAssociation.strike_id, type_=ARRAY(Integer)
-        ).filter(
-            Strike.is_active == True
-        ).label('strikes_involved_ids_active'),
     ).where(
-        StrikeToUserAssociation.user_id == user_id
-    ).join(Strike).subquery()
+        StrikeToUserAssociation.user_id == Strike.created_by_id,
+    ).lateral()
 
     strikes_stats = select(
         func.nullif(func.count('*'), 0).label('num_strikes_created'),
         strike_ids.c.strikes_involved_ids,
-        strike_ids.c.strikes_involved_ids_active,
     ).select_from(
         Strike
     ).where(
-        Strike.created_by_id == user_id
+        Strike.created_by_id == user_id,
+        Strike.created_at.op('<@')(period),
     ).group_by(
         strike_ids.c.strikes_involved_ids,
-        strike_ids.c.strikes_involved_ids_active,
+    ).join_from(
+        Strike, strike_ids, true()
     )
 
-    strike_stats = (await session.execute(strikes_stats)).one()
-    user_stats.__dict__.update(strike_stats._mapping)
+    strike_stats = (await session.execute(strikes_stats)).one_or_none()
+    if strike_stats is not None:
+        user_stats.__dict__.update(strike_stats._mapping)
 
     return user_stats
-

@@ -1,5 +1,6 @@
 import asyncio
 import contextvars
+import datetime
 from typing import Annotated, Any, AsyncGenerator, Iterator, TYPE_CHECKING
 
 import jwt
@@ -10,6 +11,7 @@ from fastapi_pagination import Params
 from fastapi_pagination.bases import AbstractParams
 from loguru import logger
 from sqlalchemy import event
+from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, with_loader_criteria
 
@@ -40,6 +42,7 @@ __all__ = (
     'log',
     'RestrictByUserIdDep',
     'restrict_by_user_id',
+    'DtRangeDep',
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -208,3 +211,19 @@ def restrict_by_user_id(user_id: UserIdDep, session: SessionDep) -> Iterator[Non
 
 
 RestrictByUserIdDep = Annotated[Any, Depends(restrict_by_user_id)]
+
+
+def dt_range_query_param(
+        dt_from: datetime.datetime | None = None,
+        dt_to: datetime.datetime | None = None,
+) -> Range[datetime.datetime]:
+    """
+    """
+    if dt_from is None and dt_to is None:
+        dt_from = datetime.datetime.min.replace(tzinfo=datetime.UTC)
+        dt_to = datetime.datetime.max.replace(tzinfo=datetime.UTC)
+
+    return Range(dt_from, dt_to)
+
+
+DtRangeDep = Annotated[Range[datetime.datetime], Depends(dt_range_query_param)]
