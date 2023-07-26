@@ -214,17 +214,13 @@ RestrictByUserIdDep = Annotated[Any, Depends(restrict_by_user_id)]
 
 
 def dt_range_query_param(
-        dt_from: datetime.datetime | None = None,
-        dt_to: datetime.datetime | None = None,
+        dt_from: datetime.datetime | None = datetime.datetime.min.replace(tzinfo=datetime.UTC),
+        dt_to: datetime.datetime | None = datetime.datetime.max.replace(tzinfo=datetime.UTC),
 ) -> Range[datetime.datetime]:
     """
     Получаем диапазон datetime (от, до) по которому далее фильтруем кверисет или делаем
     с ним еще что-нибудь.
     """
-    if dt_from is None and dt_to is None:
-        dt_from = datetime.datetime.min.replace(tzinfo=datetime.UTC)
-        dt_to = datetime.datetime.max.replace(tzinfo=datetime.UTC)
-
     return Range(dt_from, dt_to)
 
 

@@ -87,4 +87,3 @@ async def current_user_statistics(session: SessionDep,
     Статистка юзера.
     """
     return await user_statistics(session, user_id, period=dt_range)
-
