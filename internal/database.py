@@ -4,8 +4,20 @@ import uuid
 from functools import cache
 from typing import Self
 
-from sqlalchemy import (BigInteger, MetaData, NullPool, TIMESTAMP, inspect)
-from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import (
+    BigInteger,
+    MetaData,
+    NullPool,
+    TIMESTAMP,
+    inspect,
+)
+from sqlalchemy.dialects.postgresql import Range, TIME, TSTZRANGE
+from sqlalchemy.ext.asyncio import (
+    AsyncAttrs,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from config import settings
@@ -52,6 +64,8 @@ class Base(AsyncAttrs, DeclarativeBase):
     type_annotation_map = {
         BigIntType: BigInteger,
         datetime.datetime: TIMESTAMP(timezone=True),
+        datetime.time: TIME(timezone=True),
+        Range[datetime.datetime]: TSTZRANGE(),
     }
 
     @classmethod

@@ -1,8 +1,8 @@
 import datetime
 
 from sqlalchemy import CheckConstraint, Column, ForeignKey, String, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import ExcludeConstraint, Range, TSTZRANGE
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import ExcludeConstraint, Range
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
 from internal.database import Base
@@ -30,6 +30,8 @@ class Jail(Base):
         ForeignKey('regions.name', ondelete='RESTRICT'),
     )
 
+    region: Mapped['Region'] = relationship()
+
     def __repr__(self):
         return f'Крытая "{self.name}" в регионе {self.region_id}.'
 
@@ -45,9 +47,7 @@ class Detention(Base):
     __tablename__ = 'detentions'
 
     id: Mapped[BigIntPk]
-    duration: Mapped[Range[datetime.datetime]] = mapped_column(
-        TSTZRANGE(),
-    )
+    duration: Mapped[Range[datetime.datetime]]
     name: Mapped[str] = mapped_column(
         String(collation=RU_RU_CE_COLLATION_NAME),
         index=True,
@@ -74,7 +74,7 @@ class Detention(Base):
             name='duration_name_exc_constraint',
         ),
         CheckConstraint(
-            ~ func.lower_inf(duration),
+            ~ func.lower_inf('duration'),
             name='duration_has_start_dt',
         )
     )
