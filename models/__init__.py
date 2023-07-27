@@ -6,3 +6,4 @@ from .enterprise import *
 from .place import *
 from .union import *
 from .crud_log import *
+from .detention import *

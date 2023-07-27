@@ -27,7 +27,7 @@ class Jail(Base):
     )
     address: Mapped[str]
     region_id: Mapped[str] = mapped_column(
-        ForeignKey('regions.name', ondelete='PROTECT'),
+        ForeignKey('regions.name', ondelete='RESTRICT'),
     )
 
     def __repr__(self):
@@ -56,11 +56,11 @@ class Detention(Base):
     needs_medical_attention: Mapped[bool] = False
     needs_lawyer: Mapped[bool] = False
     jail_id: Mapped[BigIntType] = mapped_column(
-        ForeignKey(Jail.id, ondelete='PROTECT')
+        ForeignKey(Jail.id, ondelete='RESTRICT')
     )
     charge: Mapped[str | None]
     transferred_from_id: Mapped[BigIntType | None] = mapped_column(
-        ForeignKey('detentions.id', ondelete='PROTECT')
+        ForeignKey('detentions.id', ondelete='RESTRICT')
     )
     relative_or_friend: Mapped[str | None]
 
