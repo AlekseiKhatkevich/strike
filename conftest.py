@@ -32,6 +32,7 @@ pytest_plugins = [
     'tests.enterprise.fixtures',
     'tests.place.fixtures',
     'tests.strike.fixtures',
+    'tests.detentions.fixtures',
 ]
 
 
