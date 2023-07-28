@@ -64,6 +64,8 @@ class Detention(Base):
     )
     relative_or_friend: Mapped[str | None]
 
+    jail: Mapped[Jail] = relationship()
+
     def __repr__(self):
         return f'{self.name} находиться в крытой {self.jail_id}.'
 
