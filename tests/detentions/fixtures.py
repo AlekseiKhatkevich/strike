@@ -30,6 +30,6 @@ async def detention(detention_factory: DetentionFactory,
                         ['AsyncSession', 'Factory', Any, ...], Awaitable['Detention']],
                     ) -> Awaitable['Detention']:
     """
-    Инстанс модели Jail сохраненный в БД.
+    Инстанс модели Detention сохраненный в БД.
     """
     return await create_instance_from_factory(detention_factory)
