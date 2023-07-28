@@ -6,9 +6,6 @@ from pydantic import (
     ConfigDict,
     Field,
     PrivateAttr,
-    AfterValidator,
-    PlainSerializer,
-    WithJsonSchema,
     AwareDatetime,
     model_validator,
 )
@@ -18,8 +15,10 @@ from sqlalchemy.dialects.postgresql.ranges import Range
 from internal.serializers import BaseModel
 from models import UserRole
 from serializers.enterprises import EnterpriseInSerializer, EnterpriseOutSerializer
+from serializers.helpers import RangeField
 from serializers.places import PlaceInSerializer, PlaceOutSerializer
 from serializers.typing import IntIdType
+from serializers.unions import UnionOutSerializer
 
 __all__ = (
     'StrikeInSerializer',
@@ -31,9 +30,6 @@ __all__ = (
     'UsersInvolvedOutSerializer',
     'StrikeWithAllRelatedSerializer',
 )
-
-from serializers.unions import UnionOutSerializer
-from serializers.users import UserOutMeSerializer
 
 
 class UsersInvolvedInSerializer(BaseModel):
@@ -62,26 +58,6 @@ class UsersInvolvedOutSerializer(BaseModel):
     role: UserRole
 
     model_config = ConfigDict(from_attributes=True)
-
-
-def range_validator(value: list[AwareDatetime | None]) -> list[AwareDatetime | None]:
-    """
-    Валидация входящих данных для поля duration.
-    """
-    dt1, dt2 = value
-    if dt1 and dt2 and dt1 >= dt2:
-        raise ValueError('Second datetime in range should be greater then first one.')
-    elif not dt1 and not dt2:
-        raise ValueError('Please specify at leas one datetime in range.')
-    return value
-
-
-RangeField = Annotated[
-    list[AwareDatetime | None],
-    AfterValidator(range_validator),
-    PlainSerializer(lambda x: Range(*x), when_used='json'),
-    WithJsonSchema({'type': 'dict'}, mode='serialization'),
-]
 
 
 class StrikeBaseSerializer(BaseModel):

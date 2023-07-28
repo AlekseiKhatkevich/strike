@@ -15,7 +15,15 @@ from internal.logging import configure_loggers
 from internal.ratelimit import limiter
 from models.constraints_descriptions import constr_text_mapping
 from models.exceptions import ModelEntryDoesNotExistsInDbError
-from routers import enterprises, places, strikes, token, union, users
+from routers import (
+    enterprises,
+    places,
+    strikes,
+    token,
+    union,
+    users,
+    detentions,
+)
 from security.invitation import InvitationTokenDeclinedException
 
 __all__ = (
@@ -46,6 +54,7 @@ app.include_router(places.router, prefix='/strikes/places')
 app.include_router(union.router, prefix='/strikes/unions')
 app.include_router(enterprises.router, prefix='/strikes/enterprises')
 app.include_router(strikes.router, prefix='/strikes')
+app.include_router(detentions.router, prefix='/detentions')
 
 
 @app.exception_handler(InvitationTokenDeclinedException)
