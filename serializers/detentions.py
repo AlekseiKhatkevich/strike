@@ -1,3 +1,4 @@
+import datetime
 import enum
 
 from pydantic import ConfigDict, field_validator
@@ -15,10 +16,12 @@ __all__ = (
     'WSDataGetDeleteSerializer',
 )
 
+duration_input_type = Range[datetime.datetime] | list[datetime.datetime, datetime.datetime | None]
+
 
 class WSActionType(str, enum.Enum):
     """
-
+    Типы действий в ЭП WS.
     """
     get_detentions = 'GET_DETENTIONS'
     create_detention = 'CREATE_DETENTIONS'
@@ -28,7 +31,7 @@ class WSActionType(str, enum.Enum):
 
 class WSDataBaseSerializer(BaseModel):
     """
-
+    Базовый сериалайзер для операций через WS.
     """
     duration: RangeField
     name: str
@@ -45,57 +48,21 @@ class WSDataBaseSerializer(BaseModel):
 
 class WSDataCreateUpdateSerializer(WSDataBaseSerializer):
     """
-
+    Для создания или обновления заключения.
     """
     id: IntIdType | None = None
-    # _for_type = WSActionType.create_detention
 
-
-# class WSDataUpdateSerializer(WSDataBaseSerializer):
-#     id: IntIdType
-#     _for_type = WSActionType.update_detention
-#
 
 class WSDataGetDeleteSerializer(BaseModel):
+    """
+    Для передачи id (GET & DELETE).
+    """
     id: IntIdType
 
 
-# class WSDataGetSerializer(WSDataBaseSerializer):
-#     ids: list[IntIdType]
-#     _for_type = WSActionType.get_detentions
-
-
-# class DetentionsWSSerializer(BaseModel):
-#     """
-#
-#     """
-#     action: WSActionType
-#     data: (WSDataCreateSerializer |
-#            WSDataUpdateSerializer |
-#            WSDataDeleteSerializer |
-#            WSDataGetSerializer)
-#
-#     # noinspection PyNestedDecorators
-#     @field_validator('data')
-#     @classmethod
-#     def validate_for_type(cls, data: WSDataBaseSerializer,
-#                           info: FieldValidationInfo,
-#                           ) -> WSDataBaseSerializer:
-#         """
-#
-#         """
-#         if (nested_action := data._for_type) != (action := info.data['action']):
-#             raise ValueError(
-#                 f'Action and data mismatch!. You specified action "{action}" but "data" provided'
-#                 f' is for "{nested_action}".'
-#             )
-#         else:
-#             return data
-#
-
 class WSDetentionOutSerializer(BaseModel):
     """
-
+    Отдача инфы на фронт о заключении человека.
     """
     duration: RangeField
     name: str
@@ -109,11 +76,13 @@ class WSDetentionOutSerializer(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # noinspection PyNestedDecorators
     @field_validator('duration', mode='before')
     @classmethod
-    def validate_for_type(cls, duration, info: FieldValidationInfo):
+    def _unpack_duration_if_needed(cls, duration: duration_input_type,
+                                   info: FieldValidationInfo,
+                                   ) -> list[datetime.datetime, datetime.datetime | None]:
         if isinstance(duration, Range):
             return [duration.lower, duration.upper]
         else:
             return duration
-

@@ -21,16 +21,21 @@ router = APIRouter(tags=['detentions'])
 
 
 @asynccontextmanager
-async def respond_with_exception_if_any(websocket):
+async def respond_with_exception_if_any(websocket: WebSocket) -> WebSocket:
+    """
+    В случае получения исключения пересылаем это исключение в виде текста на клиентский ws.
+    """
     try:
         yield websocket
     except Exception as err:
         await websocket.send_text(str(err))
-        # raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR)
 
 
 @router.websocket('/ws')
 async def websocket_endpoint(session: SessionDep, websocket: WebSocket):
+    """
+    CRUD модели DETENTION.
+    """
     await websocket.accept()
     while True:
         async with respond_with_exception_if_any(websocket) as websocket:
