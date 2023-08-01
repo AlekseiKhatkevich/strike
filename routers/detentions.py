@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, WebSocket
 from sqlalchemy import column
 
+from crud.detentions import zk_for_lawyer
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from internal.dependencies import SessionDep
 from models import Detention
@@ -10,7 +11,7 @@ from serializers.detentions import (
     WSActionType,
     WSDataCreateUpdateSerializer,
     WSDataGetDeleteSerializer,
-    WSDetentionOutSerializer,
+    WSDetentionOutSerializer, WSForLawyerInSerializer,
 )
 
 __all__ = (
@@ -38,7 +39,15 @@ async def for_lawyer(session: SessionDep, websocket: WebSocket):
     """
     await websocket.accept()
     while True:
-        pass#NOTIFY
+        async with respond_with_exception_if_any(websocket) as websocket:
+            data = await websocket.receive_json()
+            deserialized_data = WSForLawyerInSerializer(**data)
+            zk = await zk_for_lawyer(
+                session,
+                deserialized_data.regions,
+                deserialized_data.start_date,
+                deserialized_data.jail_ids,
+            )
 
 
 @router.websocket('/ws')
