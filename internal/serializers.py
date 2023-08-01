@@ -1,10 +1,14 @@
 from typing import Any, Callable
 
 import orjson
-from pydantic import ConfigDict, BaseModel as PydanticBaseModel
+from pydantic import BaseModel as PydanticBaseModel, ConfigDict
+from pydantic._internal import _annotated_handlers
+from pydantic.types import _check_annotated_type
+from pydantic_core import core_schema
 
 __all__ = (
     'BaseModel',
+    'PastAwareDatetime',
 )
 
 
@@ -24,3 +28,25 @@ class BaseModel(PydanticBaseModel):
         str_strip_whitespace=True,
         str_min_length=1,
     )
+
+
+class PastAwareDatetime:
+    """
+    Объект datetime с временной зоной в прошлом.
+    """
+    @classmethod
+    def __get_pydantic_core_schema__(
+            cls, source: type[Any], handler: _annotated_handlers.GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        if cls is source:
+            # used directly as a type
+            return core_schema.datetime_schema(now_op='past', tz_constraint='aware')
+        else:
+            schema = handler(source)
+            _check_annotated_type(schema['type'], 'datetime', cls.__name__)
+            schema['now_op'] = 'past'
+            schema['tz_constraint'] = 'aware'
+            return schema
+
+    def __repr__(self) -> str:
+        return 'PastAwareDatetime'

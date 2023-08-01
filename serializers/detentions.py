@@ -1,11 +1,13 @@
 import datetime
 import enum
+from typing import Literal
 
 from pydantic import ConfigDict, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
 from sqlalchemy.dialects.postgresql import Range
 
-from internal.serializers import BaseModel
+from internal.serializers import BaseModel, PastAwareDatetime
+from models.initial_data import RU_regions
 from serializers.helpers import RangeField
 from serializers.typing import IntIdType
 
@@ -14,6 +16,7 @@ __all__ = (
     'WSActionType',
     'WSDataCreateUpdateSerializer',
     'WSDataGetDeleteSerializer',
+    'WSForLawyerInSerializer',
 )
 
 duration_input_type = Range[datetime.datetime] | list[datetime.datetime, datetime.datetime | None]
@@ -86,3 +89,12 @@ class WSDetentionOutSerializer(BaseModel):
             return [duration.lower, duration.upper]
         else:
             return duration
+
+
+class WSForLawyerInSerializer(BaseModel):
+    """
+
+    """
+    regions: list[Literal[*RU_regions.names]] | None = None
+    start_date: PastAwareDatetime = datetime.datetime.min.replace(tzinfo=datetime.UTC)
+    jail_ids: list[IntIdType] | None = None

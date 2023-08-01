@@ -31,6 +31,16 @@ async def respond_with_exception_if_any(websocket: WebSocket) -> WebSocket:
         await websocket.send_text(str(err))
 
 
+@router.websocket('/ws/lawyer')
+async def for_lawyer(session: SessionDep, websocket: WebSocket):
+    """
+
+    """
+    await websocket.accept()
+    while True:
+        pass#NOTIFY
+
+
 @router.websocket('/ws')
 async def websocket_endpoint(session: SessionDep, websocket: WebSocket):
     """

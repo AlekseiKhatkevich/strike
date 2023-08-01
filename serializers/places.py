@@ -2,9 +2,14 @@ import abc
 from decimal import Decimal
 from typing import Literal
 
-import shapely.wkt
 from geoalchemy2 import WKTElement
-from pydantic import field_validator, model_validator, ConfigDict, condecimal, constr
+from pydantic import (
+    field_validator,
+    model_validator,
+    ConfigDict,
+    condecimal,
+    constr,
+)
 
 from internal.geo import point_from_numeric, point_from_wkt_or_wkb
 from internal.serializers import BaseModel
