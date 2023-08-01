@@ -17,6 +17,8 @@ __all__ = (
     'WSDataCreateUpdateSerializer',
     'WSDataGetDeleteSerializer',
     'WSForLawyerInSerializer',
+    'WsForLawyerOutSerializer',
+    'JailOutSerializer',
 )
 
 duration_input_type = Range[datetime.datetime] | list[datetime.datetime, datetime.datetime | None]
@@ -98,3 +100,21 @@ class WSForLawyerInSerializer(BaseModel):
     regions: list[Literal[*RU_regions.names]] | None = None
     start_date: PastAwareDatetime = datetime.datetime.min.replace(tzinfo=datetime.UTC)
     jail_ids: list[IntIdType] | None = None
+
+
+class JailOutSerializer(BaseModel):
+    """
+
+    """
+    id: IntIdType
+    address: str
+    region_id: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WsForLawyerOutSerializer(WSDetentionOutSerializer):
+    """
+
+    """
+    jail: JailOutSerializer

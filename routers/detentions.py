@@ -1,17 +1,21 @@
+import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import column
+from starlette.websockets import WebSocketState
 
 from crud.detentions import zk_for_lawyer
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
+from internal.constants import WS_FOR_LAWYER_TIME_PERIOD
 from internal.dependencies import SessionDep
 from models import Detention
 from serializers.detentions import (
     WSActionType,
     WSDataCreateUpdateSerializer,
     WSDataGetDeleteSerializer,
-    WSDetentionOutSerializer, WSForLawyerInSerializer,
+    WSDetentionOutSerializer,
+    WSForLawyerInSerializer,
 )
 
 __all__ = (
@@ -37,17 +41,35 @@ async def for_lawyer(session: SessionDep, websocket: WebSocket):
     """
 
     """
+    max_id = 1
+
+    async def send_zks_onto_frontend(zks):
+        await websocket.send_json(
+            [WSDetentionOutSerializer.model_validate(zk).model_dump_json() for zk in zks]
+        )
+        nonlocal max_id
+        max_id = max(zks, key=lambda zk: zk.id).id
+
     await websocket.accept()
-    while True:
-        async with respond_with_exception_if_any(websocket) as websocket:
-            data = await websocket.receive_json()
-            deserialized_data = WSForLawyerInSerializer(**data)
-            zk = await zk_for_lawyer(
-                session,
-                deserialized_data.regions,
-                deserialized_data.start_date,
-                deserialized_data.jail_ids,
-            )
+
+    async with respond_with_exception_if_any(websocket) as websocket:
+        data = await websocket.receive_json()
+        deserialized_data = WSForLawyerInSerializer(**data)
+        regions = deserialized_data.regions
+        start_date = deserialized_data.start_date
+        jail_ids = deserialized_data.jail_ids
+
+        try:
+            while websocket.application_state == WebSocketState.CONNECTED:
+                new_zk = await zk_for_lawyer(
+                    session, regions, start_date, jail_ids, max_id,
+                )
+                if new_zk:
+                    await send_zks_onto_frontend(new_zk)
+
+                await asyncio.sleep(WS_FOR_LAWYER_TIME_PERIOD)
+        except WebSocketDisconnect:
+            return None
 
 
 @router.websocket('/ws')

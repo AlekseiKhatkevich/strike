@@ -91,7 +91,7 @@ class Jail(Base):
             Detention.jail_id == id,
             Detention.duration.op('@>')(func.now()),
         ).correlate_except(Detention).scalar_subquery()
-    )
+        )
     )
 
     region: Mapped['Region'] = relationship()
