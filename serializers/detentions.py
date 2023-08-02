@@ -95,7 +95,7 @@ class WSDetentionOutSerializer(BaseModel):
 
 class WSForLawyerInSerializer(BaseModel):
     """
-
+    Для получения настроек ЭП '/ws/lawyer' с фронта.
     """
     regions: list[Literal[*RU_regions.names]] | None = None
     start_date: PastAwareDatetime = datetime.datetime.min.replace(tzinfo=datetime.UTC)
@@ -104,17 +104,19 @@ class WSForLawyerInSerializer(BaseModel):
 
 class JailOutSerializer(BaseModel):
     """
-
+    Для отдачи инфы о крытой на фронт.
     """
     id: IntIdType
     address: str
     region_id: str
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True,)
 
 
 class WsForLawyerOutSerializer(WSDetentionOutSerializer):
     """
-
+    Для отдачи инф на фронт через вебсокет '/ws/lawyer'.
     """
     jail: JailOutSerializer
+
+    model_config = ConfigDict(extra='forbid', )

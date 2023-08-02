@@ -1,16 +1,27 @@
+import datetime
+from typing import TYPE_CHECKING
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from models import Detention, Jail
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 __all__ = (
     'zk_for_lawyer',
 )
 
 
-async def zk_for_lawyer(session, regions, start_date, jail_ids, last_id=None):
+async def zk_for_lawyer(session: 'AsyncSession',
+                        regions: list[str, ...],
+                        start_date: datetime.datetime,
+                        jail_ids: list[int, ...],
+                        last_id: int | None = None,
+                        ) -> list[Detention, ...]:
     """
-
+    Получение списка задержанных для ЭП '/ws/lawyer'.
     """
     # noinspection PyTypeChecker
     stmt = select(
@@ -25,7 +36,7 @@ async def zk_for_lawyer(session, regions, start_date, jail_ids, last_id=None):
     if jail_ids:
         join_on = join_on.and_(Jail.id.in_(jail_ids))
 
-    stmt = stmt.options(joinedload(join_on, innerjoin=True),)
+    stmt = stmt.options(joinedload(join_on, innerjoin=True,),)
 
     if last_id is not None:
         stmt = stmt.where(Detention.id > last_id)

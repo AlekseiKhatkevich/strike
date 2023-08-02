@@ -37,9 +37,10 @@ async def respond_with_exception_if_any(websocket: WebSocket) -> WebSocket:
 
 
 @router.websocket('/ws/lawyer')
-async def for_lawyer(session: SessionDep, websocket: WebSocket):
+async def for_lawyer(session: SessionDep, websocket: WebSocket) -> None:
     """
-
+    Отдает все данные о ЗК по переданным условиям фильтрации, затем раз в n секунд
+    отдает на фронт новые записи с теми же условиями фильтрации.
     """
     max_id = 1
 
@@ -48,21 +49,18 @@ async def for_lawyer(session: SessionDep, websocket: WebSocket):
             [WSDetentionOutSerializer.model_validate(zk).model_dump_json() for zk in zks]
         )
         nonlocal max_id
-        max_id = max(zks, key=lambda zk: zk.id).id
+        max_id = max(max_id, max(zk.id for zk in zks))
 
     await websocket.accept()
 
     async with respond_with_exception_if_any(websocket) as websocket:
         data = await websocket.receive_json()
         deserialized_data = WSForLawyerInSerializer(**data)
-        regions = deserialized_data.regions
-        start_date = deserialized_data.start_date
-        jail_ids = deserialized_data.jail_ids
 
         try:
             while websocket.application_state == WebSocketState.CONNECTED:
                 new_zk = await zk_for_lawyer(
-                    session, regions, start_date, jail_ids, max_id,
+                    session, **deserialized_data.model_dump(), last_id=max_id,
                 )
                 if new_zk:
                     await send_zks_onto_frontend(new_zk)
