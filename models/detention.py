@@ -3,13 +3,13 @@ import datetime
 from sqlalchemy import (
     CheckConstraint,
     Column,
-    ForeignKey,
-    String,
+    DATE, ForeignKey,
+    Index, String,
     UniqueConstraint,
     func,
     select,
 )
-from sqlalchemy.dialects.postgresql import ExcludeConstraint, Range
+from sqlalchemy.dialects.postgresql import ExcludeConstraint, INTERVAL, Range
 from sqlalchemy.orm import (
     Mapped,
     column_property,
@@ -17,6 +17,8 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+from sqlalchemy_utils import create_materialized_view, refresh_materialized_view
+from sqlalchemy_utils.view import CreateView, DropView
 
 from internal.constants import RU_RU_CE_COLLATION_NAME
 from internal.database import Base
@@ -26,6 +28,7 @@ from models.annotations import BigIntPk
 __all__ = (
     'Detention',
     'Jail',
+    'DetentionMaterializedView',
 )
 
 
@@ -91,7 +94,7 @@ class Jail(Base):
             Detention.jail_id == id,
             Detention.duration.op('@>')(func.now()),
         ).correlate_except(Detention).scalar_subquery()
-        )
+    )
     )
 
     region: Mapped['Region'] = relationship()
@@ -107,3 +110,63 @@ class Jail(Base):
     @property
     def has_zk(self) -> bool:
         return self.zk_count > 0
+
+
+class DetentionMaterializedView(Base):
+    """
+    Материализованное представление статистики сидельцев по дням на каждую крытую.
+    https://github.com/kvesteri/sqlalchemy-utils/issues/457#issuecomment-1432453337
+    Пример:
+     +-------+-------+----------+
+    |jail_id|zk_count|date   |
+    +-------+-------+----------+
+    |1      |1      |2023-07-30|
+    |1      |1      |2023-08-01|
+    |1      |1      |2023-07-31|
+    |1      |1      |2023-07-27|
+    |1      |1      |2023-07-28|
+    |1      |1      |2023-08-02|
+    |5      |23     |2023-07-29|
+    |5      |1      |2023-07-27|
+    |1      |1      |2023-07-29|
+    |5      |23     |2023-07-28|
+    +-------+-------+----------+
+    """
+    selectable = select(
+            Detention.jail_id,
+            func.count(Detention.id).label('zk_count'),
+            func.cast(
+                func.generate_series(
+                    func.date_trunc('day', func.lower(Detention.duration)),
+                    func.coalesce(func.date_trunc('day', func.upper(Detention.duration)), func.current_date()),
+                    func.cast(func.concat(1, ' DAY'), INTERVAL)),
+                DATE,
+            ).label('date')
+        ).group_by(
+            Detention.jail_id,
+            'date',
+        )
+
+    __table__ = create_materialized_view(
+        'detentions_stats_per_day',
+        selectable,
+        Base.metadata,
+        indexes=[Index('date_jail_idx', 'date', 'jail_id')]
+    )
+
+    @classmethod
+    def refresh(cls, session, concurrently=True):
+        refresh_materialized_view(session, cls.__table__.fullname, concurrently)
+
+    @classmethod
+    def create(cls, op):
+        cls.drop(op)
+        create_sql = CreateView(cls.__table__.fullname, cls.selectable, materialized=True)
+        op.execute(create_sql)
+        for idx in cls.__table__.indexes:
+            idx.create(op.get_bind())
+
+    @classmethod
+    def drop(cls, op):
+        drop_sql = DropView(cls.__table__.fullname, materialized=True, cascade=True)
+        op.execute(drop_sql)
