@@ -11,8 +11,11 @@ from sqlalchemy import exc as sa_exc
 from config import settings
 from crud.helpers import get_constr_name_from_integrity_error, get_text_from_integrity_error
 from events import register_all_sqlalchemy_events
+
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
+from internal.scheduler import Scheduler
+
 from models.constraints_descriptions import constr_text_mapping
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 from routers import (
@@ -36,7 +39,10 @@ async def lifespan(app: FastAPI) -> AsyncContextManager[None]:
     configure_loggers()
     app.state.limiter = limiter
     register_all_sqlalchemy_events()
+    # asyncio.create_task(refresh_view())
+    Scheduler.run()
     yield
+    Scheduler.stop()
 
 app = FastAPI(
     default_response_class=ORJSONResponse,
