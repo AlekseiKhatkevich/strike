@@ -31,6 +31,8 @@ __all__ = (
     'DetentionMaterializedView',
 )
 
+from models.mixins import MaterializedViewMixin
+
 
 class Detention(Base):
     """
@@ -112,7 +114,7 @@ class Jail(Base):
         return self.zk_count > 0
 
 
-class DetentionMaterializedView(Base):
+class DetentionMaterializedView(MaterializedViewMixin, Base):
     """
     Материализованное представление статистики сидельцев по дням на каждую крытую.
     https://github.com/kvesteri/sqlalchemy-utils/issues/457#issuecomment-1432453337
@@ -132,7 +134,13 @@ class DetentionMaterializedView(Base):
     |5      |23     |2023-07-28|
     +-------+-------+----------+
     """
-    selectable = select(
+    jail_id: Mapped[BigIntPk]
+    zk_count: Mapped[int]
+    date: Mapped[datetime.date]
+
+    __tablename__ = 'detentions_stats_per_day'
+
+    _selectable = select(
             Detention.jail_id,
             func.count(Detention.id).label('zk_count'),
             func.cast(
@@ -148,25 +156,11 @@ class DetentionMaterializedView(Base):
         )
 
     __table__ = create_materialized_view(
-        'detentions_stats_per_day',
-        selectable,
+        __tablename__,
+        _selectable,
         Base.metadata,
         indexes=[Index('date_jail_idx', 'date', 'jail_id')]
     )
 
-    @classmethod
-    def refresh(cls, session, concurrently=True):
-        refresh_materialized_view(session, cls.__table__.fullname, concurrently)
-
-    @classmethod
-    def create(cls, op):
-        cls.drop(op)
-        create_sql = CreateView(cls.__table__.fullname, cls.selectable, materialized=True)
-        op.execute(create_sql)
-        for idx in cls.__table__.indexes:
-            idx.create(op.get_bind())
-
-    @classmethod
-    def drop(cls, op):
-        drop_sql = DropView(cls.__table__.fullname, materialized=True, cascade=True)
-        op.execute(drop_sql)
+    def __repr__(self):
+        return f'{self.date} was {self.zk_count} zk in jail with id {self.jail_id}'
