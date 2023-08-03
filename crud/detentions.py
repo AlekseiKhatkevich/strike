@@ -1,13 +1,15 @@
 import datetime
 from typing import TYPE_CHECKING
 
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
-from models import Detention, Jail
+from models import Detention, DetentionMaterializedView, Jail
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+    from fastapi_pagination.bases import AbstractParams
 
 __all__ = (
     'zk_for_lawyer',
@@ -43,3 +45,16 @@ async def zk_for_lawyer(session: 'AsyncSession',
 
     zk = await session.scalars(stmt)
     return zk.all()
+
+
+async def zk_daily_stats(session: 'AsyncSession', params: 'AbstractParams'):
+    """
+    Получение ежедневной статистики для '/statistics/daily/'.
+    """
+    stmt = select(
+        DetentionMaterializedView,
+    ).order_by(
+        DetentionMaterializedView.date.desc(),
+        DetentionMaterializedView.jail_id,
+    )
+    return await paginate(session, stmt, params)

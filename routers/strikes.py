@@ -14,7 +14,7 @@ from internal.dependencies import (
     GetParamsIdsDep,
     PaginParamsDep,
     PathIdDep,
-    RestrictByUserIdDep, SessionDep,
+    SessionDep,
     UserIdDep,
     jwt_authorize, restrict_by_user_id,
 )

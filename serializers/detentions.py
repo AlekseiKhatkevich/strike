@@ -19,6 +19,7 @@ __all__ = (
     'WSForLawyerInSerializer',
     'WsForLawyerOutSerializer',
     'JailOutSerializer',
+    'DetentionDailyStatsOutSerializer',
 )
 
 duration_input_type = Range[datetime.datetime] | list[datetime.datetime, datetime.datetime | None]
@@ -120,3 +121,14 @@ class WsForLawyerOutSerializer(WSDetentionOutSerializer):
     jail: JailOutSerializer
 
     model_config = ConfigDict(extra='forbid', )
+
+
+class DetentionDailyStatsOutSerializer(BaseModel):
+    """
+    Для отдачи ежедневной статистики на фронт.
+    """
+    jail_id: int
+    zk_count: int
+    date: datetime.date
+
+    model_config = ConfigDict(from_attributes=True,)

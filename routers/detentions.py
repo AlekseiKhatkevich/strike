@@ -2,16 +2,17 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi_pagination import LimitOffsetPage
 from sqlalchemy import column
 from starlette.websockets import WebSocketState
 
-from crud.detentions import zk_for_lawyer
+from crud.detentions import zk_daily_stats, zk_for_lawyer
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from internal.constants import WS_FOR_LAWYER_TIME_PERIOD
-from internal.dependencies import SessionDep
+from internal.dependencies import PaginParamsDep, SessionDep
 from models import Detention
 from serializers.detentions import (
-    WSActionType,
+    DetentionDailyStatsOutSerializer, WSActionType,
     WSDataCreateUpdateSerializer,
     WSDataGetDeleteSerializer,
     WSDetentionOutSerializer,
@@ -23,6 +24,18 @@ __all__ = (
 )
 
 router = APIRouter(tags=['detentions'])
+
+
+@router.get('/statistics/daily/')
+async def daily_stats_ep(session: SessionDep,
+                         params: PaginParamsDep,
+                         ) -> LimitOffsetPage[DetentionDailyStatsOutSerializer]:
+    """
+    ЭП отдачи ежедневной статистики.
+    """
+    col = await zk_daily_stats(session, params)
+    out = LimitOffsetPage[DetentionDailyStatsOutSerializer]
+    return out.create(col.items, params, total=col.total)
 
 
 @asynccontextmanager
