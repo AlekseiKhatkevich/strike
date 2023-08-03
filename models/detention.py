@@ -159,7 +159,7 @@ class DetentionMaterializedView(MaterializedViewMixin, Base):
         __tablename__,
         _selectable,
         Base.metadata,
-        indexes=[Index('date_jail_idx', 'date', 'jail_id')]
+        indexes=[Index('date_jail_idx', 'date', 'jail_id', unique=True)]
     )
 
     def __repr__(self):

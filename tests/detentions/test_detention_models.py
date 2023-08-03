@@ -1,9 +1,11 @@
 import datetime
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from crud.helpers import is_instance_in_db
+from models import DetentionMaterializedView
 
 
 @pytest.fixture(params=['jail', 'detention'])
@@ -50,3 +52,28 @@ async def test_detention_negative_exclude_c(detention_factory, detention, create
             duration=detention.duration,
             name=detention.name,
         )
+
+
+async def test_DetentionMaterializedView_positive(db_session, detentions_for_view):
+    """
+    Позитивный тест материализованного представления DetentionMaterializedView.
+    """
+    jail1, jail2, detentions_jail1, detentions_jail2 = detentions_for_view
+
+    jail1_cnts = await db_session.scalars(
+        select(DetentionMaterializedView).filter_by(
+            jail_id=jail1.id,
+        )
+    )
+    jail1_cnts = jail1_cnts.all()
+    assert len(jail1_cnts) == 2  # 2 days
+    assert jail1_cnts[0].zk_count == jail1_cnts[-1].zk_count == 3  # 3 detentions
+
+    jail2_cnts = await db_session.scalars(
+        select(DetentionMaterializedView).filter_by(
+            jail_id=jail2.id,
+        )
+    )
+    jail2_cnts = jail2_cnts.all()
+    assert len(jail2_cnts) == 2  # 2 days
+    assert jail2_cnts[0].zk_count == jail2_cnts[-1].zk_count == 2  # 2 detentions

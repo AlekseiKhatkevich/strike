@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from asyncio import AbstractEventLoop
 from typing import AsyncGenerator, Callable, Awaitable, TYPE_CHECKING, Any
 
@@ -34,6 +35,14 @@ pytest_plugins = [
     'tests.strike.fixtures',
     'tests.detentions.fixtures',
 ]
+
+
+@pytest.fixture
+def now() -> datetime.datetime:
+    """
+    Текущее время в utc.
+    """
+    return datetime.datetime.now(tz=datetime.UTC)
 
 
 @pytest.fixture

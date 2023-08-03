@@ -3,8 +3,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
-from sqlalchemy_utils import refresh_materialized_view
-from sqlalchemy_utils.view import CreateView, DropView
+from sqlalchemy_utils.view import CreateView, DropView, RefreshMaterializedView
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,8 +39,9 @@ class MaterializedViewMixin:
     Для создания, удаления и обновления материализованных представлений.
     """
     @classmethod
-    def refresh(cls, session: 'AsyncSession', concurrently: bool = True) -> None:
-        refresh_materialized_view(session, cls.__table__.fullname, concurrently)
+    async def refresh(cls, session: 'AsyncSession', concurrently: bool = True) -> None:
+        await session.flush()
+        await session.execute(RefreshMaterializedView(cls.__table__.fullname, concurrently))
 
     @classmethod
     def create(cls, op: 'op') -> None:
