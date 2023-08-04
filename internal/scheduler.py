@@ -1,8 +1,15 @@
 import asyncio
+import datetime
+
+from sqlalchemy import func, select
 
 from internal.database import async_session
 from models import DetentionMaterializedView
 from loguru import logger
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 __all__ = (
     'Scheduler',
@@ -63,11 +70,27 @@ class DetentionMaterializedViewRefresher(Scheduler):
     """
     Обновление представления DetentionMaterializedView раз в час.
     """
-    timeout = DetentionMaterializedView._refresh_period
+    timeout = datetime.timedelta(seconds=DetentionMaterializedView._refresh_period)
     name = f'Refresh {DetentionMaterializedView.__name__} view'
 
     @classmethod
     async def task(cls):
         async with async_session() as session:
-            await DetentionMaterializedView.refresh(session, concurrently=False)
-            await session.commit()
+            last_update_dt = await cls.get_mv_recent_refresh_time(session)
+            now = datetime.datetime.now(tz=datetime.UTC)
+            if last_update_dt is None or (now > last_update_dt + cls.timeout):
+                logger.info(
+                    f'{DetentionMaterializedView.__name__} was updated last time at {last_update_dt}.'
+                    f' Updating it now due to timeout got expired.'
+                )
+                await DetentionMaterializedView.refresh(session, concurrently=False)
+                await session.commit()
+
+    @staticmethod
+    async def get_mv_recent_refresh_time(session: 'AsyncSession') -> datetime.datetime | None:
+        """
+        Время последнего обновления представления.
+        """
+        return await session.scalar(
+            select(func.get_refresh_ts(DetentionMaterializedView.__tablename__))
+        )
