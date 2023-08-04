@@ -139,6 +139,7 @@ class DetentionMaterializedView(MaterializedViewMixin, Base):
     date: Mapped[datetime.date]
 
     __tablename__ = 'detentions_stats_per_day'
+    _refresh_period: float = 3600
 
     _selectable = select(
             Detention.jail_id,

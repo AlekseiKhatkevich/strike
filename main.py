@@ -39,7 +39,6 @@ async def lifespan(app: FastAPI) -> AsyncContextManager[None]:
     configure_loggers()
     app.state.limiter = limiter
     register_all_sqlalchemy_events()
-    # asyncio.create_task(refresh_view())
     Scheduler.run()
     yield
     Scheduler.stop()
