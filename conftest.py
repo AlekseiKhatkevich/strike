@@ -1,12 +1,12 @@
 import asyncio
 import datetime
 from asyncio import AbstractEventLoop
-from typing import AsyncGenerator, Callable, Awaitable, TYPE_CHECKING, Any
+from typing import Any, AsyncGenerator, Awaitable, Callable, TYPE_CHECKING
 
-import factory
 import pytest
 import redis
 from _pytest.logging import LogCaptureFixture
+from fastapi import Request
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from loguru import logger
@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from events import register_all_sqlalchemy_events
 from internal.database import Base, async_session, engine
 from internal.dependencies import get_session
-from internal.redis import redis_connection, RedisConnectionContextManager
+from internal.redis import RedisConnectionContextManager, redis_connection
 from main import app
 from security.jwt import generate_jwt_token
 
@@ -198,3 +198,11 @@ def faker_session_locale():
     https://faker.readthedocs.io/en/master/pytest-fixtures.html
     """
     return ['ru_RU']
+
+
+@pytest.fixture
+def fake_request() -> Request:
+    """
+    Типа реквест.
+    """
+    return Request(scope={'type': 'http'})

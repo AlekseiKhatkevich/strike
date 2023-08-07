@@ -19,6 +19,6 @@ def pb_from_model_instance(pb: 'MessageMeta', instance: MODEL_T) -> 'MessageMeta
         setattr(buff, filed_name, getattr(instance, filed_name))
 
     if not buff.IsInitialized():
-        raise AttributeError(f' Not all attributes are set for buffer {type(buff)}')
+        raise AttributeError(f'Not all attributes are set in buffer {type(buff)}')
 
     return buff

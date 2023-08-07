@@ -6,6 +6,7 @@ import pytest
 from pytest_factoryboy import register
 
 from models import Detention, DetentionMaterializedView, Jail
+from serializers.proto.compiled import jail_pb2
 from tests.factories.detention import DetentionFactory, JailFactory
 
 if TYPE_CHECKING:
@@ -65,3 +66,17 @@ async def detentions_for_view(db_session,
     await DetentionMaterializedView.refresh(db_session, False)
 
     return jail1, jail2, detentions_jail1, detentions_jail2
+
+
+@pytest.fixture
+def jail_inbound_pb(jail_factory, region) -> bytes:
+    """
+    Сериализуем крытую через протобаф в байтстринг.
+    """
+    jail = jail_factory.build(region=region)
+    buff = jail_pb2.Jail()
+    buff.name = jail.name
+    buff.address = jail.address
+    buff.region_id = jail.region.name
+
+    return buff.SerializeToString()

@@ -49,7 +49,7 @@ async def create_jail(session: SessionDep,
     )
     jail_buff = pb_from_model_instance(jail_pb2.Jail, instance)
 
-    return Response(content=jail_buff.SerializeToString(), media_type='application/x-protobuf')
+    return Response(jail_buff.SerializeToString(), media_type='application/x-protobuf')
 
 
 @router.get('/statistics/daily/')
