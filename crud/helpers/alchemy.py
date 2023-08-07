@@ -10,6 +10,7 @@ from sqlalchemy import delete, exc as sa_exc, inspect, select
 from sqlalchemy.dialects.postgresql import insert
 
 from internal.database import Base
+from internal.typing_and_types import ID_T, MODEL_T
 from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 if TYPE_CHECKING:
@@ -30,9 +31,6 @@ __all__ = (
     'get_text_from_integrity_error',
     'get_constr_name_from_integrity_error',
 )
-
-MODEL_T = TypeVar('MODEL_T', bound='Base')
-ID_T = TypeVar('ID_T')
 
 
 @cache

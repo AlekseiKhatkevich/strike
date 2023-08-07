@@ -1,16 +1,18 @@
 import asyncio
-import codecs
 from contextlib import asynccontextmanager
+from typing import Annotated
 
-from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect, Response
+from fastapi import APIRouter, Depends, Response, WebSocket, WebSocketDisconnect
 from fastapi_pagination import LimitOffsetPage
+from google._upb._message import MessageMeta
 from sqlalchemy import column
 from starlette.websockets import WebSocketState
 
 from crud.detentions import zk_daily_stats, zk_for_lawyer
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from internal.constants import WS_FOR_LAWYER_TIME_PERIOD
-from internal.dependencies import PaginParamsDep, SessionDep
+from internal.dependencies import PBRequestData, PaginParamsDep, SessionDep
+from internal.protobuf import pb_from_model_instance
 from models import Detention
 from serializers.detentions import (
     DetentionDailyStatsOutSerializer,
@@ -30,27 +32,22 @@ __all__ = (
 router = APIRouter(tags=['detentions'])
 
 
+JailPBDataDep = Annotated[MessageMeta, Depends(PBRequestData(jail_pb2.Jail, serializer=JailInSerializer))]
+
+
 @router.post('/')
-async def create_jail(session: SessionDep, request: Request) -> Response:
+async def create_jail(session: SessionDep,
+                      serializer: JailPBDataDep,
+                      ) -> Response:
     """
-
+    ЭП создания новой крытой.
     """
-    raw_data = await request.body()
-    if b'\\' in raw_data:
-        raw_data, _ = codecs.escape_decode(raw_data)
-
-    jail_buff = jail_pb2.Jail()
-    jail_buff.ParseFromString(raw_data)
-    jail = JailInSerializer.model_validate(jail_buff)
-
     instance = await create_or_update_with_session_get(
         session,
         'Jail',
-        jail.model_dump(),
+        serializer.model_dump(),
     )
-    jail_buff.Clear()
-    for filed_name in jail_buff.DESCRIPTOR.fields_by_name.keys():
-        setattr(jail_buff, filed_name, getattr(instance, filed_name))
+    jail_buff = pb_from_model_instance(jail_pb2.Jail, instance)
 
     return Response(content=jail_buff.SerializeToString(), media_type='application/x-protobuf')
 

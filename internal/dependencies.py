@@ -1,7 +1,8 @@
 import asyncio
+import codecs
 import contextvars
 import datetime
-from typing import Annotated, Any, AsyncGenerator, Iterator, TYPE_CHECKING
+from typing import Annotated, Any, AsyncGenerator, Iterator, Optional, TYPE_CHECKING, Union
 
 import jwt
 from fastapi import Depends, HTTPException, Path, Request, status
@@ -9,6 +10,7 @@ from fastapi.params import Query
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import Params
 from fastapi_pagination.bases import AbstractParams
+
 from loguru import logger
 from sqlalchemy import event
 from sqlalchemy.dialects.postgresql import Range
@@ -25,6 +27,8 @@ from security.jwt import validate_jwt_token
 
 if TYPE_CHECKING:
     from models.users import User
+    from google._upb._message import MessageMeta
+    from internal.serializers import BaseModel
 
 __all__ = (
     'SessionDep',
@@ -43,6 +47,7 @@ __all__ = (
     'RestrictByUserIdDep',
     'restrict_by_user_id',
     'DtRangeDep',
+    'PBRequestData',
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
@@ -225,3 +230,29 @@ def dt_range_query_param(
 
 
 DtRangeDep = Annotated[Range[datetime.datetime], Depends(dt_range_query_param)]
+
+
+class PBRequestData:
+    """
+    Получает байтстринг из реквеста, десериализует его через переданный буфер, а затем
+    опционально валидирует через пайдантиковский сериалайзер.
+    Отдает заполненный буфер или заполненный сериалайзер.
+    """
+    def __init__(self,
+                 pb: 'MessageMeta',
+                 *,
+                 serializer: Optional['BaseModel'] = None,
+                 ) -> None:
+        self.pb = pb
+        self.serializer = serializer
+
+    async def __call__(self, request: Request) -> Union['MessageMeta', 'BaseModel']:
+        raw_data = await request.body()
+        if b'\\' in raw_data:
+            raw_data, _ = codecs.escape_decode(raw_data)
+        buff = self.pb()
+        buff.ParseFromString(raw_data)
+        if self.serializer is not None:
+            return self.serializer.model_validate(buff)
+
+        return buff
