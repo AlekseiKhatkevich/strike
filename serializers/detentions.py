@@ -20,6 +20,7 @@ __all__ = (
     'WsForLawyerOutSerializer',
     'JailOutSerializer',
     'DetentionDailyStatsOutSerializer',
+    'JailInSerializer',
 )
 
 duration_input_type = Range[datetime.datetime] | list[datetime.datetime, datetime.datetime | None]
@@ -103,14 +104,27 @@ class WSForLawyerInSerializer(BaseModel):
     jail_ids: list[IntIdType] | None = None
 
 
-class JailOutSerializer(BaseModel):
+class JailBaseSerializer(BaseModel):
+    """
+    Базовый сериалайзер крытой.
+    """
+    address: str
+    region_id: Literal[*RU_regions.names]
+    name: str
+
+
+class JailOutSerializer(JailBaseSerializer):
     """
     Для отдачи инфы о крытой на фронт.
     """
     id: IntIdType
-    address: str
-    region_id: str
+    model_config = ConfigDict(from_attributes=True,)
 
+
+class JailInSerializer(JailBaseSerializer):
+    """
+    Для создания новой крытой.
+    """
     model_config = ConfigDict(from_attributes=True,)
 
 

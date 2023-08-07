@@ -1,7 +1,8 @@
 import asyncio
+import codecs
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from fastapi_pagination import LimitOffsetPage
 from sqlalchemy import column
 from starlette.websockets import WebSocketState
@@ -12,18 +13,39 @@ from internal.constants import WS_FOR_LAWYER_TIME_PERIOD
 from internal.dependencies import PaginParamsDep, SessionDep
 from models import Detention
 from serializers.detentions import (
-    DetentionDailyStatsOutSerializer, WSActionType,
+    DetentionDailyStatsOutSerializer, JailInSerializer, JailOutSerializer, WSActionType,
     WSDataCreateUpdateSerializer,
     WSDataGetDeleteSerializer,
     WSDetentionOutSerializer,
     WSForLawyerInSerializer,
 )
+from serializers.proto.compiled import jail_pb2
 
 __all__ = (
     'router',
 )
 
 router = APIRouter(tags=['detentions'])
+
+
+@router.post('/')
+async def create_jail(session: SessionDep, request: Request) -> JailOutSerializer:
+    """
+
+    """
+    raw_data = await request.body()
+    if b'\\' in raw_data:
+        raw_data, _ = codecs.escape_decode(raw_data)
+
+    jail = jail_pb2.Jail()
+    jail.ParseFromString(raw_data)
+    jail = JailInSerializer.model_validate(jail)
+
+    return await create_or_update_with_session_get(
+        session,
+        'Jail',
+        jail.model_dump(),
+    )
 
 
 @router.get('/statistics/daily/')
