@@ -1,0 +1,11 @@
+syntax = 'proto3';
+
+package strike;
+
+
+message Jail {
+  optional int64 id = 1;
+  string name = 2;
+  string address = 3;
+  string region_id = 4;
+}
