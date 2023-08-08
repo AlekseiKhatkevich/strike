@@ -1,16 +1,17 @@
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
-from fastapi import FastAPI, status
+from fastapi import Depends, FastAPI, status
 from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import exc as sa_exc
-
 from config import settings
 from crud.helpers import get_constr_name_from_integrity_error, get_text_from_integrity_error
 from events import register_all_sqlalchemy_events
+from graphql_related.main import graphql_app
+from internal.dependencies import jwt_authorize
 
 from internal.logging import configure_loggers
 from internal.ratelimit import limiter
@@ -60,6 +61,7 @@ app.include_router(union.router, prefix='/strikes/unions')
 app.include_router(enterprises.router, prefix='/strikes/enterprises')
 app.include_router(strikes.router, prefix='/strikes')
 app.include_router(detentions.router, prefix='/detentions')
+app.include_router(graphql_app, prefix='/graphql', tags=['graphql'], dependencies=[Depends(jwt_authorize)])
 
 
 @app.exception_handler(InvitationTokenDeclinedException)
