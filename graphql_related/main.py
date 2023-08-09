@@ -1,9 +1,10 @@
 import asyncio
 import dataclasses
 import datetime
-from typing import AsyncGenerator
+from typing import AsyncGenerator, NewType
 
 import strawberry
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import Range
 from strawberry.fastapi import GraphQLRouter
@@ -18,17 +19,17 @@ __all__ = (
 )
 
 
-async def get_detentions(root) -> list['Detention']:
+async def get_detentions(root, name: str | None = None) -> list['Detention']:
     async with async_session() as session:
-        data = await session.scalars(
-            select(DetentionModel).order_by(func.lower(DetentionModel.duration).desc())
-        )
-        exc = {'duration', 'jail'}
+        stmt = select(DetentionModel).order_by(func.lower(DetentionModel.duration).desc())
+        if name is not None:
+            stmt = stmt.where(DetentionModel.name == name)
+        data = await session.scalars(stmt)
+        exc = {'jail'}
         f_names = [f.name for f in dataclasses.fields(Detention) if f.name not in exc]
         detentions = []
         for det in data:
             data = {f_name: getattr(det, f_name) for f_name in f_names}
-            data['duration'] = Duration(lower=det.duration.lower, upper=det.duration.upper)
             detentions.append(Detention(**data))
         return detentions
 
@@ -44,10 +45,11 @@ async def get_jail_for_detention(root):
         )
 
 
-@strawberry.type
-class Duration:
-    lower: datetime.datetime
-    upper: datetime.datetime | None
+DurationType = strawberry.scalar(
+    NewType('DurationType', Range),
+    serialize=lambda v: jsonable_encoder(v),
+    parse_value=lambda v: Range(*v),
+)
 
 
 @strawberry.type
@@ -61,7 +63,7 @@ class Jail:
 @strawberry.type
 class Detention:
     id: int
-    duration: Duration
+    duration: DurationType
     name: str
     extra_personal_info: str | None
     needs_medical_attention: bool
@@ -86,7 +88,7 @@ def type_from_model_instance(strawberry_type, so_instance):
 @strawberry.type
 class Strike:
     id: int
-    duration: Duration
+    duration: DurationType
     planned_on_date: datetime.date | None
     goals: str
     results: str | None
