@@ -9,7 +9,7 @@ from sqlalchemy import (
     func,
     select,
 )
-from sqlalchemy.dialects.postgresql import ExcludeConstraint, INTERVAL, Range
+from sqlalchemy.dialects.postgresql import ExcludeConstraint, INTERVAL, Range, TSTZRANGE
 from sqlalchemy.orm import (
     Mapped,
     column_property,
@@ -41,7 +41,7 @@ class Detention(Base):
     __tablename__ = 'detentions'
 
     id: Mapped[BigIntPk]
-    duration: Mapped[Range[datetime.datetime]]
+    duration: Mapped[Range[datetime.datetime]] = mapped_column(TSTZRANGE)
     name: Mapped[str] = mapped_column(
         String(collation=RU_RU_CE_COLLATION_NAME),
         index=True,
