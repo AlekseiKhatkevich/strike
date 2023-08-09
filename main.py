@@ -61,7 +61,8 @@ app.include_router(union.router, prefix='/strikes/unions')
 app.include_router(enterprises.router, prefix='/strikes/enterprises')
 app.include_router(strikes.router, prefix='/strikes')
 app.include_router(detentions.router, prefix='/detentions')
-app.include_router(graphql_app, prefix='/graphql', tags=['graphql'], dependencies=[Depends(jwt_authorize)])
+# app.include_router(graphql_app, prefix='/graphql', tags=['graphql'], dependencies=[Depends(jwt_authorize)])
+app.include_router(graphql_app, prefix='/graphql', tags=['graphql'])
 
 
 @app.exception_handler(InvitationTokenDeclinedException)

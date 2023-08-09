@@ -1,12 +1,17 @@
+import asyncio
+import dataclasses
 import datetime
+from typing import AsyncGenerator
 
 import strawberry
-from sqlalchemy import func, select, update
-from sqlalchemy.dialects.postgresql import Range, insert, TSTZRANGE
+from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import Range
 from strawberry.fastapi import GraphQLRouter
-import dataclasses
+
+from internal.constants import WS_NEW_STRIKES_TIME_PERIOD
 from internal.database import async_session
 from models.detention import Detention as DetentionModel, Jail as JailModel
+from models.strike import Strike as StrikeModel
 
 __all__ = (
     'graphql_app',
@@ -73,6 +78,24 @@ class Detention:
         return [f.name for f in dataclasses.fields(cls) if f.name not in exc]
 
 
+def type_from_model_instance(strawberry_type, so_instance):
+    f_names = [f.name for f in dataclasses.fields(strawberry_type)]
+    return strawberry_type(**{f_name: getattr(so_instance, f_name) for f_name in f_names})
+
+
+@strawberry.type
+class Strike:
+    id: int
+    duration: Duration
+    planned_on_date: datetime.date | None
+    goals: str
+    results: str | None
+    overall_num_of_employees_involved: int
+    enterprise_id: int
+    created_by_id: int
+    union_in_charge_id: int | None
+
+
 @strawberry.input
 class ZKTransferInput:
     detention_id: int = strawberry.field(description='Who is transferred')
@@ -86,7 +109,7 @@ class Mutation:
     @strawberry.field
     async def zk_transfer(self, transfer: ZKTransferInput) -> Detention:
         async with async_session() as session:
-            old_detention = await session.get(DetentionModel, transfer.detention_id)
+            old_detention = await session.get(DetentionModel, transfer.detention_id, with_for_update=True)
             upper_detention_time = transfer.detention_upper or old_detention.duration.upper
             old_detention.duration = Range(old_detention.duration.lower, transfer.transfer_dt, bounds='()')
 
@@ -110,11 +133,37 @@ class Mutation:
             f_names = Detention.f_names()
             return Detention(**{f_name: getattr(new_detention, f_name) for f_name in f_names})
 
+
+@strawberry.type
+class Subscription:
+    @strawberry.subscription
+    async def new_strikes(self, gt_dt: datetime.datetime) -> AsyncGenerator[Strike, None]:
+        max_dt = gt_dt
+        while True:
+            async with async_session() as session:
+                scalar_res = await session.scalars(
+                    select(
+                        StrikeModel
+                    ).where(
+                        StrikeModel.created_at > max_dt
+                    ).order_by(
+                        StrikeModel.created_at.desc()
+                    )
+                )
+            new_strikes = scalar_res.all()
+            if new_strikes:
+                max_dt = max(new_strikes, key=lambda s: s.created_at).created_at
+                for strike in new_strikes:
+                    yield type_from_model_instance(Strike, strike)
+
+            await asyncio.sleep(WS_NEW_STRIKES_TIME_PERIOD)
+
+
 @strawberry.type
 class Query:
     detentions: list[Detention] = strawberry.field(resolver=get_detentions)
 
 
-schema = strawberry.Schema(Query, Mutation)
+schema = strawberry.Schema(Query, Mutation, subscription=Subscription)
 
 graphql_app = GraphQLRouter(schema)
