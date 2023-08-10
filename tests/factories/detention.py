@@ -56,9 +56,12 @@ class DetentionFactory(factory.alchemy.SQLAlchemyModelFactory):
             tzinfo=datetime.UTC,
         )
         detention_end = None
-        detention_duration = factory.Faker('pyint', min_value=1, max_value=30)
+        detention_duration = factory.Faker('pyint', min_value=5, max_value=30)
         done = factory.Trait(
             detention_end=datetime.datetime.now(tz=datetime.UTC)
+        )
+        undone_but_limited = factory.Trait(
+            detention_end=datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=14)
         )
         relative_name = factory.Faker('name')
         relative_phone = factory.Faker('basic_phone_number')

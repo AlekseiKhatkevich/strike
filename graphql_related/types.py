@@ -5,6 +5,7 @@ from typing import NewType
 import strawberry
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.dialects.postgresql import Range
+from strawberry.types import Info
 
 from models.detention import Jail as JailModel
 
@@ -15,7 +16,6 @@ __all__ = (
     'Strike',
 )
 
-from internal.database import async_session
 
 DurationType = strawberry.scalar(
     NewType('DurationType', Range[datetime.datetime]),
@@ -53,15 +53,15 @@ class Detention:
     relative_or_friend: str | None
 
     @strawberry.field
-    async def jail(self) -> Jail:
-        async with async_session() as session:
-            j = await session.get(JailModel, self.jail_id)
-            return Jail(
-                id=j.id,
-                name=j.name,
-                address=j.address,
-                region_id=j.region_id,
-            )
+    async def jail(self, info: Info) -> Jail:
+        session = info.context['session']
+        j = await session.get(JailModel, self.jail_id)
+        return Jail(
+            id=j.id,
+            name=j.name,
+            address=j.address,
+            region_id=j.region_id,
+        )
 
     @classmethod
     def f_names(cls) -> list[str, ...]:

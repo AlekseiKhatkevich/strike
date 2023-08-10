@@ -5,13 +5,12 @@ from strawberry.fastapi import GraphQLRouter
 from graphql_related.mutations import Mutation
 from graphql_related.queries import Query
 from graphql_related.subscriptions import Subscription
+from internal.dependencies import get_session
 
 __all__ = (
     'graphql_app',
     'schema',
 )
-
-from internal.dependencies import get_session
 
 
 async def get_context(
@@ -26,5 +25,5 @@ async def get_context(
     }
 
 
-schema = strawberry.Schema(Query, Mutation, subscription=Subscription,)
-graphql_app = GraphQLRouter(schema, context_getter=get_context,)
+schema = strawberry.Schema(Query, Mutation, subscription=Subscription, )
+graphql_app = GraphQLRouter(schema, context_getter=get_context, )

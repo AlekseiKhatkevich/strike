@@ -4,7 +4,6 @@ import strawberry
 from sqlalchemy import func, select
 from strawberry.types import Info
 from graphql_related.types import Detention
-from internal.database import async_session
 from internal.typing_and_types import DataclassType
 from models.detention import Detention as DetentionModel
 
