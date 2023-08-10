@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 10000000
     obtain_jwt_token_ratelimit: str = '10/minute'
     user_cache_persistence: datetime.timedelta = datetime.timedelta(minutes=60)
-    redis_socket_connection_timeout: float = 0.2
-    redis_socket_timeout: float = 0.2
+    redis_socket_connection_timeout: float = 0.5
+    redis_socket_timeout: float = 0.5
 
     model_config = ConfigDict(extra='ignore')
 
