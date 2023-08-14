@@ -2,8 +2,7 @@ syntax = 'proto3';
 
 package strike;
 
-import 'google/protobuf/timestamp.proto';
-
+import "google/protobuf/timestamp.proto";
 
 service ConflictsService {
   rpc CreateConflict(Conflict) returns (SingleConflictResponse) {}

@@ -39,6 +39,8 @@ pydantic = "2.*"
 websockets = "11.*"
 protobuf = "4.*"
 strawberry-graphql = {extras = ["debug-server"], version = "^0.200.0"}
+grpcio = "^1.57.0"
+grpcio-tools = "^1.57.0"
 
 
 [tool.poetry.group.dev.dependencies]
