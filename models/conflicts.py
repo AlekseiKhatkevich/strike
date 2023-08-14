@@ -58,4 +58,3 @@ class Conflict(CreatedUpdatedMixin, Base):
 
     def __repr__(self):
         return f'{self.type} conflict in company {self.enterprise_id}'
-
