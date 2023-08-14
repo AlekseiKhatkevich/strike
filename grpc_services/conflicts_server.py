@@ -1,15 +1,14 @@
+import asyncio
 import datetime
-from concurrent import futures
 
 import grpc
-
-# from internal.database import async_session
-from serializers.proto.compiled.conflicts_pb2_grpc import ConflictsServiceServicer, \
-    ConflictsServiceStub, add_ConflictsServiceServicer_to_server
-import asyncio
 from grpc import aio
 from loguru import logger
-from serializers.proto.compiled.conflicts_pb2 import Conflict,ConflictExtraData, ConflictTypes, Duration, SingleConflictResponse
+
+from serializers.proto.compiled.conflicts_pb2 import Conflict, ConflictExtraData, ConflictTypes, SingleConflictResponse
+from internal.database import async_session
+from serializers.proto.compiled.conflicts_pb2_grpc import ConflictsServiceServicer, \
+    ConflictsServiceStub, add_ConflictsServiceServicer_to_server
 
 
 class ConflictsServicer(ConflictsServiceServicer):
@@ -17,8 +16,8 @@ class ConflictsServicer(ConflictsServiceServicer):
 
     """
 
-    def CreateConflict(self, request, context):
-        # async with async_session as session:
+    async def CreateConflict(self, request, context):
+        async with async_session() as session:
             conflict = Conflict()
             conflict.id = 1
             conflict.type = ConflictTypes.LAYOFF
@@ -40,14 +39,14 @@ class ConflictsServicer(ConflictsServiceServicer):
             return sr
 
 
-def serve():
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-  add_ConflictsServiceServicer_to_server(
-      ConflictsServicer(), server)
-  server.add_insecure_port('[::]:50051')
-  server.start()
-  server.wait_for_termination()
-
+async def serve():
+    server = aio.server()
+    add_ConflictsServiceServicer_to_server(ConflictsServicer(), server)
+    listen_addr = '[::]:50051'
+    server.add_insecure_port(listen_addr)
+    logger.info("Starting server on %s" % listen_addr)
+    await server.start()
+    await server.wait_for_termination()
 
 
 def run():
@@ -69,4 +68,4 @@ def run():
 
 
 if __name__ == "__main__":
-    serve()
+    asyncio.run(serve())
