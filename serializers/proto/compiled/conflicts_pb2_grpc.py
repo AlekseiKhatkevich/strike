@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import conflicts_pb2 as conflicts__pb2
+from serializers.proto.compiled import conflicts_pb2 as conflicts__pb2
 
 
 class ConflictsServiceStub(object):
