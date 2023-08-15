@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     user_cache_persistence: datetime.timedelta = datetime.timedelta(minutes=60)
     redis_socket_connection_timeout: float = 0.5
     redis_socket_timeout: float = 0.5
+    grpc_port: str
 
     model_config = ConfigDict(extra='ignore')
 

@@ -12,6 +12,7 @@ from .mixins import CreatedUpdatedMixin
 
 __all__ = (
     'Conflict',
+    'ConflictTypes',
 )
 
 

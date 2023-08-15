@@ -2,7 +2,12 @@ syntax = 'proto3';
 
 package strike;
 
-import "google/protobuf/timestamp.proto";
+import 'google/protobuf/timestamp.proto';
+
+// компиляция
+//python -m grpc_tools.protoc -I /usr/include/google/protobuf/timestamp.proto
+// --python_out=./compiled --proto_path=/home/hardcase/PycharmProjects/strike/serializers/proto/
+// --pyi_out=./compiled --grpc_python_out=./compiled  conflicts.proto
 
 service ConflictsService {
   rpc CreateConflict(Conflict) returns (SingleConflictResponse) {}
