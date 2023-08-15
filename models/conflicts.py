@@ -4,8 +4,10 @@ import enum
 from sqlalchemy import CheckConstraint, ForeignKey
 from sqlalchemy.dialects.postgresql import ENUM, Range, TSTZRANGE
 from sqlalchemy.orm import Mapped, mapped_column
-from serializers.proto.compiled.conflicts_pb2 import (Conflict as PBConflict,
-                                                      ConflictTypes as PBConflictTypes)
+from serializers.proto.compiled.conflicts_pb2 import (
+    Conflict as PBConflict,
+    ConflictTypes as PBConflictTypes,
+)
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from .annotations import BigIntPk
@@ -74,7 +76,9 @@ class Conflict(CreatedUpdatedMixin, Base):
                 case 'type':
                     conflict_pb.type = getattr(PBConflictTypes, self.type.name)
                 case _:
-                    setattr(conflict_pb, filed_name, getattr(self, filed_name))
+                    model_value = getattr(self, filed_name)
+                    if model_value is not None:
+                        setattr(conflict_pb, filed_name, model_value)
 
         return conflict_pb
 

@@ -6,7 +6,12 @@ from serializers.proto.compiled import conflicts_pb2 as conflicts__pb2
 
 
 class ConflictsServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """компиляция
+    python -m grpc_tools.protoc -I /usr/include/google/protobuf/timestamp.proto
+    --python_out=./compiled --proto_path=/home/hardcase/PycharmProjects/strike/serializers/proto/
+    --pyi_out=./compiled --grpc_python_out=./compiled  conflicts.proto
+
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -22,7 +27,12 @@ class ConflictsServiceStub(object):
 
 
 class ConflictsServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """компиляция
+    python -m grpc_tools.protoc -I /usr/include/google/protobuf/timestamp.proto
+    --python_out=./compiled --proto_path=/home/hardcase/PycharmProjects/strike/serializers/proto/
+    --pyi_out=./compiled --grpc_python_out=./compiled  conflicts.proto
+
+    """
 
     def CreateConflict(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -46,7 +56,12 @@ def add_ConflictsServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class ConflictsService(object):
-    """Missing associated documentation comment in .proto file."""
+    """компиляция
+    python -m grpc_tools.protoc -I /usr/include/google/protobuf/timestamp.proto
+    --python_out=./compiled --proto_path=/home/hardcase/PycharmProjects/strike/serializers/proto/
+    --pyi_out=./compiled --grpc_python_out=./compiled  conflicts.proto
+
+    """
 
     @staticmethod
     def CreateConflict(request,

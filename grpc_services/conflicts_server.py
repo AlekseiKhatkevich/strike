@@ -1,8 +1,9 @@
 import asyncio
 
 from asyncpg import Range
-from grpc import aio
+from grpc import aio, StatusCode
 from loguru import logger
+from pydantic import ValidationError
 
 from config import settings
 from crud.helpers import create_or_update_with_session_get
@@ -20,7 +21,13 @@ class ConflictsServicer(ConflictsServiceServicer):
 
     """
     async def CreateConflict(self, request, context):
-        conflict = ConflictCreateSerializer.model_validate(request)
+        try:
+            conflict = ConflictCreateSerializer.model_validate(request)
+        except ValidationError as err:
+            await context.abort(
+                code=StatusCode.INVALID_ARGUMENT,
+                details=err.json(),
+            )
         conflict_dict = conflict.model_dump()
         conflict_dict['duration'] = Range(conflict.duration.lower, conflict.duration.upper)
         async with async_session() as session:

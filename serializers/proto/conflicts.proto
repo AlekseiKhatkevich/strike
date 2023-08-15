@@ -13,6 +13,7 @@ service ConflictsService {
   rpc CreateConflict(Conflict) returns (SingleConflictResponse) {}
 }
 
+// Типы возможных конфликтов. Зеркалит ConflictTypes в SA модели Conflict.
 enum ConflictTypes {
   UNSPECIFIED = 0;
   PAYMENT = 1;
@@ -28,7 +29,7 @@ enum ConflictTypes {
   LABOUR_RIGHTS = 11;
 }
 
-
+// конфликт
 message Conflict {
   optional int64 id = 1;
   ConflictTypes type = 2;
@@ -39,18 +40,36 @@ message Conflict {
   optional float success_rate = 7;
 }
 
+// один конфликт с дополнительными данными
 message SingleConflictResponse {
   Conflict conflict = 1;
   ConflictExtraData extra_data = 2;
 }
 
+// дополнительные данные для конфликта
 message ConflictExtraData {
   optional google.protobuf.Timestamp updated_at = 1;
   google.protobuf.Timestamp created_at = 2;
 }
 
+// период времени от t1 до t2
 message Duration {
   google.protobuf.Timestamp lower = 1;
   optional google.protobuf.Timestamp upper = 2;
 }
 
+//// The `Status` type defines a logical error model that is suitable for
+//// different programming environments, including REST APIs and RPC APIs.
+//message Status {
+//  // A simple error code that can be easily handled by the client. The
+//  // actual error code is defined by `google.rpc.Code`.
+//  int32 code = 1;
+//
+//  // A developer-facing human-readable error message in English. It should
+//  // both explain the error and offer an actionable resolution to it.
+//  string message = 2;
+//
+//  // Additional error information that the client code can use to handle
+//  // the error, such as retry info or a help link.
+//  repeated google.protobuf.Any details = 3;
+//}
