@@ -2,13 +2,16 @@ import datetime
 
 from google.protobuf.internal.well_known_types import Timestamp
 from pydantic import ConfigDict, field_validator
-
+from serializers.proto.compiled.conflicts_pb2 import ConflictTypes as PBConflictTypes
 from internal.serializers import BaseModel
 from models.conflicts import ConflictTypes
+from serializers.typing import IntIdType
 
 __all__ = (
-    'ConflictBaseSerializer',
+    'ConflictCreateSerializer',
 )
+
+
 
 
 class ProtoDurationSerializer(BaseModel):
@@ -26,7 +29,7 @@ class ProtoDurationSerializer(BaseModel):
     # noinspection PyNestedDecorators
     @field_validator('lower', 'upper')
     @classmethod
-    def double(cls, value: Timestamp) -> datetime.datetime | None:
+    def _convert_ts_into_dt(cls, value: Timestamp) -> datetime.datetime | None:
         """
 
         """
@@ -36,11 +39,29 @@ class ProtoDurationSerializer(BaseModel):
             return value.ToDatetime(tzinfo=datetime.UTC)
 
 
-
 class ConflictBaseSerializer(BaseModel):
     """
 
     """
     type: ConflictTypes
+    duration: ProtoDurationSerializer
+    enterprise_id: IntIdType
+    description: str
+    results: str | None
+    success_rate: float | None
 
     model_config = ConfigDict(from_attributes=True)
+
+    # noinspection PyNestedDecorators
+    @field_validator('type', mode='before')
+    @classmethod
+    def _get_enum_by_num(cls, value: int) -> ConflictTypes:
+        """
+        """
+        pb_enum_name = PBConflictTypes.Name(value)
+        return getattr(ConflictTypes, pb_enum_name)
+
+
+class ConflictCreateSerializer(ConflictBaseSerializer):
+    pass
+

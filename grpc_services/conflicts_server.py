@@ -6,6 +6,7 @@ from loguru import logger
 
 from config import settings
 from internal.database import async_session
+from serializers.conflicts import ConflictCreateSerializer
 from serializers.proto.compiled.conflicts_pb2 import (
     Conflict,
     ConflictExtraData,
@@ -23,26 +24,28 @@ class ConflictsServicer(ConflictsServiceServicer):
 
     """
     async def CreateConflict(self, request, context):
+        conflict = ConflictCreateSerializer.model_validate(request)
         async with async_session() as session:
-            conflict = Conflict()
-            conflict.id = 1
-            conflict.type = ConflictTypes.LAYOFF
-
-            now = datetime.datetime.now(tz=datetime.UTC)
-            conflict.duration.lower.FromDatetime(now)
-            conflict.duration.upper.FromDatetime(now + datetime.timedelta(days=10))
-
-            conflict.description = 'test'
-
-            sr = SingleConflictResponse()
-            sr.conflict.MergeFrom(conflict)
-
-            ed = ConflictExtraData()
-            ed.created_at.FromDatetime(now)
-
-            sr.extra_data.MergeFrom(ed)
-
-            return sr
+            pass
+            # conflict = Conflict()
+            # conflict.id = 1
+            # conflict.type = ConflictTypes.LAYOFF
+            #
+            # now = datetime.datetime.now(tz=datetime.UTC)
+            # conflict.duration.lower.FromDatetime(now)
+            # conflict.duration.upper.FromDatetime(now + datetime.timedelta(days=10))
+            #
+            # conflict.description = 'test'
+            #
+            # sr = SingleConflictResponse()
+            # sr.conflict.MergeFrom(conflict)
+            #
+            # ed = ConflictExtraData()
+            # ed.created_at.FromDatetime(now)
+            #
+            # sr.extra_data.MergeFrom(ed)
+            #
+            # return sr
 
 
 async def serve():
