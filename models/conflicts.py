@@ -4,7 +4,8 @@ import enum
 from sqlalchemy import CheckConstraint, ForeignKey
 from sqlalchemy.dialects.postgresql import ENUM, Range, TSTZRANGE
 from sqlalchemy.orm import Mapped, mapped_column
-
+from serializers.proto.compiled.conflicts_pb2 import (Conflict as PBConflict,
+                                                      ConflictTypes as PBConflictTypes)
 from internal.database import Base
 from internal.typing_and_types import BigIntType
 from .annotations import BigIntPk
@@ -59,3 +60,21 @@ class Conflict(CreatedUpdatedMixin, Base):
 
     def __repr__(self):
         return f'{self.type} conflict in company {self.enterprise_id}'
+
+    def to_protobuf(self):
+        """
+
+        """
+        conflict_pb = PBConflict()
+        for filed_name in conflict_pb.DESCRIPTOR.fields_by_name.keys():
+            match filed_name:
+                case 'duration':
+                    conflict_pb.duration.lower.FromDatetime(self.duration.lower)
+                    conflict_pb.duration.upper.FromDatetime(self.duration.upper)
+                case 'type':
+                    conflict_pb.type = getattr(PBConflictTypes, self.type.name)
+                case _:
+                    setattr(conflict_pb, filed_name, getattr(self, filed_name))
+
+        return conflict_pb
+

@@ -7,8 +7,8 @@ from loguru import logger
 from config import settings
 from crud.helpers import create_or_update_with_session_get
 from internal.database import async_session
-from internal.protobuf import pb_from_model_instance
 from serializers.conflicts import ConflictCreateSerializer
+from serializers.proto.compiled.conflicts_pb2 import ConflictExtraData, SingleConflictResponse
 from serializers.proto.compiled.conflicts_pb2_grpc import (
     ConflictsServiceServicer,
     add_ConflictsServiceServicer_to_server,
@@ -29,26 +29,16 @@ class ConflictsServicer(ConflictsServiceServicer):
                 'Conflict',
                 conflict_dict
             )
-            # pb_from_model_instance
-            # conflict = Conflict()
-            # conflict.id = 1
-            # conflict.type = ConflictTypes.LAYOFF
-            #
-            # now = datetime.datetime.now(tz=datetime.UTC)
-            # conflict.duration.lower.FromDatetime(now)
-            # conflict.duration.upper.FromDatetime(now + datetime.timedelta(days=10))
-            #
-            # conflict.description = 'test'
-            #
-            # sr = SingleConflictResponse()
-            # sr.conflict.MergeFrom(conflict)
-            #
-            # ed = ConflictExtraData()
-            # ed.created_at.FromDatetime(now)
-            #
-            # sr.extra_data.MergeFrom(ed)
-            #
-            # return sr
+            response_pb = SingleConflictResponse()
+
+            conflict_pb = instance.to_protobuf()
+            response_pb.conflict.MergeFrom(conflict_pb)
+
+            extra_data_pb = ConflictExtraData()
+            extra_data_pb.created_at.FromDatetime(instance.created_at)
+            response_pb.extra_data.MergeFrom(extra_data_pb)
+
+            return response_pb
 
 
 async def serve():
