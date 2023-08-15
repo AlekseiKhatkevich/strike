@@ -1,18 +1,14 @@
 import asyncio
-import datetime
 
+from asyncpg import Range
 from grpc import aio
 from loguru import logger
 
 from config import settings
+from crud.helpers import create_or_update_with_session_get
 from internal.database import async_session
+from internal.protobuf import pb_from_model_instance
 from serializers.conflicts import ConflictCreateSerializer
-from serializers.proto.compiled.conflicts_pb2 import (
-    Conflict,
-    ConflictExtraData,
-    ConflictTypes,
-    SingleConflictResponse,
-)
 from serializers.proto.compiled.conflicts_pb2_grpc import (
     ConflictsServiceServicer,
     add_ConflictsServiceServicer_to_server,
@@ -25,8 +21,15 @@ class ConflictsServicer(ConflictsServiceServicer):
     """
     async def CreateConflict(self, request, context):
         conflict = ConflictCreateSerializer.model_validate(request)
+        conflict_dict = conflict.model_dump()
+        conflict_dict['duration'] = Range(conflict.duration.lower, conflict.duration.upper)
         async with async_session() as session:
-            pass
+            instance = await create_or_update_with_session_get(
+                session,
+                'Conflict',
+                conflict_dict
+            )
+            # pb_from_model_instance
             # conflict = Conflict()
             # conflict.id = 1
             # conflict.type = ConflictTypes.LAYOFF
