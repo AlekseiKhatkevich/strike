@@ -1,12 +1,12 @@
 import asyncio
 
 from asyncpg import Range
-from grpc import aio, StatusCode
+from grpc import aio
 from loguru import logger
-from pydantic import ValidationError
 
 from config import settings
 from crud.helpers import create_or_update_with_session_get
+from grpc_services.helpers import GRPCErrorHandler
 from internal.database import async_session
 from serializers.conflicts import ConflictCreateSerializer
 from serializers.proto.compiled.conflicts_pb2 import ConflictExtraData, SingleConflictResponse
@@ -18,23 +18,17 @@ from serializers.proto.compiled.conflicts_pb2_grpc import (
 
 class ConflictsServicer(ConflictsServiceServicer):
     """
-
+    Создание записи модели Conflict.
     """
     async def CreateConflict(self, request, context):
-        try:
+        async with GRPCErrorHandler(context), async_session() as session:
             conflict = ConflictCreateSerializer.model_validate(request)
-        except ValidationError as err:
-            await context.abort(
-                code=StatusCode.INVALID_ARGUMENT,
-                details=err.json(),
-            )
-        conflict_dict = conflict.model_dump()
-        conflict_dict['duration'] = Range(conflict.duration.lower, conflict.duration.upper)
-        async with async_session() as session:
+            conflict_dict = conflict.model_dump()
+            conflict_dict['duration'] = Range(conflict.duration.lower, conflict.duration.upper)
             instance = await create_or_update_with_session_get(
                 session,
                 'Conflict',
-                conflict_dict
+                conflict_dict,
             )
             response_pb = SingleConflictResponse()
 

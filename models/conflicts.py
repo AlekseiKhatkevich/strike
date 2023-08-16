@@ -4,12 +4,13 @@ import enum
 from sqlalchemy import CheckConstraint, ForeignKey
 from sqlalchemy.dialects.postgresql import ENUM, Range, TSTZRANGE
 from sqlalchemy.orm import Mapped, mapped_column
+
+from internal.database import Base
+from internal.typing_and_types import BigIntType
 from serializers.proto.compiled.conflicts_pb2 import (
     Conflict as PBConflict,
     ConflictTypes as PBConflictTypes,
 )
-from internal.database import Base
-from internal.typing_and_types import BigIntType
 from .annotations import BigIntPk
 from .mixins import CreatedUpdatedMixin
 
@@ -63,9 +64,9 @@ class Conflict(CreatedUpdatedMixin, Base):
     def __repr__(self):
         return f'{self.type} conflict in company {self.enterprise_id}'
 
-    def to_protobuf(self):
+    def to_protobuf(self) -> PBConflict:
         """
-
+        Преобразует экземпляр класса модели в protobuf.
         """
         conflict_pb = PBConflict()
         for filed_name in conflict_pb.DESCRIPTOR.fields_by_name.keys():
@@ -81,4 +82,3 @@ class Conflict(CreatedUpdatedMixin, Base):
                         setattr(conflict_pb, filed_name, model_value)
 
         return conflict_pb
-
