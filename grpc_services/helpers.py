@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 
 from crud.helpers import get_text_from_integrity_error
+from models.exceptions import ModelEntryDoesNotExistsInDbError
 
 if TYPE_CHECKING:
     from grpc.aio import ServicerContext
@@ -36,6 +37,11 @@ class GRPCErrorHandler:
                 return dict(
                     code=StatusCode.INTERNAL,
                     details=get_text_from_integrity_error(exc_val),
+                )
+            case ModelEntryDoesNotExistsInDbError():
+                return dict(
+                    code=StatusCode.NOT_FOUND,
+                    details=str(exc_val),
                 )
             case _:
                 return dict(

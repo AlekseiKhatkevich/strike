@@ -12,9 +12,10 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
+from google.protobuf import any_pb2 as google_dot_protobuf_dot_any__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x63onflicts.proto\x12\x06strike\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe5\x01\n\x08\x43onflict\x12\x0f\n\x02id\x18\x01 \x01(\x03H\x00\x88\x01\x01\x12#\n\x04type\x18\x02 \x01(\x0e\x32\x15.strike.ConflictTypes\x12\"\n\x08\x64uration\x18\x03 \x01(\x0b\x32\x10.strike.Duration\x12\x15\n\renterprise_id\x18\x04 \x01(\x03\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12\x14\n\x07results\x18\x06 \x01(\tH\x01\x88\x01\x01\x12\x19\n\x0csuccess_rate\x18\x07 \x01(\x02H\x02\x88\x01\x01\x42\x05\n\x03_idB\n\n\x08_resultsB\x0f\n\r_success_rate\"k\n\x16SingleConflictResponse\x12\"\n\x08\x63onflict\x18\x01 \x01(\x0b\x32\x10.strike.Conflict\x12-\n\nextra_data\x18\x02 \x01(\x0b\x32\x19.strike.ConflictExtraData\"\x87\x01\n\x11\x43onflictExtraData\x12\x33\n\nupdated_at\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\r\n\x0b_updated_at\"o\n\x08\x44uration\x12)\n\x05lower\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\x05upper\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x42\x08\n\x06_upper\"\x0f\n\rEmptyResponse\"\x1d\n\x0fSingleIdRequest\x12\n\n\x02id\x18\x01 \x01(\x03*\xe3\x01\n\rConflictTypes\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x0b\n\x07PAYMENT\x10\x01\x12\n\n\x06LAYOFF\x10\x02\x12\x0f\n\x0bLIQUIDATION\x10\x03\x12\t\n\x05OTHER\x10\x04\x12\r\n\tDISMISSAL\x10\x05\x12\x17\n\x13MANAGEMENT_POLITICS\x10\x06\x12\x13\n\x0fWORK_CONDITIONS\x10\x07\x12\x0f\n\x0bLABOR_HOURS\x10\x08\x12\x18\n\x14\x43OLLECTIVE_AGREEMENT\x10\t\x12\x11\n\rPAYMENT_DELAY\x10\n\x12\x11\n\rLABOUR_RIGHTS\x10\x0b\x32\xe2\x01\n\x10\x43onflictsService\x12\x44\n\x0e\x43reateConflict\x12\x10.strike.Conflict\x1a\x1e.strike.SingleConflictResponse\"\x00\x12\x42\n\x0e\x44\x65leteConflict\x12\x17.strike.SingleIdRequest\x1a\x15.strike.EmptyResponse\"\x00\x12\x44\n\x0eUpdateConflict\x12\x10.strike.Conflict\x1a\x1e.strike.SingleConflictResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x63onflicts.proto\x12\x06strike\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19google/protobuf/any.proto\"\xe5\x01\n\x08\x43onflict\x12\x0f\n\x02id\x18\x01 \x01(\x03H\x00\x88\x01\x01\x12#\n\x04type\x18\x02 \x01(\x0e\x32\x15.strike.ConflictTypes\x12\"\n\x08\x64uration\x18\x03 \x01(\x0b\x32\x10.strike.Duration\x12\x15\n\renterprise_id\x18\x04 \x01(\x03\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12\x14\n\x07results\x18\x06 \x01(\tH\x01\x88\x01\x01\x12\x19\n\x0csuccess_rate\x18\x07 \x01(\x02H\x02\x88\x01\x01\x42\x05\n\x03_idB\n\n\x08_resultsB\x0f\n\r_success_rate\"k\n\x16SingleConflictResponse\x12\"\n\x08\x63onflict\x18\x01 \x01(\x0b\x32\x10.strike.Conflict\x12-\n\nextra_data\x18\x02 \x01(\x0b\x32\x19.strike.ConflictExtraData\"\x87\x01\n\x11\x43onflictExtraData\x12\x33\n\nupdated_at\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\r\n\x0b_updated_at\"o\n\x08\x44uration\x12)\n\x05lower\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\x05upper\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x42\x08\n\x06_upper\"\x0f\n\rEmptyResponse\"\x1d\n\x0fSingleIdRequest\x12\n\n\x02id\x18\x01 \x01(\x03\"\xd9\x01\n\x18MultipleConflictsRequest\x12\n\n\x02id\x18\x01 \x03(\x03\x12#\n\x04type\x18\x02 \x03(\x0e\x32\x15.strike.ConflictTypes\x12\'\n\x08\x64uration\x18\x03 \x01(\x0b\x32\x10.strike.DurationH\x00\x88\x01\x01\x12\x15\n\renterprise_id\x18\x04 \x03(\x03\x12.\n\x0csuccess_rate\x18\x05 \x01(\x0b\x32\x13.strike.SuccessRateH\x01\x88\x01\x01\x42\x0b\n\t_durationB\x0f\n\r_success_rate\"U\n\x0bSuccessRate\x12\x1a\n\x10success_rate_gte\x18\x01 \x01(\x02H\x00\x12\x1a\n\x10success_rate_lte\x18\x02 \x01(\x02H\x00\x42\x0e\n\x0csuccess_rate\"M\n\x19MultipleConflictsResponse\x12\x30\n\x08\x63onflict\x18\x01 \x03(\x0b\x32\x1e.strike.SingleConflictResponse\"N\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12%\n\x07\x64\x65tails\x18\x03 \x03(\x0b\x32\x14.google.protobuf.Any*\xe3\x01\n\rConflictTypes\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x0b\n\x07PAYMENT\x10\x01\x12\n\n\x06LAYOFF\x10\x02\x12\x0f\n\x0bLIQUIDATION\x10\x03\x12\t\n\x05OTHER\x10\x04\x12\r\n\tDISMISSAL\x10\x05\x12\x17\n\x13MANAGEMENT_POLITICS\x10\x06\x12\x13\n\x0fWORK_CONDITIONS\x10\x07\x12\x0f\n\x0bLABOR_HOURS\x10\x08\x12\x18\n\x14\x43OLLECTIVE_AGREEMENT\x10\t\x12\x11\n\rPAYMENT_DELAY\x10\n\x12\x11\n\rLABOUR_RIGHTS\x10\x0b\x32\xba\x02\n\x10\x43onflictsService\x12\x44\n\x0e\x43reateConflict\x12\x10.strike.Conflict\x1a\x1e.strike.SingleConflictResponse\"\x00\x12\x42\n\x0e\x44\x65leteConflict\x12\x17.strike.SingleIdRequest\x1a\x15.strike.EmptyResponse\"\x00\x12\x44\n\x0eUpdateConflict\x12\x10.strike.Conflict\x1a\x1e.strike.SingleConflictResponse\"\x00\x12V\n\rListConflicts\x12 .strike.MultipleConflictsRequest\x1a!.strike.MultipleConflictsResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,20 +23,28 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'conflicts_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _globals['_CONFLICTTYPES']._serialized_start=701
-  _globals['_CONFLICTTYPES']._serialized_end=928
-  _globals['_CONFLICT']._serialized_start=61
-  _globals['_CONFLICT']._serialized_end=290
-  _globals['_SINGLECONFLICTRESPONSE']._serialized_start=292
-  _globals['_SINGLECONFLICTRESPONSE']._serialized_end=399
-  _globals['_CONFLICTEXTRADATA']._serialized_start=402
-  _globals['_CONFLICTEXTRADATA']._serialized_end=537
-  _globals['_DURATION']._serialized_start=539
-  _globals['_DURATION']._serialized_end=650
-  _globals['_EMPTYRESPONSE']._serialized_start=652
-  _globals['_EMPTYRESPONSE']._serialized_end=667
-  _globals['_SINGLEIDREQUEST']._serialized_start=669
-  _globals['_SINGLEIDREQUEST']._serialized_end=698
-  _globals['_CONFLICTSSERVICE']._serialized_start=931
-  _globals['_CONFLICTSSERVICE']._serialized_end=1157
+  _globals['_CONFLICTTYPES']._serialized_start=1194
+  _globals['_CONFLICTTYPES']._serialized_end=1421
+  _globals['_CONFLICT']._serialized_start=88
+  _globals['_CONFLICT']._serialized_end=317
+  _globals['_SINGLECONFLICTRESPONSE']._serialized_start=319
+  _globals['_SINGLECONFLICTRESPONSE']._serialized_end=426
+  _globals['_CONFLICTEXTRADATA']._serialized_start=429
+  _globals['_CONFLICTEXTRADATA']._serialized_end=564
+  _globals['_DURATION']._serialized_start=566
+  _globals['_DURATION']._serialized_end=677
+  _globals['_EMPTYRESPONSE']._serialized_start=679
+  _globals['_EMPTYRESPONSE']._serialized_end=694
+  _globals['_SINGLEIDREQUEST']._serialized_start=696
+  _globals['_SINGLEIDREQUEST']._serialized_end=725
+  _globals['_MULTIPLECONFLICTSREQUEST']._serialized_start=728
+  _globals['_MULTIPLECONFLICTSREQUEST']._serialized_end=945
+  _globals['_SUCCESSRATE']._serialized_start=947
+  _globals['_SUCCESSRATE']._serialized_end=1032
+  _globals['_MULTIPLECONFLICTSRESPONSE']._serialized_start=1034
+  _globals['_MULTIPLECONFLICTSRESPONSE']._serialized_end=1111
+  _globals['_STATUS']._serialized_start=1113
+  _globals['_STATUS']._serialized_end=1191
+  _globals['_CONFLICTSSERVICE']._serialized_start=1424
+  _globals['_CONFLICTSSERVICE']._serialized_end=1738
 # @@protoc_insertion_point(module_scope)

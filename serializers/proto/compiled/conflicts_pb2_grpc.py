@@ -34,6 +34,11 @@ class ConflictsServiceStub(object):
                 request_serializer=conflicts__pb2.Conflict.SerializeToString,
                 response_deserializer=conflicts__pb2.SingleConflictResponse.FromString,
                 )
+        self.ListConflicts = channel.unary_unary(
+                '/strike.ConflictsService/ListConflicts',
+                request_serializer=conflicts__pb2.MultipleConflictsRequest.SerializeToString,
+                response_deserializer=conflicts__pb2.MultipleConflictsResponse.FromString,
+                )
 
 
 class ConflictsServiceServicer(object):
@@ -62,6 +67,12 @@ class ConflictsServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListConflicts(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ConflictsServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -79,6 +90,11 @@ def add_ConflictsServiceServicer_to_server(servicer, server):
                     servicer.UpdateConflict,
                     request_deserializer=conflicts__pb2.Conflict.FromString,
                     response_serializer=conflicts__pb2.SingleConflictResponse.SerializeToString,
+            ),
+            'ListConflicts': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListConflicts,
+                    request_deserializer=conflicts__pb2.MultipleConflictsRequest.FromString,
+                    response_serializer=conflicts__pb2.MultipleConflictsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -143,5 +159,22 @@ class ConflictsService(object):
         return grpc.experimental.unary_unary(request, target, '/strike.ConflictsService/UpdateConflict',
             conflicts__pb2.Conflict.SerializeToString,
             conflicts__pb2.SingleConflictResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ListConflicts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/strike.ConflictsService/ListConflicts',
+            conflicts__pb2.MultipleConflictsRequest.SerializeToString,
+            conflicts__pb2.MultipleConflictsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

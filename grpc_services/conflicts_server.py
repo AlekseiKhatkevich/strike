@@ -100,6 +100,12 @@ class ConflictsServicer(ConflictsServiceServicer):
         data = self.get_conflict_dict(request, ConflictUpdateSerializer)
         return await self.CreateOrUpdateConflict(context, data)
 
+    async def ListConflicts(self, request, context):
+        """
+
+        """
+        pass
+
 
 async def serve():
     server = aio.server()

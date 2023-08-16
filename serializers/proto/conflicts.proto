@@ -3,6 +3,7 @@ syntax = 'proto3';
 package strike;
 
 import 'google/protobuf/timestamp.proto';
+import 'google/protobuf/any.proto';
 
 // компиляция
 //python -m grpc_tools.protoc -I /usr/include/google/protobuf/timestamp.proto
@@ -13,6 +14,7 @@ service ConflictsService {
   rpc CreateConflict(Conflict) returns (SingleConflictResponse) {};
   rpc DeleteConflict(SingleIdRequest) returns (EmptyResponse) {};
   rpc UpdateConflict(Conflict) returns (SingleConflictResponse) {};
+  rpc ListConflicts(MultipleConflictsRequest) returns (MultipleConflictsResponse) {};
 }
 
 // Типы возможных конфликтов. Зеркалит ConflictTypes в SA модели Conflict.
@@ -68,18 +70,40 @@ message SingleIdRequest {
   int64 id = 1;
 }
 
-//// The `Status` type defines a logical error model that is suitable for
-//// different programming environments, including REST APIs and RPC APIs.
-//message Status {
-//  // A simple error code that can be easily handled by the client. The
-//  // actual error code is defined by `google.rpc.Code`.
-//  int32 code = 1;
-//
-//  // A developer-facing human-readable error message in English. It should
-//  // both explain the error and offer an actionable resolution to it.
-//  string message = 2;
-//
-//  // Additional error information that the client code can use to handle
-//  // the error, such as retry info or a help link.
-//  repeated google.protobuf.Any details = 3;
-//}
+// запрос на выдачу списка конфликтов по условиям поиска.
+message MultipleConflictsRequest {
+  repeated int64 id = 1;
+  repeated ConflictTypes type = 2;
+  optional Duration duration = 3;
+  repeated int64 enterprise_id = 4;
+  optional SuccessRate success_rate = 5;
+}
+
+// для запроса конфликтов. Условие поиска по успешности.
+message SuccessRate {
+  oneof success_rate {
+    float success_rate_gte = 1;
+    float success_rate_lte = 2;
+  }
+}
+
+// Респонс с несколькими конфликтами.
+message MultipleConflictsResponse {
+  repeated SingleConflictResponse conflict = 1;
+}
+
+// The `Status` type defines a logical error model that is suitable for
+// different programming environments, including REST APIs and RPC APIs.
+message Status {
+  // A simple error code that can be easily handled by the client. The
+  // actual error code is defined by `google.rpc.Code`.
+  int32 code = 1;
+
+  // A developer-facing human-readable error message in English. It should
+  // both explain the error and offer an actionable resolution to it.
+  string message = 2;
+
+  // Additional error information that the client code can use to handle
+  // the error, such as retry info or a help link.
+  repeated google.protobuf.Any details = 3;
+}
