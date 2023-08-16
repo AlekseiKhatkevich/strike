@@ -718,6 +718,21 @@ files = [
 protobuf = ["grpcio-tools (>=1.57.0)"]
 
 [[package]]
+name = "grpcio-reflection"
+version = "1.57.0"
+description = "Standard Protobuf Reflection Service for gRPC"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "grpcio-reflection-1.57.0.tar.gz", hash = "sha256:8f63a18729cba995a172f8325235f5094cb066febec75f9a3b1b2e28328aa166"},
+    {file = "grpcio_reflection-1.57.0-py3-none-any.whl", hash = "sha256:d7deb8587f9d0095fb5d367c2aa5ce1380e3f23b0f8bca6c00bc404c5429cb6a"},
+]
+
+[package.dependencies]
+grpcio = ">=1.57.0"
+protobuf = ">=4.21.6"
+
+[[package]]
 name = "grpcio-tools"
 version = "1.57.0"
 description = "Protobuf code generator for gRPC"
@@ -2589,4 +2604,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "077161c114acfb5248c61c821028155bf9e1d416ede03a7eb7c0e7517b301729"
+content-hash = "1848a871e4cc646b4fec993f2d35204f8c5eba683ac91d6668a9c6a13ef5fbe9"
