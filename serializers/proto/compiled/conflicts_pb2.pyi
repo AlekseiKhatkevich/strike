@@ -110,10 +110,10 @@ class SuccessRate(_message.Message):
     def __init__(self, gte: _Optional[float] = ..., lte: _Optional[float] = ...) -> None: ...
 
 class MultipleConflictsResponse(_message.Message):
-    __slots__ = ["conflict"]
-    CONFLICT_FIELD_NUMBER: _ClassVar[int]
-    conflict: _containers.RepeatedCompositeFieldContainer[SingleConflictResponse]
-    def __init__(self, conflict: _Optional[_Iterable[_Union[SingleConflictResponse, _Mapping]]] = ...) -> None: ...
+    __slots__ = ["conflicts"]
+    CONFLICTS_FIELD_NUMBER: _ClassVar[int]
+    conflicts: _containers.RepeatedCompositeFieldContainer[SingleConflictResponse]
+    def __init__(self, conflicts: _Optional[_Iterable[_Union[SingleConflictResponse, _Mapping]]] = ...) -> None: ...
 
 class Status(_message.Message):
     __slots__ = ["code", "message", "details"]

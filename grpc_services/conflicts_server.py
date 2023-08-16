@@ -16,7 +16,7 @@ from serializers.conflicts import ConflictCreateSerializer, ConflictUpdateSerial
     ConflictsRequestedConditionsSerializer
 from serializers.proto.compiled.conflicts_pb2 import (
     ConflictExtraData,
-    SingleConflictResponse,
+    MultipleConflictsResponse, SingleConflictResponse,
     EmptyResponse,
     DESCRIPTOR,
     Conflict as ConflictPB,
@@ -59,6 +59,8 @@ class ConflictsServicer(ConflictsServiceServicer):
 
         extra_data_pb = ConflictExtraData()
         extra_data_pb.created_at.FromDatetime(instance.created_at)
+        if instance.updated_at is not None:
+            extra_data_pb.updated_at.FromDatetime(instance.updated_at)
         response_pb.extra_data.MergeFrom(extra_data_pb)
 
         return response_pb
@@ -109,7 +111,12 @@ class ConflictsServicer(ConflictsServiceServicer):
         async with GRPCErrorHandler(context), async_session() as session:
             conditions = ConflictsRequestedConditionsSerializer.model_validate(request)
             conflicts = await list_conflicts(session, conditions)
-            1+1
+
+            response = MultipleConflictsResponse()
+            response.conflicts.MergeFrom(
+                self.create_single_conflict_response_pb(c) for c in conflicts
+            )
+            return response
 
 
 async def serve():

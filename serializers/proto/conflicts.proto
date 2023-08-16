@@ -89,7 +89,7 @@ message SuccessRate {
 
 // Респонс с несколькими конфликтами.
 message MultipleConflictsResponse {
-  repeated SingleConflictResponse conflict = 1;
+  repeated SingleConflictResponse conflicts = 1;
 }
 
 // The `Status` type defines a logical error model that is suitable for
