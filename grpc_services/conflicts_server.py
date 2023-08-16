@@ -7,11 +7,13 @@ from grpc import aio
 from loguru import logger
 
 from config import settings
+from crud.conflicts import list_conflicts
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from grpc_services.helpers import GRPCErrorHandler
 from internal.database import async_session
 from models import Conflict
-from serializers.conflicts import ConflictCreateSerializer, ConflictUpdateSerializer
+from serializers.conflicts import ConflictCreateSerializer, ConflictUpdateSerializer, \
+    ConflictsRequestedConditionsSerializer
 from serializers.proto.compiled.conflicts_pb2 import (
     ConflictExtraData,
     SingleConflictResponse,
@@ -104,7 +106,10 @@ class ConflictsServicer(ConflictsServiceServicer):
         """
 
         """
-        pass
+        async with GRPCErrorHandler(context), async_session() as session:
+            conditions = ConflictsRequestedConditionsSerializer.model_validate(request)
+            conflicts = await list_conflicts(session, conditions)
+            1+1
 
 
 async def serve():

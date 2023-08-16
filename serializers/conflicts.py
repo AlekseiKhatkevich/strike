@@ -2,7 +2,7 @@ import datetime
 from typing import Annotated
 
 from google.protobuf.internal.well_known_types import Timestamp
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, computed_field, field_validator
 from pydantic.functional_validators import AfterValidator, BeforeValidator
 
 from internal.serializers import BaseModel
@@ -94,6 +94,14 @@ class SuccessRateSerializer(BaseModel):
     lte: Annotated[float, Field(ge=0, le=1)]
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def condition(self) -> tuple[float, float] | None:
+        if not self.gte and not self.lte:
+            return None
+        else:
+            return self.gte, self.lte or 1.0
 
 
 class ConflictsRequestedConditionsSerializer(BaseModel):
