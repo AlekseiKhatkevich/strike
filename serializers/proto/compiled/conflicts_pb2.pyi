@@ -74,3 +74,13 @@ class Duration(_message.Message):
     lower: _timestamp_pb2.Timestamp
     upper: _timestamp_pb2.Timestamp
     def __init__(self, lower: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., upper: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+
+class EmptyResponse(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
+class SingleIdRequest(_message.Message):
+    __slots__ = ["id"]
+    ID_FIELD_NUMBER: _ClassVar[int]
+    id: int
+    def __init__(self, id: _Optional[int] = ...) -> None: ...

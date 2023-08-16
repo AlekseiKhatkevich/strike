@@ -10,7 +10,8 @@ import 'google/protobuf/timestamp.proto';
 // --pyi_out=./compiled --grpc_python_out=./compiled  conflicts.proto
 
 service ConflictsService {
-  rpc CreateConflict(Conflict) returns (SingleConflictResponse) {}
+  rpc CreateConflict(Conflict) returns (SingleConflictResponse) {};
+  rpc DeleteConflict(SingleIdRequest) returns (EmptyResponse) {};
 }
 
 // Типы возможных конфликтов. Зеркалит ConflictTypes в SA модели Conflict.
@@ -56,6 +57,14 @@ message ConflictExtraData {
 message Duration {
   google.protobuf.Timestamp lower = 1;
   optional google.protobuf.Timestamp upper = 2;
+}
+
+// пустое сообщение используется для респонсов.
+message EmptyResponse {}
+
+// запрос чего либо по конкретному id: int
+message SingleIdRequest {
+  int64 id = 1;
 }
 
 //// The `Status` type defines a logical error model that is suitable for

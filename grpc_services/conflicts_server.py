@@ -5,11 +5,16 @@ from grpc import aio
 from loguru import logger
 
 from config import settings
-from crud.helpers import create_or_update_with_session_get
+from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from grpc_services.helpers import GRPCErrorHandler
 from internal.database import async_session
+from models import Conflict
 from serializers.conflicts import ConflictCreateSerializer
-from serializers.proto.compiled.conflicts_pb2 import ConflictExtraData, SingleConflictResponse
+from serializers.proto.compiled.conflicts_pb2 import (
+    ConflictExtraData,
+    SingleConflictResponse,
+    EmptyResponse,
+)
 from serializers.proto.compiled.conflicts_pb2_grpc import (
     ConflictsServiceServicer,
     add_ConflictsServiceServicer_to_server,
@@ -21,6 +26,9 @@ class ConflictsServicer(ConflictsServiceServicer):
     Создание записи модели Conflict.
     """
     async def CreateConflict(self, request, context):
+        """
+        Создание записи Conflict в БД.
+        """
         async with GRPCErrorHandler(context), async_session() as session:
             conflict = ConflictCreateSerializer.model_validate(request)
             conflict_dict = conflict.model_dump()
@@ -40,6 +48,18 @@ class ConflictsServicer(ConflictsServiceServicer):
             response_pb.extra_data.MergeFrom(extra_data_pb)
 
             return response_pb
+
+    async def DeleteConflict(self, request, context):
+        """
+        Удаление записи Conflict по id.
+        """
+        async with GRPCErrorHandler(context), async_session() as session:
+            await delete_via_sql_delete(
+                session,
+                Conflict,
+                Conflict.id == request.id,
+            )
+            return EmptyResponse()
 
 
 async def serve():
