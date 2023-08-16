@@ -2,7 +2,7 @@ import datetime
 from typing import Annotated
 
 from google.protobuf.internal.well_known_types import Timestamp
-from pydantic import ConfigDict, field_validator
+from pydantic import ConfigDict, Field, field_validator
 from pydantic.functional_validators import AfterValidator, BeforeValidator
 
 from internal.serializers import BaseModel
@@ -13,7 +13,17 @@ from serializers.typing import IntIdType
 __all__ = (
     'ConflictCreateSerializer',
     'ConflictUpdateSerializer',
+    'ConflictsRequestedConditionsSerializer',
 )
+
+
+def _get_enum_by_num(value: int) -> ConflictTypes:
+    """
+    Получаем члена ENUM ConflictTypes модели Conflict через номер ConflictTypes протобафа.
+    """
+    pb_enum_name = PBConflictTypes.Name(value)
+    return getattr(ConflictTypes, pb_enum_name)
+
 
 #  преобразуем "" в None так как с protobuf приходит "" в качестве дефолтного значения для str
 EmptyStrToNone = Annotated[str | None, BeforeValidator(lambda v: v or None)]
@@ -23,6 +33,7 @@ ZeroFloatToNone = Annotated[
     BeforeValidator(lambda v: v or None),
     AfterValidator(lambda v: round(v, 2) if v else v),
 ]
+PBConflictTypesField = Annotated[ConflictTypes, BeforeValidator(_get_enum_by_num)]
 
 
 class ProtoDurationSerializer(BaseModel):
@@ -51,7 +62,7 @@ class ConflictBaseSerializer(BaseModel):
     """
     Базовый сериалайзер для 1 конфликта.
     """
-    type: ConflictTypes
+    type: PBConflictTypesField
     duration: ProtoDurationSerializer
     enterprise_id: IntIdType
     description: str
@@ -59,16 +70,6 @@ class ConflictBaseSerializer(BaseModel):
     success_rate: ZeroFloatToNone
 
     model_config = ConfigDict(from_attributes=True)
-
-    # noinspection PyNestedDecorators
-    @field_validator('type', mode='before')
-    @classmethod
-    def _get_enum_by_num(cls, value: int) -> ConflictTypes:
-        """
-        Получаем члена ENUM ConflictTypes модели Conflict через номер ConflictTypes протобафа.
-        """
-        pb_enum_name = PBConflictTypes.Name(value)
-        return getattr(ConflictTypes, pb_enum_name)
 
 
 class ConflictCreateSerializer(ConflictBaseSerializer):
@@ -83,3 +84,26 @@ class ConflictUpdateSerializer(ConflictBaseSerializer):
     Сериалайзер для валидации и преобразования данных от буфера для ЭП CreateConflict.
     """
     id: IntIdType
+
+
+class SuccessRateSerializer(BaseModel):
+    """
+
+    """
+    gte: Annotated[float, Field(ge=0, le=1)]
+    lte: Annotated[float, Field(ge=0, le=1)]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ConflictsRequestedConditionsSerializer(BaseModel):
+    """
+
+    """
+    ids: list[IntIdType] = Field(validation_alias='id')
+    types: list[PBConflictTypesField] = Field(validation_alias='type')
+    duration: ProtoDurationSerializer
+    enterprise_ids: list[IntIdType] = Field(validation_alias='enterprise_id')
+    success_rate: SuccessRateSerializer
+
+    model_config = ConfigDict(from_attributes=True)

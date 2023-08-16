@@ -102,12 +102,12 @@ class MultipleConflictsRequest(_message.Message):
     def __init__(self, id: _Optional[_Iterable[int]] = ..., type: _Optional[_Iterable[_Union[ConflictTypes, str]]] = ..., duration: _Optional[_Union[Duration, _Mapping]] = ..., enterprise_id: _Optional[_Iterable[int]] = ..., success_rate: _Optional[_Union[SuccessRate, _Mapping]] = ...) -> None: ...
 
 class SuccessRate(_message.Message):
-    __slots__ = ["success_rate_gte", "success_rate_lte"]
-    SUCCESS_RATE_GTE_FIELD_NUMBER: _ClassVar[int]
-    SUCCESS_RATE_LTE_FIELD_NUMBER: _ClassVar[int]
-    success_rate_gte: float
-    success_rate_lte: float
-    def __init__(self, success_rate_gte: _Optional[float] = ..., success_rate_lte: _Optional[float] = ...) -> None: ...
+    __slots__ = ["gte", "lte"]
+    GTE_FIELD_NUMBER: _ClassVar[int]
+    LTE_FIELD_NUMBER: _ClassVar[int]
+    gte: float
+    lte: float
+    def __init__(self, gte: _Optional[float] = ..., lte: _Optional[float] = ...) -> None: ...
 
 class MultipleConflictsResponse(_message.Message):
     __slots__ = ["conflict"]

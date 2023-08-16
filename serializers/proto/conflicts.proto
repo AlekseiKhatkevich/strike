@@ -82,8 +82,8 @@ message MultipleConflictsRequest {
 // для запроса конфликтов. Условие поиска по успешности.
 message SuccessRate {
   oneof success_rate {
-    float success_rate_gte = 1;
-    float success_rate_lte = 2;
+    float gte = 1;
+    float lte = 2;
   }
 }
 
