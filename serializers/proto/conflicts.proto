@@ -12,6 +12,7 @@ import 'google/protobuf/timestamp.proto';
 service ConflictsService {
   rpc CreateConflict(Conflict) returns (SingleConflictResponse) {};
   rpc DeleteConflict(SingleIdRequest) returns (EmptyResponse) {};
+  rpc UpdateConflict(Conflict) returns (SingleConflictResponse) {};
 }
 
 // Типы возможных конфликтов. Зеркалит ConflictTypes в SA модели Conflict.

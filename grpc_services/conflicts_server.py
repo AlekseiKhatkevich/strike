@@ -1,4 +1,6 @@
 import asyncio
+from typing import Any, TYPE_CHECKING, Type
+
 from grpc_reflection.v1alpha import reflection
 from asyncpg import Range
 from grpc import aio
@@ -9,46 +11,75 @@ from crud.helpers import create_or_update_with_session_get, delete_via_sql_delet
 from grpc_services.helpers import GRPCErrorHandler
 from internal.database import async_session
 from models import Conflict
-from serializers.conflicts import ConflictCreateSerializer
+from serializers.conflicts import ConflictCreateSerializer, ConflictUpdateSerializer
 from serializers.proto.compiled.conflicts_pb2 import (
     ConflictExtraData,
     SingleConflictResponse,
     EmptyResponse,
     DESCRIPTOR,
+    Conflict as ConflictPB,
 )
 from serializers.proto.compiled.conflicts_pb2_grpc import (
     ConflictsServiceServicer,
     add_ConflictsServiceServicer_to_server,
 )
 
+if TYPE_CHECKING:
+    from grpc.aio import ServicerContext
+
 
 class ConflictsServicer(ConflictsServiceServicer):
     """
     Создание записи модели Conflict.
     """
+    @staticmethod
+    def get_conflict_dict(request: ConflictPB,
+                          serializer: Type[ConflictCreateSerializer] | Type[ConflictUpdateSerializer],
+                          ) -> dict[str, Any]:
+        """
+        Пропихиваем сырые данные с буфера в сериалайзер, затем получаем словарь с
+        данными.
+        """
+        conflict = serializer.model_validate(request)
+        conflict_dict = conflict.model_dump()
+        conflict_dict['duration'] = Range(conflict.duration.lower, conflict.duration.upper)
+        return conflict_dict
+
+    @staticmethod
+    def create_single_conflict_response_pb(instance: Conflict) -> SingleConflictResponse:
+        """
+        Создаем респонс с одним созданным или обновленным Conflict.
+        """
+        response_pb = SingleConflictResponse()
+
+        conflict_pb = instance.to_protobuf()
+        response_pb.conflict.MergeFrom(conflict_pb)
+
+        extra_data_pb = ConflictExtraData()
+        extra_data_pb.created_at.FromDatetime(instance.created_at)
+        response_pb.extra_data.MergeFrom(extra_data_pb)
+
+        return response_pb
+
+    async def CreateOrUpdateConflict(self,
+                                     context: 'ServicerContext',
+                                     data: dict[str, Any],
+                                     ) -> SingleConflictResponse:
+        """
+        Создает или обновляет 1 запись Conflict.
+        """
+        async with GRPCErrorHandler(context), async_session() as session:
+            instance = await create_or_update_with_session_get(
+                session, 'Conflict', data,
+            )
+            return self.create_single_conflict_response_pb(instance)
+
     async def CreateConflict(self, request, context):
         """
         Создание записи Conflict в БД.
         """
-        async with GRPCErrorHandler(context), async_session() as session:
-            conflict = ConflictCreateSerializer.model_validate(request)
-            conflict_dict = conflict.model_dump()
-            conflict_dict['duration'] = Range(conflict.duration.lower, conflict.duration.upper)
-            instance = await create_or_update_with_session_get(
-                session,
-                'Conflict',
-                conflict_dict,
-            )
-            response_pb = SingleConflictResponse()
-
-            conflict_pb = instance.to_protobuf()
-            response_pb.conflict.MergeFrom(conflict_pb)
-
-            extra_data_pb = ConflictExtraData()
-            extra_data_pb.created_at.FromDatetime(instance.created_at)
-            response_pb.extra_data.MergeFrom(extra_data_pb)
-
-            return response_pb
+        data = self.get_conflict_dict(request, ConflictCreateSerializer)
+        return await self.CreateOrUpdateConflict(context, data)
 
     async def DeleteConflict(self, request, context):
         """
@@ -61,6 +92,13 @@ class ConflictsServicer(ConflictsServiceServicer):
                 Conflict.id == request.id,
             )
             return EmptyResponse()
+
+    async def UpdateConflict(self, request, context):
+        """
+        Обновление 1 записи Conflict.
+        """
+        data = self.get_conflict_dict(request, ConflictUpdateSerializer)
+        return await self.CreateOrUpdateConflict(context, data)
 
 
 async def serve():

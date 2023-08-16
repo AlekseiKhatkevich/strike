@@ -12,6 +12,7 @@ from serializers.typing import IntIdType
 
 __all__ = (
     'ConflictCreateSerializer',
+    'ConflictUpdateSerializer',
 )
 
 #  преобразуем "" в None так как с protobuf приходит "" в качестве дефолтного значения для str
@@ -76,3 +77,9 @@ class ConflictCreateSerializer(ConflictBaseSerializer):
     """
     pass
 
+
+class ConflictUpdateSerializer(ConflictBaseSerializer):
+    """
+    Сериалайзер для валидации и преобразования данных от буфера для ЭП CreateConflict.
+    """
+    id: IntIdType
