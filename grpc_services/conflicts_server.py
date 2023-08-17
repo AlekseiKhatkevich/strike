@@ -3,6 +3,7 @@ from typing import Any, TYPE_CHECKING, Type
 import aiorun
 from asyncpg import Range
 import grpc
+from grpc._compression import Gzip
 from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
@@ -10,6 +11,7 @@ from config import settings
 from crud.conflicts import list_conflicts
 from crud.helpers import create_or_update_with_session_get, delete_via_sql_delete
 from grpc_services.helpers import GRPCErrorHandler
+from grpc_services.interceptors import AuthInterceptor
 from internal.database import async_session
 from models import Conflict
 from serializers.conflicts import (
@@ -124,7 +126,7 @@ class ConflictsServicer(ConflictsServiceServicer):
 
 
 async def serve():
-    server = grpc.aio.server()
+    server = grpc.aio.server(interceptors=(AuthInterceptor(),), compression=Gzip)
     add_ConflictsServiceServicer_to_server(ConflictsServicer(), server)
     listen_addr = '[::]:' + settings.grpc_port
     service_names = (
