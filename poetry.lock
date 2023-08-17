@@ -747,6 +747,21 @@ grpcio = ">=1.57.0"
 protobuf = ">=4.21.6"
 
 [[package]]
+name = "grpcio-testing"
+version = "1.57.0"
+description = "Testing utilities for gRPC Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "grpcio-testing-1.57.0.tar.gz", hash = "sha256:c4532a26563e1219f42b76d7a9d88612f2f65f73e6ec83e11c73d64e2f1e70e9"},
+    {file = "grpcio_testing-1.57.0-py3-none-any.whl", hash = "sha256:abc6e11fc8d05e0cd3986e844da4eb8738048496a42dcedcde0ebbdcdd307408"},
+]
+
+[package.dependencies]
+grpcio = ">=1.57.0"
+protobuf = ">=4.21.6"
+
+[[package]]
 name = "grpcio-tools"
 version = "1.57.0"
 description = "Protobuf code generator for gRPC"
@@ -2208,13 +2223,13 @@ pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 
 [[package]]
 name = "strawberry-graphql"
-version = "0.200.0"
+version = "0.204.0"
 description = "A library for creating GraphQL APIs"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "strawberry_graphql-0.200.0-py3-none-any.whl", hash = "sha256:4a2e73cf585b667802b75f8b750552f437935dbcc644ccfe063bc5975c43f308"},
-    {file = "strawberry_graphql-0.200.0.tar.gz", hash = "sha256:3dae7d346c2bfe88f0717df7b08f639029e89c4eb2287686cbd8438906e93d1d"},
+    {file = "strawberry_graphql-0.204.0-py3-none-any.whl", hash = "sha256:e5f46abf49e7569335b51e992fb54f040355712274cf74a8bd540dd692457ccd"},
+    {file = "strawberry_graphql-0.204.0.tar.gz", hash = "sha256:2c806036ecfe6d32cc0bae111346d9df24a7ca7156cc61047ce429efbb6cd630"},
 ]
 
 [package.dependencies]
@@ -2622,4 +2637,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "c6fb7927396bc052d27a403675dd64865f1c5d3c027396dd55bfc451893378f2"
+content-hash = "95382f5341c51b8053be825c737b9eecfb567184cf1dc5b04d290aba915e25d2"

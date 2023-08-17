@@ -38,7 +38,7 @@ sqlalchemy-utils = "^0.41.1"
 pydantic = "2.*"
 websockets = "11.*"
 protobuf = "4.*"
-strawberry-graphql = {extras = ["debug-server"], version = "^0.200.0"}
+strawberry-graphql = {extras = ["debug-server"], version = "~0.204"}
 grpcio = "^1.57.0"
 grpcio-tools = "^1.57.0"
 grpcio-reflection = "^1.57.0"
@@ -54,6 +54,7 @@ pytest-asyncio = "*"
 factory-boy = "*"
 pytest-factoryboy = "*"
 bump-pydantic = "^0.1.0"
+grpcio-testing = "^1.57.0"
 
 [build-system]
 requires = ["poetry-core"]
