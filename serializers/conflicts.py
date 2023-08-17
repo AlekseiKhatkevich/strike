@@ -88,7 +88,9 @@ class ConflictUpdateSerializer(ConflictBaseSerializer):
 
 class SuccessRateSerializer(BaseModel):
     """
-
+    Успех конфликта от 0 до 1.
+    gte - => какого либо числа
+    lte - <= какого либо числа
     """
     gte: Annotated[float, Field(ge=0, le=1)]
     lte: Annotated[float, Field(ge=0, le=1)]
@@ -106,7 +108,7 @@ class SuccessRateSerializer(BaseModel):
 
 class ConflictsRequestedConditionsSerializer(BaseModel):
     """
-
+    Для проверки параметров на входе хендлера ListConflicts.
     """
     ids: list[IntIdType] = Field(validation_alias='id')
     types: list[PBConflictTypesField] = Field(validation_alias='type')

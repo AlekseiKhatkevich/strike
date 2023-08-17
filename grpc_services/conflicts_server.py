@@ -2,7 +2,7 @@ from typing import Any, TYPE_CHECKING, Type
 
 import aiorun
 from asyncpg import Range
-from grpc import aio
+import grpc
 from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
@@ -124,7 +124,7 @@ class ConflictsServicer(ConflictsServiceServicer):
 
 
 async def serve():
-    server = aio.server()
+    server = grpc.aio.server()
     add_ConflictsServiceServicer_to_server(ConflictsServicer(), server)
     listen_addr = '[::]:' + settings.grpc_port
     service_names = (
@@ -140,4 +140,4 @@ async def serve():
 
 
 if __name__ == '__main__':
-    aiorun.run(serve())
+    aiorun.run(serve(), use_uvloop=True)

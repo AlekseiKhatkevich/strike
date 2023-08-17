@@ -22,6 +22,7 @@ async def list_conflicts(
     Получает из БД список конфликтов по переданным в "conditions" условиям фильтрации.
     """
     stmt = select(Conflict)
+
     if ids := conditions.ids:
         stmt = stmt.where(Conflict.id.in_(ids))
     if types := conditions.types:
