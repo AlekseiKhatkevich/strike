@@ -42,6 +42,7 @@ strawberry-graphql = {extras = ["debug-server"], version = "^0.200.0"}
 grpcio = "^1.57.0"
 grpcio-tools = "^1.57.0"
 grpcio-reflection = "^1.57.0"
+aiorun = "^2023.7.2"
 
 
 [tool.poetry.group.dev.dependencies]

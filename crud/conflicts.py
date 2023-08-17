@@ -19,6 +19,7 @@ async def list_conflicts(
         conditions: 'ConflictsRequestedConditionsSerializer',
 ) -> Sequence[Conflict]:
     """
+    Получает из БД список конфликтов по переданным в "conditions" условиям фильтрации.
     """
     stmt = select(Conflict)
     if ids := conditions.ids:

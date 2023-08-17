@@ -1,9 +1,9 @@
-import asyncio
 from typing import Any, TYPE_CHECKING, Type
 
-from grpc_reflection.v1alpha import reflection
+import aiorun
 from asyncpg import Range
 from grpc import aio
+from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
 from config import settings
@@ -12,14 +12,18 @@ from crud.helpers import create_or_update_with_session_get, delete_via_sql_delet
 from grpc_services.helpers import GRPCErrorHandler
 from internal.database import async_session
 from models import Conflict
-from serializers.conflicts import ConflictCreateSerializer, ConflictUpdateSerializer, \
-    ConflictsRequestedConditionsSerializer
+from serializers.conflicts import (
+    ConflictCreateSerializer,
+    ConflictUpdateSerializer,
+    ConflictsRequestedConditionsSerializer,
+)
 from serializers.proto.compiled.conflicts_pb2 import (
-    ConflictExtraData,
-    MultipleConflictsResponse, SingleConflictResponse,
-    EmptyResponse,
-    DESCRIPTOR,
     Conflict as ConflictPB,
+    ConflictExtraData,
+    DESCRIPTOR,
+    EmptyResponse,
+    MultipleConflictsResponse,
+    SingleConflictResponse,
 )
 from serializers.proto.compiled.conflicts_pb2_grpc import (
     ConflictsServiceServicer,
@@ -106,7 +110,7 @@ class ConflictsServicer(ConflictsServiceServicer):
 
     async def ListConflicts(self, request, context):
         """
-
+        Отдает список конфликтов по переданным условиям фильтрации.
         """
         async with GRPCErrorHandler(context), async_session() as session:
             conditions = ConflictsRequestedConditionsSerializer.model_validate(request)
@@ -136,4 +140,4 @@ async def serve():
 
 
 if __name__ == '__main__':
-    asyncio.run(serve())
+    aiorun.run(serve())
