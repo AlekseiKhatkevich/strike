@@ -35,6 +35,7 @@ pytest_plugins = [
     'tests.strike.fixtures',
     'tests.detentions.fixtures',
     'tests.graphql_eps.fixtures',
+    'tests.grpc_services.fixtures',
 ]
 
 

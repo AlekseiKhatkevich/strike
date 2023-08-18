@@ -3,7 +3,7 @@ import enum
 
 from sqlalchemy import CheckConstraint, ForeignKey
 from sqlalchemy.dialects.postgresql import ENUM, Range, TSTZRANGE
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from internal.database import Base
 from internal.typing_and_types import BigIntType
@@ -56,6 +56,8 @@ class Conflict(CreatedUpdatedMixin, Base):
     description: Mapped[str]
     results: Mapped[str | None]
     success_rate: Mapped[float | None] = mapped_column()
+
+    enterprise: Mapped['Enterprise'] = relationship()
 
     __table_args__ = (
         CheckConstraint((success_rate >= 0) & (success_rate <= 1), name='success_rate_between_0_1'),
