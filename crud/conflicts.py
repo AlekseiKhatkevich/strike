@@ -21,13 +21,13 @@ async def list_conflicts(
     """
     Получает из БД список конфликтов по переданным в "conditions" условиям фильтрации.
     """
-    stmt = select(Conflict)
+    stmt = select(Conflict).order_by('id')
 
     if ids := conditions.ids:
         stmt = stmt.where(Conflict.id.in_(ids))
     if types := conditions.types:
         stmt = stmt.where(Conflict.type.in_(types))
-    if duration := conditions.duration:
+    if not (duration := conditions.duration).is_empty():
         duration = Range(duration.lower, duration.upper)
         stmt = stmt.where(Conflict.duration.op('<@')(duration))
     if enterprise_ids := conditions.enterprise_ids:

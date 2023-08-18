@@ -57,6 +57,12 @@ class ProtoDurationSerializer(BaseModel):
         """
         return value.ToDatetime(tzinfo=datetime.UTC) if value.ByteSize() else None
 
+    def is_empty(self) -> bool:
+        """
+        Не заполнены обе границы диапазона.
+        """
+        return self.lower is None and self.upper is None
+
 
 class ConflictBaseSerializer(BaseModel):
     """
