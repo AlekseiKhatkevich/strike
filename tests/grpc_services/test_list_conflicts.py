@@ -9,6 +9,9 @@ from internal.database import async_session
 from serializers.proto.compiled import conflicts_pb2
 
 
+pytestmark = pytest.mark.usefixtures('truncate_db_func_scope')
+
+
 # https://github.com/alexykot/grpcio-test-example/blob/master/example/test_greeter_server.py
 
 

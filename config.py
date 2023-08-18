@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     secret_string: SecretStr
     debug: bool = False
     root_path: Path = Path(__file__).resolve().parent
-    logging_config_file_path: FilePath = 'internal/logging/configuration.yaml'
+    # logging_config_file_path: FilePath = 'internal/logging/configuration.yaml'
     access_token_expire_minutes: int = 10000000
     obtain_jwt_token_ratelimit: str = '10/minute'
     user_cache_persistence: datetime.timedelta = datetime.timedelta(minutes=60)

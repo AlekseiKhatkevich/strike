@@ -121,19 +121,23 @@ def override_session_for_tests(db_session) -> None:
     app.dependency_overrides[get_session] = _get_test_db
 
 
-@pytest.fixture(scope='session', autouse=True)
-async def truncate_db(request):
+async def truncate_db_func() -> None:
     """
     Чистим базу после каждой сессии на всякий случай.
     """
-    if 'no_db_calls' not in request.keywords:
-        tables = [table.name for table in Base.metadata.sorted_tables]
-        statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
-        async with async_session() as session:
-            await session.execute(statement)
-            await session.commit()
+    tables = [table.name for table in Base.metadata.sorted_tables]
+    statement = text("TRUNCATE {} RESTART IDENTITY CASCADE;".format(', '.join(tables)))
+    async with async_session() as session:
+        await session.execute(statement)
+        await session.commit()
 
-    yield None
+
+truncate_db = pytest.fixture(scope='session', autouse=True)(truncate_db_func)
+
+
+@pytest.fixture
+async def truncate_db_func_scope() -> None:
+    await truncate_db_func()
 
 
 @pytest.fixture(autouse=True)

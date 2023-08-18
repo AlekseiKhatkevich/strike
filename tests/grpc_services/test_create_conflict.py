@@ -1,9 +1,12 @@
 import grpc
+import pytest
 
 from crud.helpers import exists_in_db
 from internal.database import async_session
 from models import Conflict
 from serializers.proto.compiled import conflicts_pb2
+
+pytestmark = pytest.mark.usefixtures('truncate_db_func_scope')
 
 
 async def test_CreateConflict_positive(get_grpc_response, conflict_factory, enterprise_factory):
