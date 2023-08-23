@@ -254,3 +254,4 @@ cython_debug/
 /.idea/csv-editor.xml
 /.idea/codeStyles/codeStyleConfig.xml
 /.idea/other.xml
+/docker-compose.yml
