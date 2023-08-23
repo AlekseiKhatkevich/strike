@@ -3,21 +3,41 @@ import heapq
 import random
 
 from confluent_kafka import Producer
+from confluent_kafka.cimpl import NewPartitions, NewTopic
 from shapely import Point
 from shapely.geometry import LineString
+from confluent_kafka.admin import AdminClient, ConfigResource
 
 config = {
     'bootstrap.servers': '127.0.0.1:29092',
 }
 
+# a.create_partitions([NewPartitions('coordinates', 130)], request_timeout=0.01)
+
+
+coordinates_topic = NewTopic(
+    'coordinates',
+    num_partitions=10,
+    config={
+       'delete.retention.ms': 604800000
+    }
+)
+
 
 class KafkaPointsProducer:
-    def __init__(self, num_users=None):
+    def __init__(self, num_users=None, topic=coordinates_topic):
         self.producer = Producer(config)
+        self.admin = AdminClient(config)
+        self.topic = topic
+        self.known_user_ids = set()
         num_users = num_users or random.randint(50, 100)
         self.routes = [
             RandomRoute(*self.generate_random_start_and_stop(), user_id=num) for num in range(1, num_users)
         ]
+        self._configure()
+
+    def _configure(self):
+        self.admin.create_topics([self.topic])
 
     @staticmethod
     def generate_random_start_and_stop():
@@ -31,17 +51,21 @@ class KafkaPointsProducer:
     async def _do_job(self, route):
         async for point in route.produce_points():
             print(f'User_id = {route.user_id}, point= {point}')
+            if route.user_id not in self.known_user_ids:
+                self.known_user_ids.add(route.user_id)
+                self.admin.create_partitions(
+                    [NewPartitions(self.topic.topic, len(self.known_user_ids) + 10)],
+                    request_timeout=0.01,
+                )
             if point:
                 self.producer.produce(
-                    topic='coordinates',
+                    topic=self.topic.topic,
                     key=str(route.user_id),
                     value=point.wkt,
                 )
 
     async def produce(self):
-        coros = []
-        for route in self.routes:
-            coros.append(self._do_job(route))
+        coros = [self._do_job(route) for route in self.routes]
         self.producer.poll(0)
         await asyncio.gather(*coros)
 
