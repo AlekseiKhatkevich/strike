@@ -3,10 +3,10 @@ import heapq
 import random
 
 from confluent_kafka import Producer
+from confluent_kafka.admin import AdminClient
 from confluent_kafka.cimpl import NewPartitions, NewTopic
 from shapely import Point
 from shapely.geometry import LineString
-from confluent_kafka.admin import AdminClient, ConfigResource
 
 from serializers.for_kafka import KafkaCoordinatesSerializer
 
@@ -14,14 +14,12 @@ config = {
     'bootstrap.servers': '127.0.0.1:29092',
 }
 
-# a.create_partitions([NewPartitions('coordinates', 130)], request_timeout=0.01)
-
 
 coordinates_topic = NewTopic(
     'coordinates',
     num_partitions=10,
     config={
-       'delete.retention.ms': 604800000
+       'delete.retention.ms': 604800000,
     }
 )
 
@@ -41,6 +39,10 @@ class KafkaPointsProducer:
     def _configure(self):
         self.admin.create_topics([self.topic])
 
+    @property
+    def _partitions_count(self) -> int:
+        return len(self.producer.list_topics().topics[self.topic.topic].partitions)
+
     @staticmethod
     def generate_random_start_and_stop():
         start_lat = random.uniform(-90, 90)
@@ -49,22 +51,22 @@ class KafkaPointsProducer:
         end_lon = random.uniform(start_lon - 0.01, start_lon + 0.01)
 
         return Point(start_lon, start_lat), Point(end_lon, end_lat)
-# получить кол-во партиций
+
     async def _do_job(self, route):
         async for point in route.produce_points():
             print(f'User_id = {route.user_id}, point= {point}')
             if route.user_id not in self.known_user_ids:
                 self.known_user_ids.add(route.user_id)
                 self.admin.create_partitions(
-                    [NewPartitions(self.topic.topic, len(self.known_user_ids) + 10)],
-                    request_timeout=0.01,
+                    [NewPartitions(self.topic.topic, self._partitions_count + 1)],
                 )
             if point:
-                value = KafkaCoordinatesSerializer(user_id=route.user_id, point=point).model_dump_json()
+                data_serializer = KafkaCoordinatesSerializer(user_id=route.user_id, point=point)
                 self.producer.produce(
                     topic=self.topic.topic,
                     key=str(route.user_id),
-                    value=value,
+                    value=data_serializer.model_dump_json(),
+                    partition="" # paretitioner
                 )
 
     async def produce(self):
