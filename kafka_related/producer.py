@@ -8,6 +8,8 @@ from shapely import Point
 from shapely.geometry import LineString
 from confluent_kafka.admin import AdminClient, ConfigResource
 
+from serializers.for_kafka import KafkaCoordinatesSerializer
+
 config = {
     'bootstrap.servers': '127.0.0.1:29092',
 }
@@ -47,7 +49,7 @@ class KafkaPointsProducer:
         end_lon = random.uniform(start_lon - 0.01, start_lon + 0.01)
 
         return Point(start_lon, start_lat), Point(end_lon, end_lat)
-
+# получить кол-во партиций
     async def _do_job(self, route):
         async for point in route.produce_points():
             print(f'User_id = {route.user_id}, point= {point}')
@@ -58,10 +60,11 @@ class KafkaPointsProducer:
                     request_timeout=0.01,
                 )
             if point:
+                value = KafkaCoordinatesSerializer(user_id=route.user_id, point=point).model_dump_json()
                 self.producer.produce(
                     topic=self.topic.topic,
                     key=str(route.user_id),
-                    value=point.wkt,
+                    value=value,
                 )
 
     async def produce(self):
