@@ -4,6 +4,7 @@ import heapq
 import random
 from itertools import count
 from typing import AsyncIterator, Iterable
+
 import aiorun
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient
