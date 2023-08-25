@@ -1,5 +1,4 @@
 from pydantic import ConfigDict, field_validator
-
 from shapely import Point, wkt
 
 from internal.serializers import BaseModel
@@ -28,6 +27,8 @@ class KafkaCoordinatesDeSerializer(KafkaCoordinatesSerializer):
     """
     Для десериализации данных послед кафки.
     """
+    _timestamp: float
+
     # noinspection PyNestedDecorators
     @field_validator('point', mode='before')
     @classmethod
@@ -36,3 +37,7 @@ class KafkaCoordinatesDeSerializer(KafkaCoordinatesSerializer):
         Десериализуем строковый point в shapely POINT.
         """
         return wkt.loads(point)
+
+    def __init__(self, timestamp, **data):
+        super().__init__(**data)
+        self._timestamp = timestamp
