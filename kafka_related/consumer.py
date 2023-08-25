@@ -28,8 +28,9 @@ class CoordinatesStorage:
 
     """
 
-    def __init__(self, save_window):
-        self.save_window = 60
+    def __init__(self, save_window, save_len):
+        self.save_window = save_window
+        self.save_len = save_len
         self._storage = defaultdict(list)
 
     def add(self, ser):
@@ -41,25 +42,26 @@ class CoordinatesStorage:
         self._storage[user_id].clear()
 
     def save(self, user_id, force=False):
-        if force:
-            pass
         coords = self._storage[user_id]
         if len(coords) < 2:
-            pass
+            return None
+        if force:
+            return self._do_save(coords, user_id=user_id)
         *_, penultimate, ultimate = coords
-        if ultimate - penultimate > self.save_window:
-            self._do_save(coords, user_id=user_id)
+        if (ultimate._timestamp - penultimate._timestamp > self.save_window or
+                len(coords) >= self.save_len):
+            return self._do_save(coords, user_id=user_id)
 
 
 class KafkaCoordinatesConsumer:
     """
     """
 
-    def __init__(self, cons_qty, poll_delay=1, save_window=60):
+    def __init__(self, cons_qty, poll_delay=1, save_window=60 * 1000, save_len=100):
         self.cons_qty = cons_qty
         self.poll_delay = poll_delay
         self.cons_user_id_map = defaultdict(set)
-        self.storage = CoordinatesStorage(save_window)
+        self.storage = CoordinatesStorage(save_window, save_len)
 
     def _handle_one_coord(self, msg):
         data = orjson.loads(msg.value)
