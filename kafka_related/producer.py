@@ -4,7 +4,7 @@ import heapq
 import random
 from itertools import count
 from typing import AsyncIterator, Iterable
-
+import aiorun
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient
 from confluent_kafka.cimpl import KafkaException, NewPartitions, NewTopic
@@ -18,6 +18,7 @@ partitions_lock = asyncio.Lock()
 
 config = {
     'bootstrap.servers': '127.0.0.1:29092',
+    'client.id': 228,
 }
 
 
@@ -177,3 +178,7 @@ class RandomRoute:
             _, point = self.heap.pop()
             yield point
             await asyncio.sleep(random.uniform(0.5, 3))
+
+
+if __name__ == '__main__':
+    aiorun.run(KafkaPointsProducer(num_users=10).produce())
