@@ -44,6 +44,7 @@ grpcio-tools = "^1.57.0"
 grpcio-reflection = "^1.57.0"
 aiorun = "^2023.7.2"
 confluent-kafka = "^2.2.0"
+aiokafka = "^0.8.1"
 
 
 [tool.poetry.group.dev.dependencies]
