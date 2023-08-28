@@ -7,19 +7,15 @@ from shapely import LineString
 
 from serializers.for_kafka import KafkaCoordinatesDeSerializer
 
-# conf = {
-#     'bootstrap.servers': '127.0.0.1:29092',
-#     'group.id': 'coordinates_consumers1',
-#     'auto.offset.reset': 'earliest',
-#     'enable.auto.commit': True,
-#     'heartbeat.interval.ms': 3000,
-# }
-aioconf = dict(
+
+conf = dict(
     bootstrap_servers='127.0.0.1:29092',
     group_id='coordinates_consumers1',
     enable_auto_commit=True,
-    auto_commit_interval_ms=100,
+    auto_commit_interval_ms=0.3 * 1000,
     auto_offset_reset='earliest',
+    metadata_max_age_ms=10 * 1000,
+    # isolation_level='read_committed'
 )
 
 
@@ -92,7 +88,7 @@ class KafkaCoordinatesConsumer:
         for num in range(self.cons_qty):
             consumer = AIOKafkaConsumer(
                 'coordinates',
-                **aioconf,
+                **conf,
             )
             coro = self._one_consumer(num, consumer)
             coros.append(coro)

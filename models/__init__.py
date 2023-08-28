@@ -8,3 +8,4 @@ from .union import *
 from .crud_log import *
 from .detention import *
 from .conflicts import *
+from .kafka_routes import *
