@@ -1,17 +1,18 @@
 import asyncio
+import enum
 from collections import defaultdict
 import orjson
-from aiokafka import AIOKafkaConsumer
+from aiokafka import AIOKafkaConsumer, TopicPartition
 from loguru import logger
 from shapely import LineString
 
-from serializers.for_kafka import KafkaCoordinatesDeSerializer
 
+from serializers.for_kafka import KafkaCoordinatesDeSerializer
 
 kafka_conf = dict(
     bootstrap_servers='127.0.0.1:29092',
     group_id='coordinates_consumers1',
-    enable_auto_commit=True,
+    enable_auto_commit=False,
     auto_commit_interval_ms=0.3 * 1000,
     auto_offset_reset='earliest',
     metadata_max_age_ms=10 * 1000,
@@ -21,6 +22,15 @@ storage_conf = dict(
     save_window=60 * 1000,
     save_len=100,
 )
+
+
+class SaveType(enum.Enum):
+    """
+
+    """
+    WITHOUT_SAVE = 0
+    WITH_ROUTE_SPLIT = 1
+    WITHOUT_ROUTE_SPLIT = 2
 
 
 class CoordinatesStorage:
@@ -33,24 +43,40 @@ class CoordinatesStorage:
         self.save_len = save_len
         self._storage = defaultdict(list)
 
-    def add(self, ser):
+    def add(self, ser, *, save_if_needed):
         self._storage[ser.user_id].append(ser)
+        if save_if_needed:
+            return self.save(user_id=ser.user_id)
+        return SaveType.WITHOUT_SAVE
 
     def _do_save(self, coords, user_id):
         route = LineString(c.point for c in coords)
         logger.info(f'Line {route} saved for user {user_id}')
-        self._storage[user_id].clear()
 
-    def save(self, user_id, force=False):
+    def save(self, user_id):
         coords = self._storage[user_id]
+
         if len(coords) < 2:
-            return None
-        if force:
-            return self._do_save(coords, user_id=user_id)
-        *_, penultimate, ultimate = coords
-        if (ultimate._timestamp - penultimate._timestamp > self.save_window or
-                len(coords) >= self.save_len):
-            return self._do_save(coords, user_id=user_id)
+            return SaveType.WITHOUT_SAVE
+
+        *rest_coords, penultimate, ultimate = coords
+        time_diff = ultimate._timestamp - penultimate._timestamp
+        #  Пришла точка с разницей во времени по отношению к предыдущей >= save_window (60 сек)
+        #  Значит эта точка - это первая точка начала НОВОГО маршрута, а старый нужно сохранить.
+        if time_diff >= self.save_window:
+            # Последняя координата будет являться первой координатой нового маршрута.
+            # Ее не сохраняем здесь, а потом в новом маршруте.
+            if rest_coords:  # нужно хотя бы 2 точки для сохранения маршрута.
+                self._do_save([*rest_coords, penultimate], user_id=user_id)
+            #  Удаляем все кроме последней точки
+            self._storage[user_id] = [ultimate]
+            return SaveType.WITH_ROUTE_SPLIT
+
+        #  Если кол-во точек >= save_len (100 штук)
+        elif len(coords) >= self.save_len:
+            self._do_save(coords, user_id=user_id)
+            self._storage[user_id].clear()
+            return SaveType.WITHOUT_ROUTE_SPLIT
 
 
 class SingleConsumer:
@@ -72,16 +98,27 @@ class SingleConsumer:
                     f' offset # {msg.offset},'
                     f' value - {msg.value}'
                 )
-                self._handle_one_coord(msg)
+                save_type = self._handle_one_coord(msg)
+                await self._handle_commit(msg, save_type)
+
         finally:
             await self.kafka_consumer.stop()
             logger.info(f'Consumer # {client_id} has stopped')
 
+    async def _handle_commit(self, msg, save_type):
+        match save_type:
+            case SaveType.WITHOUT_SAVE:
+                return None
+            case SaveType.WITHOUT_ROUTE_SPLIT:
+                await self.kafka_consumer.commit()
+            case SaveType.WITH_ROUTE_SPLIT:
+                tp = TopicPartition(msg.topic, msg.partition)
+                await self.kafka_consumer.commit({tp: msg.offset})
+
     def _handle_one_coord(self, msg):
         data = orjson.loads(msg.value)
         ser = KafkaCoordinatesDeSerializer(timestamp=msg.timestamp, **data)
-        self.storage.add(ser)
-        # self.storage.save(ser.user_id, force=False)
+        return self.storage.add(ser, save_if_needed=True)
 
 
 class KafkaCoordinatesConsumer:
