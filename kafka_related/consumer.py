@@ -7,6 +7,8 @@ from aiokafka import AIOKafkaConsumer, TopicPartition
 from loguru import logger
 from shapely import LineString
 
+from crud.kafka import CoorsPreparer, save_route_into_db
+from internal.database import async_session
 from serializers.for_kafka import KafkaCoordinatesDeSerializer
 
 kafka_conf = dict(
@@ -51,9 +53,11 @@ class CoordinatesStorage:
             return await self.save(user_id=ser.user_id)
         return SaveType.WITHOUT_SAVE
 
-    async def _do_save(self, coords, user_id):
-        route = LineString(c.point for c in coords)
-        logger.info(f'Line {route} saved for user {user_id}')
+    @staticmethod
+    async def _do_save(coords, user_id):
+        async with async_session() as session:
+            preparer = CoorsPreparer(user_id, coords)
+            return await save_route_into_db(session, preparer.data_for_saving)
 
     async def save(self, user_id, by_timer=False):
         coords = self._storage[user_id]
@@ -158,4 +162,5 @@ class KafkaCoordinatesConsumer:
         while not stop_event.is_set():
             await asyncio.sleep(self.schedule_saver_period)
             for consumer in self.consumers:
+                logger.info(f'Initiate save on timer for consumer # {consumer.num}')
                 await consumer.save_all()
