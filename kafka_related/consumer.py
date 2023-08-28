@@ -8,7 +8,7 @@ from shapely import LineString
 from serializers.for_kafka import KafkaCoordinatesDeSerializer
 
 
-conf = dict(
+kafka_conf = dict(
     bootstrap_servers='127.0.0.1:29092',
     group_id='coordinates_consumers1',
     enable_auto_commit=True,
@@ -16,6 +16,10 @@ conf = dict(
     auto_offset_reset='earliest',
     metadata_max_age_ms=10 * 1000,
     # isolation_level='read_committed'
+)
+storage_conf = dict(
+    save_window=60 * 1000,
+    save_len=100,
 )
 
 
@@ -49,48 +53,45 @@ class CoordinatesStorage:
             return self._do_save(coords, user_id=user_id)
 
 
-class KafkaCoordinatesConsumer:
-    """
-    """
+class SingleConsumer:
+    def __init__(self, num):
+        self.storage = CoordinatesStorage(**storage_conf)
+        self.kafka_consumer = AIOKafkaConsumer('coordinates', client_id=num, **kafka_conf)
 
-    def __init__(self, cons_qty, poll_delay=1, save_window=60 * 1000, save_len=100):
-        self.cons_qty = cons_qty
-        self.poll_delay = poll_delay
-        self.cons_user_id_map = defaultdict(set)
-        self.storage = CoordinatesStorage(save_window, save_len)
-
-    def _handle_one_coord(self, msg):
-        data = orjson.loads(msg.value)
-        ser = KafkaCoordinatesDeSerializer(timestamp=msg.timestamp, **data)
-        self.storage.add(ser)
-        self.storage.save(ser.user_id, force=False)
-
-    async def _one_consumer(self, number, consumer):
-        logger.info(f'Starting consumer # {number}')
-        await consumer.start()
+    async def consume_forever(self):
+        # noinspection PyProtectedMember
+        client_id = self.kafka_consumer._client._client_id
+        logger.info(f'Starting consumer # {client_id}')
+        await self.kafka_consumer.start()
         try:
-            async for msg in consumer:
+            async for msg in self.kafka_consumer:
                 logger.info(
-                    f'Consumer # {number},'
+                    f'Consumer # {client_id},'
                     f' partition # {msg.partition},'
                     f' key # {msg.key},'
                     f' offset # {msg.offset},'
                     f' value - {msg.value}'
                 )
-                self.cons_user_id_map[number].add(msg.key)
                 self._handle_one_coord(msg)
         finally:
-            await consumer.stop()
-            logger.info(f'Consumer # {number} has stopped')
+            await self.kafka_consumer.stop()
+            logger.info(f'Consumer # {client_id} has stopped')
+
+    def _handle_one_coord(self, msg):
+        data = orjson.loads(msg.value)
+        ser = KafkaCoordinatesDeSerializer(timestamp=msg.timestamp, **data)
+        self.storage.add(ser)
+        # self.storage.save(ser.user_id, force=False)
+
+
+class KafkaCoordinatesConsumer:
+    """
+    """
+
+    def __init__(self, cons_qty):
+        self.cons_qty = cons_qty
+        self.consumers = [SingleConsumer(num) for num in range(self.cons_qty)]
 
     async def consume(self):
-        coros = []
-        for num in range(self.cons_qty):
-            consumer = AIOKafkaConsumer(
-                'coordinates',
-                **conf,
-            )
-            coro = self._one_consumer(num, consumer)
-            coros.append(coro)
-
+        coros = [consumer.consume_forever() for consumer in self.consumers]
         await asyncio.gather(*coros)
