@@ -44,4 +44,5 @@ class KafkaCoordinatesDeSerializer(KafkaCoordinatesSerializer):
     def __init__(self, timestamp, **data):
         super().__init__(**data)
         self._timestamp = timestamp
+        # миллисекунды
         self._process_time = datetime.datetime.now(tz=datetime.UTC).timestamp() * 1000
