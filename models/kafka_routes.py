@@ -27,8 +27,9 @@ class KafkaRoute(CreatedAtMixin, Base):
     )
     user_id: Mapped[int] = mapped_column()
     linestring = mapped_column(
-        Geography(geometry_type='LINESTRING', nullable=False, spatial_index=True),
+        Geography(geometry_type='LINESTRING', nullable=False, spatial_index=True, srid=4326),
     )
+    num_points: Mapped[int]
 
     def __repr__(self):
         return f'Route for user {self.user_id} during {self.duration}'

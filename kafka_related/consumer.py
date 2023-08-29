@@ -2,10 +2,10 @@ import asyncio
 import datetime
 import enum
 from collections import defaultdict
+
 import orjson
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from loguru import logger
-from shapely import LineString
 
 from crud.kafka import CoorsPreparer, save_route_into_db
 from internal.database import async_session
@@ -18,7 +18,6 @@ kafka_conf = dict(
     auto_commit_interval_ms=0.3 * 1000,
     auto_offset_reset='earliest',
     metadata_max_age_ms=10 * 1000,
-    # isolation_level='read_committed'
 )
 storage_conf = dict(
     save_window=60 * 1000,
@@ -79,7 +78,7 @@ class CoordinatesStorage:
             return SaveType.WITH_ROUTE_SPLIT
 
         #  Если кол-во точек >= save_len (100 штук)
-        elif len(coords) >= self.save_len or (by_timer and self._timer_condition(ultimate)) :
+        elif len(coords) >= self.save_len or (by_timer and self._timer_condition(ultimate)):
             await self._do_save(coords, user_id=user_id)
             self._storage[user_id].clear()
             return SaveType.WITHOUT_ROUTE_SPLIT
