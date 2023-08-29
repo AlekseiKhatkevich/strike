@@ -6,6 +6,7 @@ from collections import defaultdict
 import orjson
 from aiokafka import AIOKafkaConsumer, TopicPartition
 from loguru import logger
+from sqlalchemy.exc import IntegrityError
 
 from crud.kafka import CoorsPreparer, save_route_into_db
 from internal.database import async_session
@@ -56,7 +57,10 @@ class CoordinatesStorage:
     async def _do_save(coords, user_id):
         async with async_session() as session:
             preparer = CoorsPreparer(user_id, coords)
-            return await save_route_into_db(session, preparer.data_for_saving)
+            try:
+                return await save_route_into_db(session, preparer.data_for_saving)
+            except IntegrityError as err:
+                logger.error(err)
 
     async def save(self, user_id, by_timer=False):
         coords = self._storage[user_id]

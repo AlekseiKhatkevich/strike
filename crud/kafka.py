@@ -34,6 +34,7 @@ class CoorsPreparer:
             duration=duration,
             user_id=self.user_id,
             linestring=linestring,
+            num_points=len(self.coords),
         )
 
 
@@ -41,5 +42,5 @@ async def save_route_into_db(session, data):
     instance = KafkaRoute(**data)
     session.add(instance)
     instance = await session.commit()
-    logger.info(f'Route {instance} has been just saved into DB.')
+    logger.info(f'Route {str(instance)} has been just saved into DB.')
     return instance
